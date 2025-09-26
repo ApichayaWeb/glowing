@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>รายงานกลุ่มเกษตรกร - ระบบสอบย้อนกลับผักอุดร</title>
+    
+    <!-- Noto Sans Thai Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.css">
+    <!-- Date Range Picker -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daterangepicker@3.1.0/daterangepicker.css">
+    
+    <style>
+        :root{
+            /* Purple Theme Colors */
+            --bg:#f5f3ff;            /* page bg - light purple */
+            --card:#ffffff;          /* card bg */
+            --muted:#6b46c1;         /* muted text - purple */
+            --text:#2e1065;          /* main text - dark purple */
+            --brand:#7c4dff;         /* primary purple */
+            --brand-2:#651fff;       /* primary darker purple */
+            --accent:#ff8a3d;        /* accent */
+            --ring: rgba(124,77,255,.35);
+            --shadow: 0 10px 30px rgba(101, 31, 255, .12);
+            --radius:18px;
+        }
+        *{box-sizing:border-box}
+        html,body{height:100%}
+        html{scroll-behavior:smooth}
+        body{
+            margin:0;
+            font-family:"Noto Sans Thai", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+            background:
+                radial-gradient(900px 500px at 85% -10%, rgba(155,135,245,.22), transparent),
+                radial-gradient(800px 500px at -10% 10%, rgba(124,77,255,.18), transparent),
+                var(--bg);
+            color:var(--text);
+            line-height:1.6;
+        }
+        a{color:inherit;text-decoration:none}
+        .container{width:min(1120px, 92vw); margin-inline:auto}
+
+        /* NAVBAR */
+        .navbar{
+            position:sticky; top:0; z-index:50;
+            backdrop-filter:saturate(160%) blur(8px);
+            background:rgba(255,255,255,.85) !important;
+            border-bottom:1px solid rgba(46,16,101,.08);
+        }
+        .navbar-brand{display:flex;align-items:center;gap:12px; font-weight:800; letter-spacing:.2px; color:#2e1065 !important}
+        .navbar .nav-link{opacity:.85; transition:.2s; padding:.5rem .75rem; border-radius:10px; color:var(--text) !important}
+        .navbar .nav-link:hover{opacity:1; background:rgba(124,77,255,.08)}
+        .navbar .nav-link.active{background:rgba(124,77,255,.15); color:var(--brand) !important}
+
+        /* BUTTONS */
+        .btn-primary{background:linear-gradient(180deg, var(--brand), var(--brand-2)) !important; border:none; box-shadow:0 10px 18px rgba(124,77,255,.25)}
+        .btn-success{background:linear-gradient(180deg, var(--brand), var(--brand-2)) !important; border:none}
+        .btn-info{background:linear-gradient(180deg, #8b5cf6, #7c3aed) !important; border:none}
+        .btn-warning{background:linear-gradient(180deg, #a855f7, #9333ea) !important; border:none}
+        .btn-outline-primary{border:2px solid var(--brand); color:var(--brand)}
+        .btn-outline-primary:hover{background:rgba(124,77,255,.08)}
+        .btn-outline-secondary{border:2px solid var(--muted); color:var(--muted)}
+        .btn-outline-secondary:hover{background:rgba(107,70,193,.08)}
+        
+        /* CARDS */
+        .card{background:var(--card); border:1px solid rgba(46,16,101,.08); border-radius:var(--radius); box-shadow:var(--shadow)}
+        .card-header{background:linear-gradient(135deg, rgba(124,77,255,.12), rgba(255,255,255,.7)); border-bottom:1px solid rgba(46,16,101,.08)}
+        
+        /* STATS CARDS */
+        .stat-card{transition:transform 0.3s ease}
+        .stat-card:hover{transform:translateY(-2px)}
+        .text-primary{color:var(--brand) !important}
+        .text-success{color:#9333ea !important}
+        .text-info{color:#8b5cf6 !important}
+        .text-warning{color:#a855f7 !important}
+        .bg-primary{background:var(--brand) !important}
+        .bg-success{background:#9333ea !important}
+        .bg-info{background:#8b5cf6 !important}
+        .bg-warning{background:#a855f7 !important}
+        
+        /* PROGRESS BARS */
+        .progress-bar{background:linear-gradient(90deg, var(--brand), var(--brand-2))}
+        .progress-bar.bg-success{background:linear-gradient(90deg, #9333ea, #7e22ce) !important}
+        .progress-bar.bg-info{background:linear-gradient(90deg, #8b5cf6, #7c3aed) !important}
+        .progress-bar.bg-warning{background:linear-gradient(90deg, #a855f7, #9333ea) !important}
+        
+        /* FORM CONTROLS */
+        .form-control:focus, .form-select:focus{
+            border-color:var(--brand);
+            box-shadow:0 0 0 0.2rem rgba(124,77,255,.25);
+        }
+        
+        /* BADGES */
+        .badge.bg-primary{background:var(--brand) !important}
+        .badge.bg-success{background:#9333ea !important}
+        .badge.bg-info{background:#8b5cf6 !important}
+        .badge.bg-warning{background:#a855f7 !important}
+        
+        /* PAGE HEADER */
+        .page-header .page-title{color:var(--text)}
+        .page-subtitle .badge{background:var(--brand) !important}
+        
+        /* CHART CONTAINERS */
+        .chart-title{color:var(--text)}
+        
+        /* TABLE */
+        .table-dark{background:linear-gradient(135deg, var(--brand), var(--brand-2)) !important}
+        
+        /* RESPONSIVE */
+        @media (max-width: 980px){
+            .container-fluid{padding-left:1rem; padding-right:1rem}
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="../index.html">
+                <img src="../assets/images/logo.png" width="32" height="32" alt="โลโก้" style="display:block;" class="me-2" />
+                ระบบสอบย้อนกลับผักอุดร
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="dashboard.html">
+                            <i class="fas fa-tachometer-alt me-1"></i>แดชบอร์ดกลุ่ม
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="manage-members.html">
+                            <i class="fas fa-user-friends me-1"></i>จัดการสมาชิก
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="reports.html">
+                            <i class="fas fa-chart-bar me-1"></i>รายงานกลุ่ม
+                        </a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle me-1"></i>หัวหน้ากลุ่ม
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="../index.html">
+                                <i class="fas fa-sign-out-alt me-2"></i>ออกจากระบบ
+                            </a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container-fluid">
+            <!-- Page Header -->
+            <div class="page-header">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <h1 class="page-title">
+                            <i class="fas fa-chart-bar me-3"></i>รายงานกลุ่มเกษตรกร
+                        </h1>
+                        <p class="page-subtitle">
+                            <span class="badge bg-success me-2" id="groupBadge">กลุ่มที่ 01</span>
+                            <span id="groupName">เกษตรกรผักปลอดภัย</span>
+                        </p>
+                    </div>
+                    <div class="col-auto">
+                        <div class="btn-group">
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exportModal">
+                                <i class="fas fa-download me-2"></i>ส่งออกรายงาน
+                            </button>
+                            <button class="btn btn-outline-primary" onclick="refreshData()">
+                                <i class="fas fa-sync-alt me-2"></i>รีเฟรช
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Stats Cards -->
+            <div class="row mb-4">
+                <div class="col-xl-3 col-md-6">
+                    <div class="card stat-card border-0 shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="stat-icon bg-primary bg-opacity-10 text-primary rounded-circle p-3 me-3">
+                                    <i class="fas fa-users fa-lg"></i>
+                                </div>
+                                <div>
+                                    <h3 class="stat-number mb-1" id="totalMembers">24</h3>
+                                    <p class="stat-label text-muted mb-0">สมาชิกทั้งหมด</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6">
+                    <div class="card stat-card border-0 shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="stat-icon bg-success bg-opacity-10 text-success rounded-circle p-3 me-3">
+                                    <i class="fas fa-check-circle fa-lg"></i>
+                                </div>
+                                <div>
+                                    <h3 class="stat-number mb-1" id="completedMembers">18</h3>
+                                    <p class="stat-label text-muted mb-0">กรอกข้อมูลครบ</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6">
+                    <div class="card stat-card border-0 shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="stat-icon bg-warning bg-opacity-10 text-warning rounded-circle p-3 me-3">
+                                    <i class="fas fa-qrcode fa-lg"></i>
+                                </div>
+                                <div>
+                                    <h3 class="stat-number mb-1" id="totalQRCodes">156</h3>
+                                    <p class="stat-label text-muted mb-0">QR Code สร้างแล้ว</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6">
+                    <div class="card stat-card border-0 shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="stat-icon bg-info bg-opacity-10 text-info rounded-circle p-3 me-3">
+                                    <i class="fas fa-seedling fa-lg"></i>
+                                </div>
+                                <div>
+                                    <h3 class="stat-number mb-1" id="totalProducts">89</h3>
+                                    <p class="stat-label text-muted mb-0">ผลิตภัณฑ์ลงทะเบียน</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter Panel -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-filter me-2"></i>ตัวกรองข้อมูล
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form id="filterForm">
+                        <div class="row g-3">
+                            <!-- Date Range -->
+                            <div class="col-md-4">
+                                <label class="form-label">
+                                    <i class="fas fa-calendar me-1"></i>ช่วงวันที่
+                                </label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="dateRange" 
+                                           placeholder="เลือกช่วงวันที่" readonly>
+                                    <span class="input-group-text">
+                                        <i class="fas fa-calendar-alt"></i>
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Member Status Filter -->
+                            <div class="col-md-3">
+                                <label class="form-label">
+                                    <i class="fas fa-user-check me-1"></i>สถานะสมาชิก
+                                </label>
+                                <select class="form-select" id="memberStatusFilter">
+                                    <option value="">ทุกสถานะ</option>
+                                    <option value="completed">กรอกข้อมูลครบ</option>
+                                    <option value="incomplete">กรอกข้อมูลไม่ครบ</option>
+                                    <option value="not_started">ยังไม่เริ่มกรอก</option>
+                                </select>
+                            </div>
+
+                            <!-- Crop Type Filter -->
+                            <div class="col-md-3">
+                                <label class="form-label">
+                                    <i class="fas fa-seedling me-1"></i>ประเภทผัก
+                                </label>
+                                <select class="form-select" id="cropTypeFilter">
+                                    <option value="">ทุกประเภท</option>
+                                    <option value="leafy">ผักใบ</option>
+                                    <option value="fruit">ผักผล</option>
+                                    <option value="root">ผักราก</option>
+                                    <option value="herb">สมุนไพร</option>
+                                </select>
+                            </div>
+
+                            <!-- Apply Button -->
+                            <div class="col-md-2">
+                                <label class="form-label">&nbsp;</label>
+                                <button type="submit" class="btn btn-success w-100" data-loading="กำลังโหลด...">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Report Content -->
+            <div class="row">
+                <!-- Left Column: Charts and Performance -->
+                <div class="col-lg-8">
+                    <!-- Group Performance Reports -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-chart-line me-2"></i>รายงานผลการดำเนินงานกลุ่ม
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <!-- Charts Row 1 -->
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <div class="chart-container">
+                                        <h6 class="chart-title">
+                                            <i class="fas fa-chart-pie me-2 text-primary"></i>ความสมบูรณ์ของข้อมูล
+                                        </h6>
+                                        <canvas id="dataCompletenessChart" height="200"></canvas>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="chart-container">
+                                        <h6 class="chart-title">
+                                            <i class="fas fa-chart-bar me-2 text-success"></i>QR Code ที่สร้างแล้ว
+                                        </h6>
+                                        <canvas id="qrCodeChart" height="200"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Charts Row 2 -->
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="chart-container">
+                                        <h6 class="chart-title">
+                                            <i class="fas fa-chart-area me-2 text-warning"></i>การส่งออกผลิตภัณฑ์
+                                        </h6>
+                                        <canvas id="productExportChart" height="200"></canvas>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="chart-container">
+                                        <h6 class="chart-title">
+                                            <i class="fas fa-chart-doughnut me-2 text-info"></i>สถิติการปลูกพืช
+                                        </h6>
+                                        <canvas id="cropStatsChart" height="200"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Member Details Table -->
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h6 class="card-title mb-0">
+                                <i class="fas fa-table me-2"></i>รายละเอียดสมาชิกในกลุ่ม
+                            </h6>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" 
+                                        data-bs-toggle="dropdown">
+                                    <i class="fas fa-cog me-1"></i>ตัวเลือก
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#" onclick="exportMemberData('pdf')">
+                                        <i class="fas fa-file-pdf me-2"></i>ส่งออก PDF
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="exportMemberData('excel')">
+                                        <i class="fas fa-file-excel me-2"></i>ส่งออก Excel
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="exportMemberData('csv')">
+                                        <i class="fas fa-file-csv me-2"></i>ส่งออก CSV
+                                    </a></li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-striped table-hover" id="membersTable">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>ลำดับ</th>
+                                            <th>ชื่อ-นามสกุล</th>
+                                            <th>แปลงที่</th>
+                                            <th>สถานะข้อมูล</th>
+                                            <th>QR Code</th>
+                                            <th>ผลิตภัณฑ์</th>
+                                            <th>วันที่ลงทะเบียน</th>
+                                            <th>การดำเนินการ</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="membersTableBody">
+                                        <!-- Data will be loaded here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <!-- Pagination -->
+                            <nav aria-label="Table pagination">
+                                <ul class="pagination justify-content-center mt-3" id="membersPagination">
+                                    <!-- Pagination will be generated here -->
+                                </ul>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Member Status Dashboard -->
+                <div class="col-lg-4">
+                    <!-- Member Status Overview -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0">
+                                <i class="fas fa-users me-2"></i>สรุปสถานะสมาชิก
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="member-status-overview">
+                                <!-- Completed Members -->
+                                <div class="status-item mb-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="status-label">
+                                            <i class="fas fa-circle text-success me-2"></i>กรอกข้อมูลครบ
+                                        </span>
+                                        <span class="status-count text-success fw-bold" id="completedCount">18</span>
+                                    </div>
+                                    <div class="progress mb-1" style="height: 8px;">
+                                        <div class="progress-bar bg-success" id="completedProgress" style="width: 75%"></div>
+                                    </div>
+                                    <small class="text-muted">75% ของสมาชิกทั้งหมด</small>
+                                </div>
+
+                                <!-- Incomplete Members -->
+                                <div class="status-item mb-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="status-label">
+                                            <i class="fas fa-circle text-warning me-2"></i>กรอกข้อมูลไม่ครบ
+                                        </span>
+                                        <span class="status-count text-warning fw-bold" id="incompleteCount">4</span>
+                                    </div>
+                                    <div class="progress mb-1" style="height: 8px;">
+                                        <div class="progress-bar bg-warning" id="incompleteProgress" style="width: 17%"></div>
+                                    </div>
+                                    <small class="text-muted">17% ของสมาชิกทั้งหมด</small>
+                                </div>
+
+                                <!-- Not Started Members -->
+                                <div class="status-item">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="status-label">
+                                            <i class="fas fa-circle text-danger me-2"></i>ยังไม่เริ่มกรอก
+                                        </span>
+                                        <span class="status-count text-danger fw-bold" id="notStartedCount">2</span>
+                                    </div>
+                                    <div class="progress mb-1" style="height: 8px;">
+                                        <div class="progress-bar bg-danger" id="notStartedProgress" style="width: 8%"></div>
+                                    </div>
+                                    <small class="text-muted">8% ของสมาชิกทั้งหมด</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Individual Member Progress -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0">
+                                <i class="fas fa-tasks me-2"></i>ความคืบหน้าแต่ละคน
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="member-progress-list" id="memberProgressList">
+                                <!-- Member progress items will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Activities -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0">
+                                <i class="fas fa-clock me-2"></i>กิจกรรมล่าสุด
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="activity-list" id="recentActivities">
+                                <!-- Recent activities will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Export Modal -->
+    <div class="modal fade" id="exportModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-download me-2"></i>ส่งออกรายงานกลุ่ม
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="exportForm">
+                        <div class="row g-3">
+                            <!-- Export Type -->
+                            <div class="col-md-6">
+                                <label class="form-label">ประเภทการส่งออก</label>
+                                <div class="export-type-grid">
+                                    <label class="export-type-card">
+                                        <input type="radio" name="exportType" value="pdf" checked>
+                                        <div class="card-content">
+                                            <i class="fas fa-file-pdf text-danger"></i>
+                                            <span>PDF Report</span>
+                                            <small>รายงานกลุ่มพร้อมกราฟ</small>
+                                        </div>
+                                    </label>
+                                    <label class="export-type-card">
+                                        <input type="radio" name="exportType" value="excel">
+                                        <div class="card-content">
+                                            <i class="fas fa-file-excel text-success"></i>
+                                            <span>Excel</span>
+                                            <small>สเปรดชีตสมาชิก</small>
+                                        </div>
+                                    </label>
+                                    <label class="export-type-card">
+                                        <input type="radio" name="exportType" value="csv">
+                                        <div class="card-content">
+                                            <i class="fas fa-file-csv text-primary"></i>
+                                            <span>CSV</span>
+                                            <small>รายชื่อสมาชิก</small>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Report Sections -->
+                            <div class="col-md-6">
+                                <label class="form-label">เลือกหัวข้อรายงาน</label>
+                                <div class="report-sections">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" value="overview" 
+                                               id="includeOverview" checked>
+                                        <label class="form-check-label" for="includeOverview">
+                                            ภาพรวมกลุ่ม
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" value="members" 
+                                               id="includeMembers" checked>
+                                        <label class="form-check-label" for="includeMembers">
+                                            รายชื่อสมาชิก
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" value="performance" 
+                                               id="includePerformance">
+                                        <label class="form-check-label" for="includePerformance">
+                                            ผลการดำเนินงาน
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" value="products" 
+                                               id="includeProducts">
+                                        <label class="form-check-label" for="includeProducts">
+                                            ข้อมูลผลิตภัณฑ์
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" value="qrcodes" 
+                                               id="includeQRCodes">
+                                        <label class="form-check-label" for="includeQRCodes">
+                                            รายการ QR Code
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                    <button type="button" class="btn btn-primary" onclick="executeGroupExport()" data-loading="กำลังส่งออก...">
+                        <i class="fas fa-download me-2"></i>ส่งออก
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay" style="display: none;">
+        <div class="loading-content">
+            <div class="spinner-border text-primary mb-3" role="status">
+                <span class="visually-hidden">กำลังโหลด...</span>
+            </div>
+            <h5>กำลังโหลดข้อมูลกลุ่ม...</h5>
+            <p class="text-muted">กรุณารอสักครู่</p>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    <!-- Date Range Picker -->
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/daterangepicker@3.1.0/daterangepicker.min.js"></script>
+    <!-- jsPDF for PDF export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- SheetJS for Excel export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <!-- Custom Scripts -->
+    <script src="../assets/js/utils.js"></script>
+    <script src="../assets/js/api.js"></script>
+    <script src="../assets/js/auth.js"></script>
+    <script src="../assets/js/mobile-optimizations.js"></script>
+    <script src="../assets/js/group-reports.js"></script>
+
+    <script>
+        // Initialize page on load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Protect group page - only group managers can access
+            if (!PageProtection.protectGroupPage()) {
+                console.error('Access denied - not group manager or not logged in');
+                return;
+            }
+            
+            const user = AuthAPI.getCurrentUser();
+            if (!user || !user.role || user.role.toString().trim().toLowerCase() !== 'group') {
+                Utils.showError('ไม่มีสิทธิ์', 'คุณต้องมีสิทธิ์ผู้จัดการกลุ่มเท่านั้น');
+                setTimeout(() => window.location.href = '../login.html', 2000);
+                return;
+            }
+            
+            console.log('Group manager access granted for reports');
+            
+            // Initialize date range picker
+            initializeDateRangePicker();
+            
+            // Initialize Group Reports Manager
+            if (typeof GroupReportsManager !== 'undefined') {
+                window.groupReportsManager = new GroupReportsManager();
+            }
+            
+            // Setup event listeners
+            setupEventListeners();
+            
+            // Initialize error handling
+            initializeErrorHandling();
+            
+            console.log('Group Reports page initialized');
+        });
+
+        /**
+         * Initialize date range picker
+         */
+        function initializeDateRangePicker() {
+            const dateRangeInput = document.getElementById('dateRange');
+            if (dateRangeInput && typeof $ !== 'undefined') {
+                $(dateRangeInput).daterangepicker({
+                    locale: {
+                        format: 'DD/MM/YYYY',
+                        separator: ' - ',
+                        applyLabel: 'เลือก',
+                        cancelLabel: 'ยกเลิก',
+                        fromLabel: 'จาก',
+                        toLabel: 'ถึง',
+                        customRangeLabel: 'กำหนดเอง',
+                        weekLabel: 'สัปดาห์',
+                        daysOfWeek: ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'],
+                        monthNames: [
+                            'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+                            'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
+                        ],
+                        firstDay: 1
+                    },
+                    ranges: {
+                        'วันนี้': [moment(), moment()],
+                        'เมื่อวาน': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+                        '7 วันที่แล้ว': [moment().subtract(6, 'days'), moment()],
+                        '30 วันที่แล้ว': [moment().subtract(29, 'days'), moment()],
+                        'เดือนนี้': [moment().startOf('month'), moment().endOf('month')],
+                        'เดือนที่แล้ว': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+                    },
+                    startDate: moment().subtract(29, 'days'),
+                    endDate: moment()
+                });
+
+                $(dateRangeInput).on('apply.daterangepicker', function(ev, picker) {
+                    if (window.groupReportsManager) {
+                        window.groupReportsManager.applyFilters();
+                    }
+                });
+            }
+        }
+
+        /**
+         * Setup event listeners
+         */
+        function setupEventListeners() {
+            // Filter form submission
+            const filterForm = document.getElementById('filterForm');
+            if (filterForm) {
+                filterForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    if (window.groupReportsManager) {
+                        window.groupReportsManager.applyFilters();
+                    }
+                });
+            }
+        }
+
+        /**
+         * Initialize error handling
+         */
+        function initializeErrorHandling() {
+            window.addEventListener('unhandledrejection', function(event) {
+                console.error('Unhandled promise rejection:', event.reason);
+                event.preventDefault();
+                
+                if (!document.querySelector('.swal2-container')) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'เกิดข้อผิดพลาด',
+                        text: 'เกิดข้อผิดพลาดที่ไม่คาดคิด กรุณาลองใหม่อีกครั้ง',
+                        confirmButtonColor: '#198754'
+                    });
+                }
+            });
+        }
+
+        /**
+         * Refresh data
+         */
+        function refreshData() {
+            if (window.groupReportsManager) {
+                window.groupReportsManager.loadGroupData();
+            }
+        }
+
+        /**
+         * Export member data
+         */
+        function exportMemberData(format) {
+            if (window.groupReportsManager && window.groupReportsManager.exportManager) {
+                window.groupReportsManager.exportManager.exportMemberData(format);
+            }
+        }
+
+        /**
+         * Execute group export
+         */
+        function executeGroupExport() {
+            if (window.groupReportsManager && window.groupReportsManager.exportManager) {
+                window.groupReportsManager.exportManager.executeGroupExport();
+            }
+        }
+    </script>
+</body>
+</html>

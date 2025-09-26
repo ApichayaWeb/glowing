@@ -1,0 +1,1433 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ค้นหาข้อมูลเชิงลึก - ระบบสอบย้อนกลับผักอุดร</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root{
+            /* Modern Green Theme */
+            --bg: linear-gradient(135deg, #f0fdf4 0%, #ecfeff 100%);
+            --card: #ffffff;
+            --muted: #6b7280;
+            --text: #111827;
+            --brand: #10b981;
+            --brand-2: #059669;
+            --accent: #f59e0b;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+            --ring: rgba(16,185,129,.2);
+            --shadow: 0 25px 50px -12px rgba(0,0,0,.25);
+            --shadow-lg: 0 35px 60px -12px rgba(0,0,0,.3);
+            --radius: 16px;
+            --radius-lg: 24px;
+        }
+        *{box-sizing:border-box}
+        html,body{height:100%}
+        html{scroll-behavior:smooth}
+        body{
+            margin:0;
+            font-family:"Noto Sans Thai", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+            background: var(--bg);
+            background-attachment: fixed;
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+        a{color:inherit;text-decoration:none}
+        .container{width:min(1120px, 92vw); margin-inline:auto}
+
+        /* NAVBAR */
+        .nav{
+            position:sticky; top:0; z-index:50;
+            backdrop-filter:saturate(160%) blur(8px);
+            background:rgba(255,255,255,.85);
+            border-bottom:1px solid rgba(14,43,31,.08);
+        }
+        .nav-inner{display:flex;align-items:center;gap:16px; padding:14px 0}
+        .brand{display:flex;align-items:center;gap:12px; font-weight:800; letter-spacing:.2px; color:#0a3c2a}
+        .brand .logo{width:36px;height:36px;display:grid;place-items:center;border-radius:10px;
+            background:conic-gradient(from 210deg at 50% 50%, #28a745 0 40%, #198754 40% 70%, #ffd166 70% 100%);
+            box-shadow:inset 0 0 0 4px rgba(0,0,0,.03), 0 6px 18px rgba(25,135,84,.25);
+        }
+        .spacer{flex:1}
+        .nav a.link{opacity:.85; transition:.2s; padding:.5rem .75rem; border-radius:10px}
+        .nav a.link:hover{opacity:1; background:rgba(25,135,84,.08)}
+
+        /* BUTTONS */
+        .btn{display:inline-flex; align-items:center; gap:8px; padding:.65rem 1rem; border-radius:12px;
+            background:linear-gradient(180deg, var(--brand), var(--brand-2)); box-shadow:0 10px 18px rgba(25,135,84,.25);
+            color:#fff; font-weight:800}
+        .btn:hover{filter:brightness(1.03)}
+        .btn-outline{display:inline-flex; align-items:center; gap:8px; padding:.55rem .95rem; border-radius:12px;
+            border:2px solid var(--brand); color:var(--brand); font-weight:800; background:transparent}
+        .btn-outline:hover{background:rgba(25,135,84,.08)}
+
+        /* Search specific styles */
+        .main-content{padding-top:88px}
+        .info-card {
+            background: var(--card);
+            padding: 1.5rem;
+            border-radius: var(--radius);
+            border: 1px solid rgba(14,43,31,.12);
+            box-shadow: var(--shadow);
+        }
+        .info-card h6 {
+            border-bottom: 1px solid rgba(14,43,31,.12);
+            padding-bottom: 0.5rem;
+            color: var(--brand);
+        }
+        .card {
+            background: var(--card);
+            border: none;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+        }
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--shadow-lg);
+        }
+        .card-header {
+            background: linear-gradient(135deg, var(--brand), var(--brand-2));
+            color: white;
+            border-radius: 0;
+            padding: 2rem;
+            font-weight: 700;
+            border: none;
+            position: relative;
+        }
+        .card-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%);
+            animation: shimmer 2s ease-in-out infinite;
+        }
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        .card-body {
+            padding: 2.5rem;
+        }
+        .form-control {
+            border: 2px solid #e5e7eb;
+            border-radius: var(--radius);
+            padding: 1rem 1.25rem;
+            transition: all 0.3s ease;
+            font-size: 1.1rem;
+        }
+        .form-control:focus {
+            border-color: var(--brand);
+            box-shadow: 0 0 0 3px var(--ring);
+            outline: none;
+        }
+        .form-control.form-control-lg {
+            padding: 1.25rem 1.5rem;
+            font-size: 1.2rem;
+        }
+        .btn {
+            padding: 1rem 2rem;
+            border-radius: var(--radius);
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: none;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        .btn-success {
+            background: linear-gradient(135deg, var(--brand), var(--brand-2));
+            color: white;
+            box-shadow: 0 10px 25px -5px rgba(16,185,129,0.4);
+        }
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 40px -5px rgba(16,185,129,0.5);
+            color: white;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--info), #2563eb);
+            color: white;
+            box-shadow: 0 10px 25px -5px rgba(59,130,246,0.4);
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 40px -5px rgba(59,130,246,0.5);
+            color: white;
+        }
+        .btn-outline-secondary {
+            border: 2px solid var(--muted);
+            color: var(--muted);
+            background: transparent;
+            border-radius: 12px;
+            font-weight: 700;
+        }
+        .btn-outline-success {
+            border: 2px solid var(--brand);
+            color: var(--brand);
+            background: transparent;
+            border-radius: 12px;
+            font-weight: 700;
+        }
+        .text-success { color: var(--brand) !important; }
+        .text-primary { color: #0d6efd !important; }
+        .text-muted { color: var(--muted) !important; }
+        .bg-success { background: linear-gradient(135deg, var(--brand), var(--brand-2)) !important; }
+        .bg-primary { background: linear-gradient(135deg, #0d6efd, #0b5ed7) !important; }
+        .bg-light { background: rgba(245,255,247,.6) !important; }
+        .alert {
+            border-radius: 12px;
+            border: 1px solid rgba(14,43,31,.15);
+        }
+        .alert-info {
+            background: rgba(13,202,240,.1);
+            border-color: rgba(13,202,240,.2);
+            color: #055160;
+        }
+        .alert-warning {
+            background: rgba(255,193,7,.1);
+            border-color: rgba(255,193,7,.2);
+            color: #664d03;
+        }
+        .alert-danger {
+            background: rgba(220,53,69,.1);
+            border-color: rgba(220,53,69,.2);
+            color: #842029;
+        }
+        h1, h2, h3, h4, h5, h6 {
+            font-weight: 700;
+        }
+        .display-4 {
+            font-size: 2.5rem;
+            font-weight: 900;
+        }
+        .lead {
+            font-size: 1.1rem;
+            color: var(--muted);
+        }
+        \n        /* Bootstrap compatibility */\n        .row { display: flex; flex-wrap: wrap; margin: 0 -12px; }\n        .col-12 { flex: 0 0 100%; padding: 0 12px; }\n        .col-md-6 { flex: 0 0 50%; padding: 0 12px; }\n        .col-md-8 { flex: 0 0 66.666667%; padding: 0 12px; }\n        .col-md-4 { flex: 0 0 33.333333%; padding: 0 12px; }\n        .col-lg-8 { flex: 0 0 66.666667%; padding: 0 12px; }\n        @media (max-width: 768px) {\n            .col-md-6, .col-md-8, .col-md-4, .col-lg-8 { flex: 0 0 100%; }\n        }\n        .mb-3 { margin-bottom: 1rem; }\n        .mb-4 { margin-bottom: 1.5rem; }\n        .mb-5 { margin-bottom: 3rem; }\n        .mt-2 { margin-top: 0.5rem; }\n        .mt-3 { margin-top: 1rem; }\n        .mt-4 { margin-top: 1.5rem; }\n        .me-1 { margin-right: 0.25rem; }\n        .me-2 { margin-right: 0.5rem; }\n        .me-3 { margin-right: 1rem; }\n        .w-100 { width: 100%; }\n        .text-center { text-align: center; }\n        .pt-5 { padding-top: 3rem; }\n        .py-5 { padding: 3rem 0; }\n        .fw-bold { font-weight: 700; }\n        .d-flex { display: flex; }\n        .align-items-center { align-items: center; }\n        .align-items-end { align-items: flex-end; }\n        .justify-content-center { justify-content: center; }\n        .gap-2 { gap: 0.5rem; }\n        .gap-3 { gap: 1rem; }\n        .visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }\n        .form-label { margin-bottom: 0.5rem; font-weight: 600; display: block; }\n        .form-text { margin-top: 0.25rem; font-size: 0.875rem; color: var(--muted); }\n        .spinner-border { width: 2rem; height: 2rem; border: 0.25em solid; border-right-color: transparent; border-radius: 50%; animation: spinner-border 0.75s linear infinite; }\n        @keyframes spinner-border { to { transform: rotate(360deg); } }\n        .fade { transition: opacity 0.15s linear; }\n        .show { opacity: 1; }\n        .btn-close { background: transparent; border: 0; font-size: 1rem; opacity: 0.5; }\n        .btn-close:hover { opacity: 0.75; }\n        .modal { position: fixed; top: 0; left: 0; z-index: 1055; width: 100%; height: 100%; overflow-x: hidden; overflow-y: auto; outline: 0; }\n        .modal-dialog { position: relative; width: auto; margin: 0.5rem; pointer-events: none; }\n        .modal-content { position: relative; display: flex; flex-direction: column; width: 100%; pointer-events: auto; background: white; border: 1px solid rgba(0,0,0,.2); border-radius: var(--radius); outline: 0; }\n        .modal-body { position: relative; flex: 1 1 auto; padding: 1rem; }\n        .modal-sm { max-width: 300px; }\n        
+        /* Enhanced Mobile Responsive */
+        @media (max-width: 768px) {
+            .card-header { padding: 1.5rem 1rem; }
+            .card-body { padding: 1.5rem 1rem; }
+            .btn { padding: 0.875rem 1.5rem; font-size: 1rem; }
+            .display-4 { font-size: 2rem; }
+            .card:hover { transform: translateY(-4px); }
+            .container { width: 95vw; }
+        }
+        
+        /* Loading Animation */
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid var(--brand);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="container nav-inner">
+            <a href="index.html" class="brand" aria-label="กลับไปหน้าแรก">
+                <img src="assets/images/logo.png" width="32" height="32" alt="โลโก้" style="display:block;" />
+                <span>ระบบตรวจสอบย้อนกลับผักอุดร</span>
+            </a>
+            <a class="link" href="index.html#gallery">แกลอรี่</a>
+            <div class="spacer"></div>
+            <a class="btn-outline" href="search.html" aria-label="ค้นหา">ค้นหา</a>
+            <a class="btn" href="login.html" aria-label="เข้าระบบ">เข้าสู่ระบบ</a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content pt-5">
+        <div class="container">
+            <!-- Hero Section -->
+            <div class="row mb-5">
+                <div class="col-12 text-center">
+                    <h1 class="display-4 fw-bold text-success mb-4">
+                        <i class="fas fa-search-plus me-3"></i>
+                        ค้นหาข้อมูลเชิงลึก
+                    </h1>
+                    <p class="lead text-muted mb-5">
+                        ค้นหาข้อมูลการผลิต การเก็บเกี่ยว การขนส่ง และเอกสารการรับรองคุณภาพแบบละเอียด
+                    </p>
+                </div>
+            </div>
+
+            <!-- QR Code Search -->
+            <div id="qrSearchSection" class="row mb-5">
+                <div class="col-lg-8 mx-auto">
+                    <div class="card">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-qrcode me-2"></i>
+                                ค้นหาข้อมูลเกษตรกร
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="qrCodeSearchForm">
+                                <div class="mb-3">
+                                    <label for="qrCodeInput" class="form-label">รหัสเกษตรกร (QR Code)</label>
+                                    <input type="text" class="form-control form-control-lg" id="qrCodeInput" 
+                                           placeholder="สแกน QR Code หรือป้อนรหัส: 02-12345678901234567" required>
+                                    <div class="form-text">
+                                        <i class="fas fa-qrcode text-success me-1"></i>
+                                        สแกน QR Code หรือป้อนรหัสรูปแบบ: XX-XXXXXXXXXXXXXXXXX
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-success w-100" style="background: linear-gradient(180deg, var(--brand), var(--brand-2)); border: none; border-radius: 12px; padding: .75rem 1.5rem; font-weight: 700; box-shadow: 0 8px 20px rgba(25,135,84,.25);">
+                                    <i class="fas fa-search me-2"></i>ค้นหาข้อมูลเกษตรกร
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- QR Code Results (Farmer Info) -->
+            <div id="qrResults" class="row" style="display: none;">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-user me-2"></i>
+                                ข้อมูลเกษตรกร
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <!-- Farmer Basic Info -->
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <div class="info-card">
+                                        <h6 class="text-success mb-3"><i class="fas fa-user me-2"></i>ข้อมูลเกษตรกร</h6>
+                                        <p><strong>เลขประจำแปลง GAP:</strong> <span id="qrPlotNumber" class="text-primary"></span></p>
+                                        <p><strong>ชื่อ-สกุล:</strong> <span id="qrFarmerName"></span></p>
+                                        <p><strong>เบอร์โทร:</strong> <span id="qrFarmerPhone"></span></p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="info-card">
+                                        <h6 class="text-success mb-3"><i class="fas fa-map-marker-alt me-2"></i>ที่อยู่และพื้นที่</h6>
+                                        <p><strong>ที่อยู่แปลงปลูก:</strong> <span id="qrFarmerAddress"></span></p>
+                                        <p><strong>พื้นที่:</strong> <span id="qrFarmerArea"></span> ไร่</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Search Production Cycle -->
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6 class="text-primary mb-3">
+                                        <i class="fas fa-search me-2"></i>
+                                        ค้นหาข้อมูลรอบการผลิตเพิ่มเติม
+                                    </h6>
+                                    <form id="productionSearchForm">
+                                        <div class="alert alert-info mb-3" style="background: rgba(13,202,240,.1); border: 1px solid rgba(13,202,240,.2); color: #055160; border-radius: 12px;">
+                                            <i class="fas fa-info-circle me-2"></i>
+                                            กรอกรหัสรอบการผลิตเพื่อดูข้อมูลเชิงลึก
+                                        </div>
+                                        <div class="row align-items-end">
+                                            <div class="col-md-8">
+                                                <label for="productionSearchInput" class="form-label">รหัสรอบการผลิต (Production Round Code)</label>
+                                                <input type="text" class="form-control form-control-lg" id="productionSearchInput" 
+                                                       placeholder="ตัวอย่าง: 25680920-003" 
+                                                       pattern="^\d{8}-\d{3}$">
+                                                <div class="form-text">
+                                                    <i class="fas fa-calendar me-1"></i>
+                                                    รูปแบบ: YYYYMMDD-XXX (วันที่จัดส่ง-รหัสผู้จำหน่าย)
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <button type="submit" class="btn btn-primary w-100 btn-lg" style="background: linear-gradient(180deg, #0d6efd, #0b5ed7); border: none; border-radius: 12px; padding: 1rem 1.5rem; font-weight: 700; box-shadow: 0 8px 20px rgba(13,110,253,.25);">
+                                                    <i class="fas fa-search me-2"></i>ค้นหารอบการผลิต
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Production Results (Detailed Production Cycle) -->
+            <div id="productionResults" class="row" style="display: none;">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-seedling me-2"></i>
+                                ข้อมูลรอบการผลิต
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <!-- Basic Info -->
+                            <div id="basicInfo" class="mb-4">
+                                <h6 class="text-primary mb-3">ข้อมูลเบื้องต้น</h6>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p><strong>รหัสค้นหา:</strong> <span id="resultSearchCode" class="text-primary"></span></p>
+                                        <p><strong>ชื่อเกษตรกร:</strong> <span id="resultFarmerName"></span></p>
+                                        <p><strong>กลุ่มเกษตรกร:</strong> <span id="resultGroupName"></span></p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p><strong>แปลงที่:</strong> <span id="resultPlotNumber"></span></p>
+                                        <p><strong>พื้นที่:</strong> <span id="resultArea"></span> ไร่</p>
+                                        <p><strong>เบอร์โทร:</strong> <span id="resultPhone"></span></p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Production Details -->
+                            <div id="productionDetails" class="mb-4">
+                                <h6 class="text-success mb-3"><i class="fas fa-seedling me-2"></i>ข้อมูลการปลูก</h6>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <div class="info-card">
+                                            <p><strong>ชนิดพืชผัก:</strong> <span id="prodCropType"></span></p>
+                                            <p><strong>พันธุ์:</strong> <span id="prodCropVariety"></span></p>
+                                            <p><strong>การปลูก:</strong> <span id="prodPlantingMethod"></span></p>
+                                            <p><strong>การใช้ปุ๋ย:</strong> <span id="prodFertilizer"></span></p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <div class="info-card">
+                                            <p><strong>การใช้ยาฆ่าแมลง:</strong> <span id="prodPesticide"></span></p>
+                                            <p><strong>วันที่เริ่มเพาะปลูก:</strong> <span id="prodPlantDate"></span></p>
+                                            <p><strong>วันที่เก็บเกี่ยว:</strong> <span id="prodHarvestDate"></span></p>
+                                            <p><strong>การใช้สารป้องกัน/กำจัดศัตรูพืช:</strong> <span id="prodPestControl"></span></p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <strong>การบันทึกวิธีการปลูก:</strong> <span id="prodRecordMethod"></span>
+                                    <div id="prodImages" class="mt-2">
+                                        <!-- Production method images -->
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Harvest Details -->
+                            <div id="harvestDetails" class="mb-4">
+                                <h6 class="text-warning mb-3"><i class="fas fa-boxes me-2"></i>ข้อมูลการเก็บเกี่ยวและการบรรจุ</h6>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <div class="info-card">
+                                            <p><strong>วันที่จัดส่ง:</strong> <span id="harvestShipDate"></span></p>
+                                            <p><strong>วิธีการเก็บเกี่ยว:</strong> <span id="harvestMethod"></span></p>
+                                            <p><strong>ปริมาณที่เก็บได้:</strong> <span id="harvestQuantity"></span> <span id="harvestUnit"></span></p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <div class="info-card">
+                                            <p><strong>การรับคัดแยกและบรรจุ:</strong> <span id="harvestPackagingCompany"></span></p>
+                                            <p><strong>สถานที่บรรจุ:</strong> <span id="harvestPackagingLocation"></span></p>
+                                            <p><strong>ชื่อผู้รับผิดชอบการเก็บเกี่ยว:</strong> <span id="harvestResponsiblePerson"></span></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Transport Details -->
+                            <div id="transportDetails" class="mb-4">
+                                <h6 class="text-info mb-3"><i class="fas fa-truck me-2"></i>ข้อมูลการขนส่ง</h6>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <div class="info-card">
+                                            <p><strong>วันที่ส่งออกจากฟาร์ม:</strong> <span id="transportShipDate"></span></p>
+                                            <p><strong>ช่องทางการขนส่ง:</strong> <span id="transportChannel"></span></p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <div class="info-card">
+                                            <p><strong>วิธีการขนส่ง:</strong> <span id="transportMethod"></span></p>
+                                            <p><strong>ชื่อผู้ขนส่ง/บริษัทขนส่ง:</strong> <span id="transportCompany"></span></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Documents -->
+                            <div id="documentsDetails" class="mb-4">
+                                <h6 class="text-secondary mb-3"><i class="fas fa-images me-2"></i>ข้อมูลเอกสารและการรับรอง</h6>
+                                <div class="row">
+                                    <div class="col-md-4 mb-3">
+                                        <div class="info-card">
+                                            <strong>รูปถ่ายแปลงปลูก</strong>
+                                            <div id="plotImages" class="mt-2">
+                                                <!-- Plot images -->
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <div class="info-card">
+                                            <strong>รูปถ่ายสินค้า</strong>
+                                            <div id="productImages" class="mt-2">
+                                                <!-- Product images -->
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <div class="info-card">
+                                            <strong>รูปถ่ายกิจกรรมการปลูก</strong>
+                                            <div id="activityImages" class="mt-2">
+                                                <!-- Activity images -->
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <div class="info-card">
+                                        <strong>เอกสารการรับรองอื่น ๆ</strong>
+                                        <div id="certificationDocs" class="mt-2">
+                                            <!-- Certification documents -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Additional Info -->
+                            <div id="additionalDetails" class="mb-4">
+                                <h6 class="text-dark mb-3"><i class="fas fa-comment-dots me-2"></i>ความคิดเห็น/ข้อมูลเพิ่มเติม</h6>
+                                <div class="row">
+                                    <div class="col-md-12 mb-3">
+                                        <div class="info-card">
+                                            <strong>ความคิดเห็น/ข้อมูลเพิ่มเติม</strong>
+                                            <div id="storyContent" class="mt-2">
+                                                <!-- Story content -->
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- No Results -->
+            <div id="noResults" class="row" style="display: none;">
+                <div class="col-12 text-center">
+                    <div class="card bg-light">
+                        <div class="card-body py-5">
+                            <i class="fas fa-search-minus fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">ไม่พบข้อมูล</h5>
+                            <p class="text-muted">โปรดตรวจสอบและลองอีกครั้ง</p>
+                            <div class="mt-4">
+                                <button class="btn btn-success me-2" onclick="goBackToSearch()" style="background: linear-gradient(180deg, var(--brand), var(--brand-2)); border: none; border-radius: 12px; padding: .75rem 1.5rem; font-weight: 700; box-shadow: 0 8px 20px rgba(25,135,84,.25); margin-right: 0.5rem;">
+                                    <i class="fas fa-arrow-left me-2"></i>กลับไปค้นหา
+                                </button>
+                                <button class="btn btn-outline-secondary" onclick="location.reload()" style="border: 2px solid var(--muted); color: var(--muted); background: transparent; border-radius: 12px; font-weight: 700; padding: .75rem 1.5rem;">
+                                    <i class="fas fa-refresh me-2"></i>เริ่มใหม่
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Loading Modal -->
+    <div class="modal fade" id="loadingModal" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-body text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">กำลังค้นหา...</span>
+                    </div>
+                    <p class="mt-2 mb-0">กำลังค้นหาข้อมูล...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    
+    <!-- Custom JS -->
+    <script src="assets/js/utils.js"></script>
+    <script src="assets/js/api.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeSearch();
+            enhanceUserInterface();
+        });
+
+        function initializeSearch() {
+            // Handle QR Code search form
+            const qrCodeSearchForm = document.getElementById('qrCodeSearchForm');
+            if (qrCodeSearchForm) {
+                qrCodeSearchForm.addEventListener('submit', handleQRCodeSearchSubmit);
+            }
+
+            // Check URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get('code');
+            const qr = urlParams.get('qr');
+
+            if (code || qr) {
+                const qrCode = code || qr;
+                // Hide search section and perform QR search
+                hideQRSearchSection();
+                performQRCodeSearch(qrCode);
+            }
+        }
+
+        function handleQRCodeSearchSubmit(e) {
+            e.preventDefault();
+            
+            const qrCode = document.getElementById('qrCodeInput').value.trim();
+            if (!qrCode) {
+                showAlert('warning', 'กรุณาใส่รหัส QR Code');
+                return;
+            }
+
+            // Validate QR code format
+            const qrPattern = /^\d{2}-\d{17}$/;
+            if (!qrPattern.test(qrCode)) {
+                showAlert('warning', 'รูปแบบรหัส QR Code ไม่ถูกต้อง ต้องเป็น XX-XXXXXXXXXXXXXXXXX');
+                return;
+            }
+
+            // Hide search section and perform search
+            hideQRSearchSection();
+            performQRCodeSearch(qrCode);
+        }
+
+        function hideQRSearchSection() {
+            const searchSection = document.getElementById('qrSearchSection');
+            if (searchSection) {
+                searchSection.style.display = 'none';
+            }
+        }
+
+        function showQRSearchSection() {
+            const searchSection = document.getElementById('qrSearchSection');
+            if (searchSection) {
+                searchSection.style.display = 'block';
+            }
+        }
+
+        async function handleSearchCodeSubmit(e) {
+            e.preventDefault();
+            
+            const searchCode = document.getElementById('searchCodeInput').value.trim();
+            if (!searchCode) {
+                showAlert('warning', 'กรุณาใส่รหัสค้นหา');
+                return;
+            }
+
+            // Validate search code format
+            const searchPattern = /^\d{8}-\d{3}$/;
+            if (!searchPattern.test(searchCode)) {
+                showAlert('warning', 'รูปแบบรหัสค้นหาไม่ถูกต้อง ต้องเป็น YYYYMMDD-XXX');
+                return;
+            }
+
+            await performSearchCodeSearch(searchCode);
+        }
+
+        async function handleDateDistributorSubmit(e) {
+            e.preventDefault();
+            
+            const shipDate = document.getElementById('shipDateSearch').value;
+            const distributorCode = document.getElementById('distributorSelect').value;
+
+            if (!shipDate || !distributorCode) {
+                showAlert('warning', 'กรุณากรอกข้อมูลให้ครบถ้วน');
+                return;
+            }
+
+            // Generate search code
+            const searchCode = toBuddhistYMD(shipDate) + '-' + distributorCode;
+            document.getElementById('searchCodeInput').value = searchCode;
+            
+            await performSearchCodeSearch(searchCode);
+        }
+
+        async function performQRCodeSearch(qrCode) {
+            try {
+                console.log('🔍 Starting QR Code search for:', qrCode);
+                showLoading(true);
+                hideAllResults();
+
+                // Use regular API method (JSONP has issues with deployment)
+                const response = await API.call('searchQRCode', { qrCode: qrCode }, 30000);
+                console.log('📥 QR API Response:', response);
+
+                if (response.success && response.data) {
+                    console.log('✅ QR Code found - displaying farmer info');
+                    
+                    // Store QR Code for validation
+                    currentQRData = {
+                        ...response.data,
+                        qrCode: qrCode // Store the searched QR Code
+                    };
+                    console.log('💾 Stored currentQRData with QR Code:', currentQRData.qrCode);
+                    
+                    displayQRResults(response.data);
+                    setupProductionFormBasedOnData(response.data);
+                } else {
+                    console.log('❌ QR Code not found');
+                    showNoResults();
+                    showAlert('info', response.message || 'ไม่พบข้อมูลสำหรับ QR Code นี้');
+                }
+
+            } catch (error) {
+                console.error('❌ QR search error:', error);
+                showAlert('error', 'เกิดข้อผิดพลาดในการค้นหา QR Code');
+                showNoResults();
+                return; // Exit early to prevent further processing
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // GET method for QR Code search to avoid CORS
+        async function performQRCodeSearchGET(qrCode) {
+            return new Promise((resolve, reject) => {
+                const callbackName = 'qrCallback_' + Date.now();
+                const timeoutDuration = 30000; // 30 seconds
+                
+                // Create JSONP callback
+                window[callbackName] = function(response) {
+                    clearTimeout(timeoutId);
+                    delete window[callbackName];
+                    document.head.removeChild(script);
+                    resolve(response);
+                };
+                
+                // Create script element for JSONP
+                const script = document.createElement('script');
+                const baseUrl = CONFIG.API_BASE_URL || 'https://script.google.com/macros/s/AKfycbxYCJQvzILZM3_GRUaC_1jy8-qj1n9OTisTatRUAZlGBCmfOEBakAhk3hatHqPmm12Z/exec';
+                const url = `${baseUrl}?action=searchQRCode&qrCode=${encodeURIComponent(qrCode)}&callback=${callbackName}`;
+                
+                script.src = url;
+                script.onerror = function() {
+                    clearTimeout(timeoutId);
+                    delete window[callbackName];
+                    document.head.removeChild(script);
+                    reject(new Error('Failed to load search script'));
+                };
+                
+                // Set timeout
+                const timeoutId = setTimeout(() => {
+                    delete window[callbackName];
+                    document.head.removeChild(script);
+                    reject(new Error('Search request timeout'));
+                }, timeoutDuration);
+                
+                // Add script to head to execute
+                document.head.appendChild(script);
+            });
+        }
+
+        // Store current QR data for validation
+        let currentQRData = null;
+
+        async function performSearchCodeSearch(searchCode) {
+            try {
+                console.log('🔍 Starting SearchCode search for:', searchCode);
+                showLoading(true);
+                
+                // Hide only production results, keep QR results visible
+                hideElement('productionResults');
+                hideElement('noResults');
+
+                const response = await API.call('handleDeepSearch', { searchCode: searchCode }, 30000); // 30 second timeout
+                console.log('📥 SearchCode API Response:', response);
+
+                if (response.success && response.data) {
+                    // Enhanced validation: SearchCode must belong to current QR Code
+                    if (currentQRData) {
+                        const currentQRCode = currentQRData.qrCode;
+                        const searchResultQRCode = response.data.qrCode;
+                        
+                        console.log('🔍 Validating QR Code match:');
+                        console.log('  Current QR Code:', currentQRCode);
+                        console.log('  SearchCode QR Code:', searchResultQRCode);
+                        
+                        if (!currentQRCode) {
+                            console.log('⚠️ No current QR Code - QR scan required first');
+                            showAlert('warning', 'กรุณาสแกน QR Code ก่อนค้นหารหัสรอบการผลิต');
+                            clearSearchCodeInput();
+                            return;
+                        }
+                        
+                        if (currentQRCode !== searchResultQRCode) {
+                            console.log('❌ SearchCode does not belong to current QR Code');
+                            console.log(`❌ Expected QR: "${currentQRCode}", Got QR: "${searchResultQRCode}"`);
+                            showValidationError('รหัสค้นหานี้ไม่ใช่ของ QR Code ที่สแกนไว้ กรุณาตรวจสอบและลองอีกครั้ง');
+                            return;
+                        }
+                        
+                        console.log('✅ QR Code validation passed');
+                    }
+                    
+                    console.log('✅ SearchCode found and validated - displaying production results');
+                    displayProductionResults(response.data);
+                } else {
+                    console.log('❌ SearchCode not found - showing validation error');
+                    showValidationError(response.message || 'ไม่พบข้อมูล โปรดตรวจสอบและลองอีกครั้ง');
+                }
+
+            } catch (error) {
+                console.error('❌ SearchCode search error:', error);
+                showValidationError('ไม่พบข้อมูล โปรดตรวจสอบและลองอีกครั้ง');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Legacy function for backward compatibility
+        async function performSearch(searchCode) {
+            return await performSearchCodeSearch(searchCode);
+        }
+
+        function displayResults(data) {
+            // Display basic info - Handle both PascalCase and camelCase
+            document.getElementById('resultSearchCode').textContent = data.searchCode || '-';
+            document.getElementById('resultFarmerName').textContent = data.farmer?.FullName || data.farmer?.fullName || '-';
+            document.getElementById('resultGroupName').textContent = data.farmer?.GroupName || data.farmer?.groupName || '-';
+            document.getElementById('resultPlotNumber').textContent = data.farmer?.PlotNumber || data.farmer?.plotNumber || '-';
+            document.getElementById('resultArea').textContent = data.farmer?.Area || data.farmer?.area || '-';
+            document.getElementById('resultPhone').textContent = data.farmer?.Phone || data.farmer?.phone || '-';
+
+            // Display production data
+            if (data.productions && data.productions.length > 0) {
+                const prod = data.productions[0]; // Take first production record
+                document.getElementById('prodCropType').textContent = prod.CropType || '-';
+                document.getElementById('prodCropVariety').textContent = prod.CropVariety || '-';
+                
+                // Handle "อื่นๆ" fields - show the specific value if available
+                let plantingMethod = prod.PlantingMethod || prod.plantingMethod || '-';
+                if (plantingMethod === 'อื่น ๆ ระบุ' && (prod.PlantingMethodOther || prod.plantingMethodOther)) {
+                    plantingMethod = prod.PlantingMethodOther || prod.plantingMethodOther;
+                }
+                document.getElementById('prodPlantingMethod').textContent = plantingMethod;
+                
+                document.getElementById('prodFertilizer').textContent = prod.Fertilizer || '-';
+                document.getElementById('prodPesticide').textContent = prod.Pesticide || '-';
+                document.getElementById('prodPlantDate').textContent = Utils.formatDateThai(prod.PlantDate) || '-';
+                document.getElementById('prodHarvestDate').textContent = Utils.formatDateThai(prod.HarvestDate) || '-';
+                document.getElementById('prodPestControl').textContent = prod.PestControl || '-';
+                // Set record method from database first
+                const recordMethod = prod.RecordMethod || prod.recordMethod || '-';
+                document.getElementById('prodRecordMethod').textContent = recordMethod;
+            }
+
+            // Display harvest data
+            if (data.harvests && data.harvests.length > 0) {
+                const harvest = data.harvests[0]; // Take first harvest record
+                document.getElementById('harvestShipDate').textContent = Utils.formatDateThai(harvest.ShipDate) || '-';
+                document.getElementById('harvestMethod').textContent = harvest.HarvestMethod || '-';
+                document.getElementById('harvestQuantity').textContent = harvest.Quantity || '-';
+                
+                // Handle unit "อื่นๆ"
+                let unit = harvest.Unit || harvest.unit || '-';
+                if (unit === 'อื่น ๆ ระบุ' && (harvest.UnitOther || harvest.unitOther)) {
+                    unit = harvest.UnitOther || harvest.unitOther;
+                }
+                document.getElementById('harvestUnit').textContent = unit;
+                
+                document.getElementById('harvestPackagingCompany').textContent = harvest.PackagingCompany || '-';
+                document.getElementById('harvestPackagingLocation').textContent = harvest.PackagingLocation || '-';
+                document.getElementById('harvestResponsiblePerson').textContent = harvest.ResponsiblePerson || '-';
+            }
+
+            // Display transport data
+            if (data.transports && data.transports.length > 0) {
+                const transport = data.transports[0]; // Take first transport record
+                // Handle different field names for ship date (farmShipDate vs ShipDate)
+                const shipDate = transport.farmShipDate || transport.ShipDate || transport.shipDate;
+                document.getElementById('transportShipDate').textContent = Utils.formatDateThai(shipDate) || '-';
+                document.getElementById('transportChannel').textContent = transport.TransportChannel || transport.transportChannel || '-';
+                
+                // Handle transport method "อื่นๆ"
+                let transportMethod = transport.TransportMethod || transport.transportMethod || '-';
+                if (transportMethod === 'อื่น ๆ ระบุ' && (transport.TransportMethodOther || transport.transportMethodOther)) {
+                    transportMethod = transport.TransportMethodOther || transport.transportMethodOther;
+                }
+                document.getElementById('transportMethod').textContent = transportMethod;
+                
+                document.getElementById('transportCompany').textContent = transport.TransportCompany || transport.transportCompany || '-';
+            }
+
+            // Display images from file records
+            displayProductionImages(data.fileRecords);
+            
+            // Display production method images
+            displayProductionMethodImages(data.fileRecords);
+            
+            // Display additional info - show only story content
+            if (data.additionalInfo && data.additionalInfo.length > 0) {
+                const info = data.additionalInfo[0];
+                const storyContent = info.Story || info.Comments || 'ไม่มีข้อมูล';
+                document.getElementById('storyContent').textContent = storyContent;
+            } else {
+                document.getElementById('storyContent').textContent = 'ไม่มีข้อมูล';
+            }
+        }
+
+        function displayProductionImages(fileRecords) {
+            console.log('📸 displayProductionImages called with:', fileRecords);
+            
+            // Initialize all sections first
+            const sections = ['plotImages', 'productImages', 'activityImages', 'certificationDocs'];
+            sections.forEach(sectionId => {
+                const element = document.getElementById(sectionId);
+                if (element) {
+                    element.innerHTML = '<small class="text-muted">ไม่มีข้อมูล</small>';
+                }
+            });
+            
+            if (!fileRecords || fileRecords.length === 0) {
+                console.log('❌ No file records found');
+                return;
+            }
+            
+            // Group files by EXACT FileType match to prevent overlap
+            const plotImages = fileRecords.filter(file => {
+                const fileType = file.FileType || file.fileType || '';
+                return fileType === 'รูปแปลงปลูก';
+            });
+            
+            const productImages = fileRecords.filter(file => {
+                const fileType = file.FileType || file.fileType || '';
+                return fileType === 'รูปสินค้า';
+            });
+            
+            const activityImages = fileRecords.filter(file => {
+                const fileType = file.FileType || file.fileType || '';
+                return fileType === 'รูปกิจกรรมการปลูก';
+            });
+            
+            const certificationDocs = fileRecords.filter(file => {
+                const fileType = file.FileType || file.fileType || '';
+                return fileType === 'เอกสารการรับรอง';
+            });
+            
+            console.log('📁 Image groups (EXACT match):', { 
+                plotImages: plotImages.length, 
+                productImages: productImages.length, 
+                activityImages: activityImages.length, 
+                certificationDocs: certificationDocs.length 
+            });
+            
+            console.log('🔍 FileTypes found:', fileRecords.map(f => f.FileType || f.fileType));
+            
+            // Display each group
+            const plotElement = document.getElementById('plotImages');
+            if (plotElement) plotElement.innerHTML = displayFileList(plotImages);
+            
+            const productElement = document.getElementById('productImages');
+            if (productElement) productElement.innerHTML = displayFileList(productImages);
+            
+            const activityElement = document.getElementById('activityImages');
+            if (activityElement) activityElement.innerHTML = displayFileList(activityImages);
+            
+            const certElement = document.getElementById('certificationDocs');
+            if (certElement) certElement.innerHTML = displayFileList(certificationDocs);
+        }
+
+        function displayProductionMethodImages(fileRecords) {
+            const prodImagesElement = document.getElementById('prodImages');
+            const prodRecordMethodElement = document.getElementById('prodRecordMethod');
+            
+            if (!prodImagesElement) {
+                console.warn('⚠️ prodImages element not found');
+                return;
+            }
+            
+            if (!fileRecords || fileRecords.length === 0) {
+                prodImagesElement.innerHTML = '<small class="text-muted">ไม่มีข้อมูล</small>';
+                return;
+            }
+            
+            // Filter files with EXACT FileType = "วิธีการปลูก"
+            const methodImages = fileRecords.filter(file => {
+                const fileType = file.FileType || file.fileType || '';
+                return fileType === 'วิธีการปลูก';
+            });
+            
+            console.log('🌱 Production method images (EXACT match):', methodImages.length);
+            console.log('🌱 Method images data:', methodImages);
+            
+            // Update record method text based on files
+            if (methodImages.length > 0) {
+                // If there are method images, show "manual" regardless of database value
+                if (prodRecordMethodElement) {
+                    prodRecordMethodElement.textContent = 'manual';
+                }
+                // Display the images
+                prodImagesElement.innerHTML = displayFileList(methodImages);
+            } else {
+                // No method images - keep the database value and show "no files"
+                prodImagesElement.innerHTML = '<small class="text-muted">ไม่มีข้อมูล</small>';
+            }
+        }
+        
+        function displayFileList(files) {
+            if (!files || files.length === 0) {
+                return '<small class="text-muted">ไม่มีข้อมูล</small>';
+            }
+            
+            return files.map(file => {
+                try {
+                    // Handle both property names (FileUrl/fileUrl, FileName/fileName, etc.)
+                    const fileUrl = file.FileUrl || file.fileUrl || file.DownloadUrl || file.downloadUrl || '';
+                    let fileName = file.FileName || file.fileName || 'ไม่ทราบชื่อไฟล์';
+                    
+                    // Clean filename - remove prefix patterns
+                    fileName = fileName.replace(/^[^_]*_/, ''); // Remove "productionId_" prefix
+                    fileName = fileName.replace(/^'/, ''); // Remove leading quote
+                    
+                    console.log('🔗 Processing file:', { fileName, fileUrl, fileType: file.FileType || file.fileType });
+                    
+                    if (fileUrl) {
+                        return `<div class="mb-1">
+                            <a href="${fileUrl}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-eye me-1"></i>${fileName}
+                            </a>
+                        </div>`;
+                    } else {
+                        return `<div class="mb-1">
+                            <span class="text-muted">${fileName} (ไม่มี URL)</span>
+                        </div>`;
+                    }
+                } catch (error) {
+                    console.error('❌ Error processing file:', file, error);
+                    return `<div class="mb-1">
+                        <span class="text-muted">ไฟล์ผิดพลาด</span>
+                    </div>`;
+                }
+            }).join('');
+        }
+
+        function displayFarmerImages(farmerData) {
+            // Legacy function - kept for backward compatibility
+            const plotImagesContainer = document.getElementById('plotImages');
+            plotImagesContainer.innerHTML = displayImageList(farmerData?.PlotImages || '');
+            
+            const productImagesContainer = document.getElementById('productImages');
+            productImagesContainer.innerHTML = displayImageList(farmerData?.ProductImages || '');
+            
+            const activityImagesContainer = document.getElementById('activityImages');
+            activityImagesContainer.innerHTML = displayImageList(farmerData?.ActivityImages || '');
+            
+            const certificationDocsContainer = document.getElementById('certificationDocs');
+            certificationDocsContainer.innerHTML = displayImageList(farmerData?.CertificationDocs || '');
+        }
+
+        function displayImageList(imageData) {
+            if (!imageData) return '<small class="text-muted">ไม่มีข้อมูล</small>';
+            
+            // Split by comma if multiple URLs
+            const images = imageData.split(',').filter(url => url.trim());
+            if (images.length === 0) return '<small class="text-muted">ไม่มีข้อมูล</small>';
+            
+            return images.map(imageUrl => {
+                const cleanUrl = imageUrl.trim();
+                return `<img src="${cleanUrl}" class="img-thumbnail me-2 mb-2" style="width: 60px; height: 60px; cursor: pointer;" onclick="window.open('${cleanUrl}', '_blank')">`;
+            }).join('');
+        }
+
+        function getDistributorName(code) {
+            const distributors = {
+                '001': '001 บริษัท คิงส์ วิช จำกัด สาขาขอนแก่น',
+                '002': '002 หจก. ธาวินเฟรช',
+                '003': '003 บริษัท ฟาร์ม สเตชั่น จำกัด'
+            };
+            return distributors[code] || code;
+        }
+
+        function displayQRResults(data) {
+            console.log('📋 Displaying QR results:', data);
+            
+            // Store current QR data for validation - ensure farmerName is available
+            currentQRData = {
+                ...data,
+                farmerName: data.farmerName || data.farmer?.FullName || data.farmer?.fullName || ''
+            };
+            
+            console.log('💾 Stored currentQRData for validation:', currentQRData);
+            
+            // Show QR results section
+            showElement('qrResults');
+            hideElement('productionResults');
+            hideElement('noResults');
+
+            // Display farmer info with enhanced formatting
+            setElementText('qrPlotNumber', data.plotNumber);
+            setElementText('qrFarmerName', data.farmerName);
+            setElementText('qrFarmerPhone', data.phone);
+            setElementText('qrFarmerAddress', data.address);
+            setElementText('qrFarmerArea', data.area + ' ไร่');
+            
+            console.log(`📊 Farmer has ${data.searchCodesCount || 0} search codes available`);
+            
+            // Show success message for QR scan
+            showAlert('info', `พบข้อมูลเกษตรกร: ${data.farmerName} เรียบร้อยแล้ว`);
+        }
+
+        function displayProductionResults(data) {
+            // Show production results section  
+            document.getElementById('productionResults').style.display = 'block';
+            document.getElementById('qrResults').style.display = 'none';
+            document.getElementById('noResults').style.display = 'none';
+
+            // Use existing displayResults function for production data
+            displayResults(data);
+        }
+
+        // Simplified helper functions
+        function hideElement(elementId) {
+            const element = document.getElementById(elementId);
+            if (element) element.style.display = 'none';
+        }
+        
+        function showElement(elementId) {
+            const element = document.getElementById(elementId);
+            if (element) element.style.display = 'block';
+        }
+        
+        function setElementText(elementId, value) {
+            const element = document.getElementById(elementId);
+            if (element) element.textContent = value || '-';
+        }
+
+        // New streamlined setup function
+        function setupProductionFormBasedOnData(data) {
+            console.log('🔧 Setting up production form based on data:', data);
+            console.log('🔍 Checking if hasSearchCodes exists:', 'hasSearchCodes' in data);
+            
+            // Check if new API format (with hasSearchCodes)
+            if ('hasSearchCodes' in data) {
+                console.log('📡 Using new API format');
+                if (data.hasSearchCodes) {
+                    console.log(`✅ Found ${data.searchCodesCount} search codes - showing form`);
+                    showProductionSearchForm();
+                    setupProductionSearchForm();
+                    
+                    if (data.availableSearchCodes && data.availableSearchCodes.length > 0) {
+                        populateSearchCodeDropdown(data.availableSearchCodes);
+                    }
+                } else {
+                    console.log('❌ No search codes found - showing warning');
+                    showProductionMessage('ไม่มีข้อมูลรอบการผลิตสำหรับเกษตรกรนี้');
+                }
+            } else {
+                console.log('📡 Using old API format - checking manually');
+                // Fallback: Check manually with separate API call
+                checkSearchCodesManually(data.qrCode || `${data.groupCode}-${data.plotNumber}`);
+            }
+        }
+        
+        async function checkSearchCodesManually(qrCode) {
+            try {
+                console.log('🔍 Manual check for search codes:', qrCode);
+                const response = await API.call('checkSearchCodes', { qrCode: qrCode });
+                console.log('📊 Manual check response:', response);
+                
+                if (response.success && response.hasSearchCodes) {
+                    console.log(`✅ Manual check: Found ${response.count} search codes`);
+                    showProductionSearchForm();
+                    setupProductionSearchForm();
+                } else {
+                    console.log('❌ Manual check: No search codes found');
+                    showProductionMessage('ไม่มีข้อมูลรอบการผลิตสำหรับเกษตรกรนี้');
+                }
+            } catch (error) {
+                console.error('❌ Manual check failed:', error);
+                console.log('📝 Fallback: Showing form due to error');
+                showProductionSearchForm();
+                setupProductionSearchForm();
+            }
+        }
+        
+        function populateSearchCodeDropdown(searchCodes) {
+            // Optional: Add dropdown for available search codes
+            const input = document.getElementById('productionSearchInput');
+            if (input && searchCodes.length === 1) {
+                // If only one search code, auto-populate
+                input.placeholder = `ตัวอย่าง: ${searchCodes[0].searchCode}`;
+            }
+        }
+        
+        function showProductionSearchForm() {
+            const formContainer = document.querySelector('#qrResults .card.bg-light');
+            if (formContainer) {
+                formContainer.style.display = 'block';
+            }
+        }
+        
+        function hideProductionSearchForm() {
+            const formContainer = document.querySelector('#qrResults .card.bg-light');
+            if (formContainer) {
+                formContainer.style.display = 'none';
+            }
+        }
+        
+        function showProductionMessage(message) {
+            const formContainer = document.querySelector('#qrResults .card.bg-light');
+            if (formContainer) {
+                formContainer.innerHTML = `
+                    <div class="card-body">
+                        <div class="alert alert-warning mb-0">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            ${message}
+                        </div>
+                        <div class="mt-3 text-center">
+                            <button class="btn btn-outline-success" onclick="location.reload()" style="border: 2px solid var(--brand); color: var(--brand); background: transparent; border-radius: 12px; font-weight: 700; padding: .75rem 1.5rem;">
+                                <i class="fas fa-refresh me-2"></i>ค้นหาเกษตรกรใหม่
+                            </button>
+                        </div>
+                    </div>
+                `;
+                formContainer.style.display = 'block';
+            }
+        }
+
+        function setupProductionSearchForm() {
+            const form = document.getElementById('productionSearchForm');
+            if (form) {
+                form.removeEventListener('submit', handleProductionSearchSubmit);
+                form.addEventListener('submit', handleProductionSearchSubmit);
+            }
+        }
+
+        async function handleProductionSearchSubmit(e) {
+            e.preventDefault();
+            
+            const searchCode = document.getElementById('productionSearchInput').value.trim();
+            if (!searchCode) {
+                showValidationError('กรุณาใส่รหัสรอบการผลิต');
+                return;
+            }
+
+            // Enhanced search code format validation
+            const searchPattern = /^\d{8}-\d{3}$/;
+            if (!searchPattern.test(searchCode)) {
+                showValidationError('รูปแบบรหัสค้นหาไม่ถูกต้อง ต้องเป็น YYYYMMDD-XXX');
+                return;
+            }
+
+            await performSearchCodeSearch(searchCode);
+        }
+
+        function hideAllResults() {
+            const elements = ['qrResults', 'productionResults', 'searchResults', 'noResults'];
+            elements.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.style.display = 'none';
+                }
+            });
+        }
+
+        function hideResults() {
+            hideAllResults();
+        }
+
+        function showNoResults() {
+            hideAllResults();
+            const noResults = document.getElementById('noResults');
+            if (noResults) {
+                noResults.style.display = 'block';
+            }
+        }
+
+        function fillSearchCode(code) {
+            document.getElementById('searchCodeInput').value = code;
+        }
+
+        function showLoading(show) {
+            const modal = document.getElementById('loadingModal');
+            if (!modal) {
+                console.warn('Loading modal element not found');
+                return;
+            }
+            
+            if (show) {
+                try {
+                    // Check if Bootstrap is loaded
+                    if (typeof bootstrap !== 'undefined') {
+                        new bootstrap.Modal(modal).show();
+                    } else {
+                        // Fallback: show modal manually
+                        modal.style.display = 'block';
+                        modal.classList.add('show');
+                        document.body.style.overflow = 'hidden';
+                    }
+                } catch (error) {
+                    console.error('Error showing loading modal:', error);
+                    // Fallback
+                    modal.style.display = 'block';
+                    modal.classList.add('show');
+                }
+            } else {
+                try {
+                    if (typeof bootstrap !== 'undefined') {
+                        const instance = bootstrap.Modal.getInstance(modal);
+                        if (instance) instance.hide();
+                    } else {
+                        // Fallback: hide modal manually
+                        modal.style.display = 'none';
+                        modal.classList.remove('show');
+                        document.body.style.overflow = '';
+                    }
+                } catch (error) {
+                    console.error('Error hiding loading modal:', error);
+                    // Fallback
+                    modal.style.display = 'none';
+                    modal.classList.remove('show');
+                    document.body.style.overflow = '';
+                }
+            }
+        }
+
+        function showAlert(type, message) {
+            // Enhanced alert system with better UX
+            console.log(`Alert [${type}]:`, message);
+            
+            // Create or update alert element
+            let alertContainer = document.getElementById('alertContainer');
+            if (!alertContainer) {
+                alertContainer = document.createElement('div');
+                alertContainer.id = 'alertContainer';
+                alertContainer.style.cssText = 'position: fixed; top: 80px; right: 20px; z-index: 9999; max-width: 400px;';
+                document.body.appendChild(alertContainer);
+            }
+            
+            const alertClass = type === 'error' ? 'alert-danger' : type === 'warning' ? 'alert-warning' : 'alert-info';
+            const iconClass = type === 'error' ? 'fas fa-exclamation-circle' : type === 'warning' ? 'fas fa-exclamation-triangle' : 'fas fa-info-circle';
+            const alertHtml = `
+                <div class="alert ${alertClass} alert-dismissible fade show shadow" role="alert">
+                    <i class="${iconClass} me-2"></i>
+                    <strong>${type === 'error' ? 'ข้อผิดพลาด!' : type === 'warning' ? 'คำเตือน!' : 'สำเร็จ!'}</strong> ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            
+            alertContainer.innerHTML = alertHtml;
+            
+            // Auto dismiss based on type
+            const dismissTime = type === 'error' ? 8000 : type === 'warning' ? 6000 : 4000;
+            setTimeout(() => {
+                const alert = alertContainer.querySelector('.alert');
+                if (alert) {
+                    alert.classList.remove('show');
+                    setTimeout(() => alert.remove(), 150);
+                }
+            }, dismissTime);
+        }
+        
+        function showValidationError(message) {
+            // Specialized function for validation errors that keeps user in QR search section
+            console.log('🚫 Validation Error:', message);
+            showAlert('warning', message);
+            
+            // Keep focus on search code input for retry
+            const searchInput = document.getElementById('productionSearchInput');
+            if (searchInput) {
+                searchInput.focus();
+                searchInput.select();
+            }
+        }
+        
+        function clearSearchCodeInput() {
+            const searchInput = document.getElementById('productionSearchInput');
+            if (searchInput) {
+                searchInput.value = '';
+                searchInput.focus();
+            }
+        }
+        
+        function goBackToSearch() {
+            // Clear all results and return to QR search
+            hideAllResults();
+            showQRSearchSection();
+            
+            // Clear inputs
+            const qrInput = document.getElementById('qrCodeInput');
+            const searchInput = document.getElementById('productionSearchInput');
+            
+            if (qrInput) {
+                qrInput.value = '';
+                qrInput.focus();
+            }
+            if (searchInput) {
+                searchInput.value = '';
+            }
+            
+            // Reset current QR data
+            currentQRData = null;
+            
+            console.log('🔄 Reset to initial search state');
+        }
+        
+        function enhanceUserInterface() {
+            // Add keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                // ESC key to go back to search
+                if (e.key === 'Escape') {
+                    goBackToSearch();
+                }
+                
+                // Ctrl+/ to focus on QR input
+                if (e.ctrlKey && e.key === '/') {
+                    e.preventDefault();
+                    const qrInput = document.getElementById('qrCodeInput');
+                    if (qrInput) qrInput.focus();
+                }
+            });
+            
+            // Add input hints
+            const qrInput = document.getElementById('qrCodeInput');
+            if (qrInput) {
+                qrInput.addEventListener('input', function(e) {
+                    const value = e.target.value;
+                    const pattern = /^\d{2}-\d{17}$/;
+                    
+                    if (value && !pattern.test(value)) {
+                        e.target.classList.add('border-warning');
+                    } else {
+                        e.target.classList.remove('border-warning');
+                    }
+                });
+            }
+        }
+    </script>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

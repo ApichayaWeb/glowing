@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>รายละเอียดการผลิต - ระบบสอบย้อนกลับผักอุดร</title>
+    
+    <!-- Noto Sans Thai Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root{
+            /* Brown nature theme colors */
+            --bg:#f9f7f4;            /* page bg - warm cream */
+            --card:#ffffff;          /* card bg */
+            --muted:#8d6e63;         /* muted text - brown */
+            --text:#3e2723;          /* main text - dark brown */
+            --brand:#8d6e63;         /* primary - brown */
+            --brand-2:#6d4c41;       /* primary darker - darker brown */
+            --accent:#d4a574;        /* accent - warm brown */
+            --ring: rgba(141,110,99,.35);
+            --shadow: 0 10px 30px rgba(109, 76, 65, .12);
+            --radius:18px;
+        }
+        *{box-sizing:border-box}
+        html,body{height:100%}
+        html{scroll-behavior:smooth}
+        body{
+            margin:0;
+            font-family:"Noto Sans Thai", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+            background:
+                radial-gradient(900px 500px at 85% -10%, rgba(212,165,116,.22), transparent),
+                radial-gradient(800px 500px at -10% 10%, rgba(141,110,99,.18), transparent),
+                var(--bg);
+            color:var(--text);
+            line-height:1.6;
+        }
+        a{color:inherit;text-decoration:none}
+        .container{width:min(1120px, 92vw); margin-inline:auto}
+
+        /* NAVBAR */
+        .nav{
+            position:sticky; top:0; z-index:50;
+            backdrop-filter:saturate(160%) blur(8px);
+            background:rgba(255,255,255,.85);
+            border-bottom:1px solid rgba(62,39,35,.08);
+        }
+        .nav-inner{display:flex;align-items:center;gap:16px; padding:14px 0}
+        .brand{display:flex;align-items:center;gap:12px; font-weight:800; letter-spacing:.2px; color:#3e2723}
+        .brand .logo{width:36px;height:36px;display:grid;place-items:center;border-radius:10px;
+            background:conic-gradient(from 210deg at 50% 50%, #8d6e63 0 40%, #6d4c41 40% 70%, #d4a574 70% 100%);
+            box-shadow:inset 0 0 0 4px rgba(0,0,0,.03), 0 6px 18px rgba(141,110,99,.25);
+        }
+        .spacer{flex:1}
+        .nav a.link{opacity:.85; transition:.2s; padding:.5rem .75rem; border-radius:10px}
+        .nav a.link:hover{opacity:1; background:rgba(141,110,99,.08)}
+
+        /* BUTTONS */
+        .btn{display:inline-flex; align-items:center; gap:8px; padding:.65rem 1rem; border-radius:12px;
+            background:linear-gradient(180deg, var(--brand), var(--brand-2)); box-shadow:0 10px 18px rgba(141,110,99,.25);
+            color:#fff; font-weight:800}
+        .btn:hover{filter:brightness(1.03)}
+        .btn-outline{display:inline-flex; align-items:center; gap:8px; padding:.55rem .95rem; border-radius:12px;
+            border:2px solid var(--brand); color:var(--brand); font-weight:800; background:transparent}
+        .btn-outline:hover{background:rgba(141,110,99,.08)}
+        .btn-success{
+            background:linear-gradient(180deg, var(--brand), var(--brand-2));
+            border:none;
+            box-shadow:var(--shadow);
+        }
+        .btn-success:hover{filter:brightness(1.1)}
+        .text-success{color:var(--brand) !important}
+        .bg-success{background:linear-gradient(135deg, var(--brand), var(--brand-2)) !important}
+        
+        .info-card {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 4px solid var(--brand);
+        }
+        
+        .info-card h6 {
+            border-bottom: 1px solid #dee2e6;
+            padding-bottom: 0.5rem;
+        }
+        
+        .thumbnail-container {
+            transition: transform 0.2s;
+        }
+        
+        .thumbnail-container:hover {
+            transform: scale(1.05);
+        }
+        
+        .thumbnail-container img {
+            border: 1px solid #dee2e6;
+        }
+        
+        .thumbnail-container img:hover {
+            border-color: var(--brand);
+        }
+        
+        .card {
+            transition: all 0.3s ease;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(62,39,35,.08);
+        }
+        
+        .card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .main-content {
+            margin-top: 90px;
+            background: var(--bg);
+            min-height: 100vh;
+            padding: 2rem 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="container nav-inner">
+            <a href="../index.html" class="brand" aria-label="กลับไปหน้าแรก">
+                <img src="../assets/images/logo.png" width="32" height="32" alt="โลโก้" style="display:block;" />
+                <span>รายละเอียดการผลิต</span>
+            </a>
+            <a class="link" href="dashboard.html">แผงควบคุม</a>
+            <div class="spacer"></div>
+            <a class="btn-outline" href="dashboard.html" aria-label="กลับ">
+                <i class="fas fa-arrow-left me-1"></i>กลับ
+            </a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content pt-5">
+        <div class="container">
+            <!-- Hero Section -->
+            <div class="row mb-5">
+                <div class="col-12 text-center">
+                    <h1 class="display-4 fw-bold text-success mb-4">
+                        <i class="fas fa-seedling me-3"></i>
+                        รายละเอียดการผลิต
+                    </h1>
+                    <p class="lead text-muted mb-5">
+                        ข้อมูลรายละเอียดการผลิต การเก็บเกี่ยว การขนส่ง และเอกสารการรับรองคุณภาพ
+                    </p>
+                </div>
+            </div>
+
+            <!-- Loading -->
+            <div id="loadingSection" class="row" style="display: none;">
+                <div class="col-12 text-center">
+                    <div class="spinner-border text-success" role="status">
+                        <span class="visually-hidden">กำลังโหลดข้อมูล...</span>
+                    </div>
+                    <p class="mt-2 text-muted">กำลังโหลดข้อมูลรายละเอียดการผลิต...</p>
+                </div>
+            </div>
+
+            <!-- No Data -->
+            <div id="noDataSection" class="row" style="display: none;">
+                <div class="col-12 text-center">
+                    <div class="card bg-light">
+                        <div class="card-body py-5">
+                            <i class="fas fa-search-minus fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">ไม่พบข้อมูลการผลิต</h5>
+                            <p class="text-muted">ไม่พบข้อมูลการผลิตสำหรับ ProductionID นี้</p>
+                            <button class="btn btn-primary" onclick="window.close()">
+                                <i class="fas fa-arrow-left me-2"></i>กลับ
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Production Detail Content -->
+            <div id="productionDetail" class="row" style="display: none;">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-seedling me-2"></i>
+                                รายละเอียดรอบการผลิต
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <!-- Basic Info -->
+                            <div id="basicInfo" class="mb-4">
+                                <h6 class="text-primary mb-3">ข้อมูลเบื้องต้น</h6>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p><strong>รหัสค้นหา:</strong> <span id="resultSearchCode" class="text-primary">-</span></p>
+                                        <p><strong>ชื่อเกษตรกร:</strong> <span id="resultFarmerName">-</span></p>
+                                        <p><strong>กลุ่มเกษตรกร:</strong> <span id="resultGroupName">-</span></p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p><strong>แปลงที่:</strong> <span id="resultPlotNumber">-</span></p>
+                                        <p><strong>พื้นที่:</strong> <span id="resultArea">-</span> ไร่</p>
+                                        <p><strong>เบอร์โทร:</strong> <span id="resultPhone">-</span></p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Production Details -->
+                            <div id="productionDetails" class="mb-4">
+                                <h6 class="text-success mb-3"><i class="fas fa-seedling me-2"></i>ข้อมูลการปลูก</h6>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <div class="info-card">
+                                            <p><strong>ชนิดพืชผัก:</strong> <span id="prodCropType">-</span></p>
+                                            <p><strong>พันธุ์:</strong> <span id="prodCropVariety">-</span></p>
+                                            <p><strong>การปลูก:</strong> <span id="prodPlantingMethod">-</span></p>
+                                            <p><strong>การใช้ปุ๋ย:</strong> <span id="prodFertilizer">-</span></p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <div class="info-card">
+                                            <p><strong>การใช้ยาฆ่าแมลง:</strong> <span id="prodPesticide">-</span></p>
+                                            <p><strong>วันที่เริ่มเพาะปลูก:</strong> <span id="prodPlantDate">-</span></p>
+                                            <p><strong>วันที่เก็บเกี่ยว:</strong> <span id="prodHarvestDate">-</span></p>
+                                            <p><strong>การใช้สารป้องกัน/กำจัดศัตรูพืช:</strong> <span id="prodPestControl">-</span></p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <strong>การบันทึกวิธีการปลูก:</strong> <span id="prodRecordMethod">-</span>
+                                </div>
+                                <div class="mt-3" id="maintenanceRecordSection" style="display: none;">
+                                    <h6><i class="fas fa-clipboard-list me-2"></i>บันทึกการดูแลรักษา</h6>
+                                    <div class="info-card">
+                                        <p id="prodMaintenanceRecord">-</p>
+                                    </div>
+                                    <div id="prodImages" class="mt-2">
+                                        <!-- Production method images -->
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Harvest Details -->
+                            <div id="harvestDetails" class="mb-4">
+                                <h6 class="text-warning mb-3"><i class="fas fa-boxes me-2"></i>ข้อมูลการเก็บเกี่ยวและการบรรจุ</h6>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <div class="info-card">
+                                            <p><strong>วันที่จัดส่ง:</strong> <span id="harvestShipDate">-</span></p>
+                                            <p><strong>วิธีการเก็บเกี่ยว:</strong> <span id="harvestMethod">-</span></p>
+                                            <p><strong>ปริมาณที่เก็บได้:</strong> <span id="harvestQuantity">-</span> <span id="harvestUnit">-</span></p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <div class="info-card">
+                                            <p><strong>การรับคัดแยกและบรรจุ:</strong> <span id="harvestPackagingCompany">-</span></p>
+                                            <p><strong>สถานที่บรรจุ:</strong> <span id="harvestPackagingLocation">-</span></p>
+                                            <p><strong>ชื่อผู้รับผิดชอบการเก็บเกี่ยว:</strong> <span id="harvestResponsiblePerson">-</span></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Transport Details -->
+                            <div id="transportDetails" class="mb-4">
+                                <h6 class="text-info mb-3"><i class="fas fa-truck me-2"></i>ข้อมูลการขนส่ง</h6>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <div class="info-card">
+                                            <p><strong>วันที่ส่งออกจากฟาร์ม:</strong> <span id="transportShipDate">-</span></p>
+                                            <p><strong>ช่องทางการขนส่ง:</strong> <span id="transportChannel">-</span></p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <div class="info-card">
+                                            <p><strong>วิธีการขนส่ง:</strong> <span id="transportMethod">-</span></p>
+                                            <p><strong>ชื่อผู้ขนส่ง/บริษัทขนส่ง:</strong> <span id="transportCompany">-</span></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Documents -->
+                            <div id="documentsDetails" class="mb-4">
+                                <h6 class="text-secondary mb-3"><i class="fas fa-images me-2"></i>ข้อมูลเอกสารและการรับรอง</h6>
+                                <div class="row">
+                                    <div class="col-md-4 mb-3">
+                                        <div class="info-card">
+                                            <strong>รูปถ่ายแปลงปลูก</strong>
+                                            <div id="plotImages" class="mt-2">
+                                                <!-- Plot images -->
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <div class="info-card">
+                                            <strong>รูปถ่ายสินค้า</strong>
+                                            <div id="productImages" class="mt-2">
+                                                <!-- Product images -->
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <div class="info-card">
+                                            <strong>รูปถ่ายกิจกรรมการปลูก</strong>
+                                            <div id="activityImages" class="mt-2">
+                                                <!-- Activity images -->
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <div class="info-card">
+                                        <strong>เอกสารการรับรองอื่น ๆ</strong>
+                                        <div id="certificationDocs" class="mt-2">
+                                            <!-- Certification documents -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Additional Info -->
+                            <div id="additionalDetails" class="mb-4">
+                                <h6 class="text-dark mb-3"><i class="fas fa-comment-dots me-2"></i>ความคิดเห็น/ข้อมูลเพิ่มเติม</h6>
+                                <div class="row">
+                                    <div class="col-md-12 mb-3">
+                                        <div class="info-card">
+                                            <strong>ความคิดเห็น/ข้อมูลเพิ่มเติม</strong>
+                                            <div id="storyContent" class="mt-2">
+                                                <!-- Story content -->
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div class="text-center mt-4">
+                                <button class="btn btn-primary me-2" onclick="editProduction()">
+                                    <i class="fas fa-edit me-2"></i>แก้ไขข้อมูล
+                                </button>
+                                <button class="btn btn-secondary" onclick="window.close()">
+                                    <i class="fas fa-arrow-left me-2"></i>กลับ
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Image Modal -->
+    <div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="imageModalTitle">รูปภาพ</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img id="modalImage" src="" class="img-fluid" alt="Image">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Core Dependencies -->
+    <script src="../assets/js/utils.js"></script>
+    <script src="../assets/js/api.js"></script>
+    <script src="../assets/js/farmer-api.js"></script>
+    <script src="../assets/js/auth.js"></script>
+
+    <script>
+        let currentProductionId = null;
+        
+        // Caching functions (same as edit-production.html)
+        function getCachedData(key) {
+            try {
+                const cached = localStorage.getItem(key);
+                if (!cached) return null;
+                
+                const data = JSON.parse(cached);
+                const now = new Date().getTime();
+                
+                if (data.expiry && now > data.expiry) {
+                    localStorage.removeItem(key);
+                    return null;
+                }
+                
+                return data.value;
+            } catch (error) {
+                console.warn('Error reading cache:', error);
+                localStorage.removeItem(key);
+                return null;
+            }
+        }
+        
+        function setCachedData(key, value, minutesToCache = 10) {
+            try {
+                const expiry = new Date().getTime() + (minutesToCache * 60 * 1000);
+                const data = {
+                    value: value,
+                    expiry: expiry
+                };
+                localStorage.setItem(key, JSON.stringify(data));
+            } catch (error) {
+                console.warn('Error setting cache:', error);
+            }
+        }
+        let productionData = null;
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Production Detail page loaded');
+            
+            // Get ProductionID from URL
+            const urlParams = new URLSearchParams(window.location.search);
+            currentProductionId = urlParams.get('id');
+            
+            if (!currentProductionId) {
+                console.error('No ProductionID provided');
+                showNoData('ไม่พบรหัสการผลิต กรุณาระบุ ProductionID ใน URL');
+                return;
+            }
+            
+            console.log('Loading production detail for ID:', currentProductionId);
+            loadProductionDetail();
+        });
+
+        async function loadProductionDetail() {
+            try {
+                showLoading(true);
+                
+                // Get current user for farmerID
+                const currentUser = Auth.getCurrentUser();
+                if (!currentUser || !currentUser.farmerID) {
+                    throw new Error('ไม่พบข้อมูลผู้ใช้ กรุณาเข้าสู่ระบบใหม่');
+                }
+
+                console.log('Calling getProductionDetail with:', {
+                    productionId: currentProductionId,
+                    farmerID: currentUser.farmerID
+                });
+
+                // ตรวจสอบ cache ก่อน (เหมือน edit-production.html)
+                const cacheKey = `productionDetail_${currentProductionId}_${currentUser.farmerID}`;
+                let response = getCachedData(cacheKey);
+                
+                if (response) {
+                    console.log('✅ Using cached production detail for:', currentProductionId);
+                } else {
+                    console.log('🔄 Fetching fresh production detail data...');
+                    response = await API.call('getProductionDetail', {
+                        productionId: currentProductionId,
+                        farmerID: currentUser.farmerID
+                    });
+                    
+                    // Cache ข้อมูลถ้า API call สำเร็จ
+                    if (response && response.success) {
+                        setCachedData(cacheKey, response, 5); // Cache 5 นาที
+                        console.log('💾 Cached production detail data (detail page)');
+                    }
+                }
+
+                console.log('Production detail response:', response);
+
+                if (response.success && response.data) {
+                    productionData = response.data;
+                    displayProductionDetail(response.data);
+                } else {
+                    throw new Error(response.message || 'ไม่พบข้อมูลการผลิตสำหรับ ProductionID นี้');
+                }
+
+            } catch (error) {
+                console.error('Error loading production detail:', error);
+                showNoData(error.message);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function displayProductionDetail(data) {
+            console.log('Displaying production detail:', data);
+
+            // Show the main content
+            document.getElementById('productionDetail').style.display = 'block';
+
+            // Display basic info - ตรงกับ Database Schema
+            document.getElementById('resultSearchCode').textContent = data.searchCode || data.SearchCode || '-';
+            document.getElementById('resultFarmerName').textContent = data.farmer?.FullName || data.FullName || '-';
+            document.getElementById('resultGroupName').textContent = data.farmer?.GroupName || data.GroupName || '-';
+            document.getElementById('resultPlotNumber').textContent = data.farmer?.PlotNumber || data.PlotNumber || '-';
+            document.getElementById('resultArea').textContent = data.farmer?.Area || data.Area || '-';
+            document.getElementById('resultPhone').textContent = data.farmer?.Phone || data.Phone || '-';
+
+            // Display production data - ตรงกับ Production_Data Schema
+            const prod = data.production || data.productions?.[0] || data;
+            if (prod) {
+                // Production_Data Schema fields
+                document.getElementById('prodCropType').textContent = prod.CropType || '-';
+                document.getElementById('prodCropVariety').textContent = prod.CropVariety || '-';
+                
+                // Handle "อื่นๆ" fields
+                let plantingMethod = prod.PlantingMethod || '-';
+                if (plantingMethod === 'อื่น ๆ ระบุ' && prod.PlantingMethodOther) {
+                    plantingMethod = prod.PlantingMethodOther;
+                }
+                document.getElementById('prodPlantingMethod').textContent = plantingMethod;
+                
+                document.getElementById('prodFertilizer').textContent = prod.Fertilizer || '-';
+                document.getElementById('prodPesticide').textContent = prod.Pesticide || '-';
+                document.getElementById('prodPlantDate').textContent = Utils.formatDateThai(prod.PlantDate) || '-';
+                document.getElementById('prodHarvestDate').textContent = Utils.formatDateThai(prod.HarvestDate) || '-';
+                document.getElementById('prodPestControl').textContent = prod.PestControl || '-';
+                document.getElementById('prodRecordMethod').textContent = prod.RecordMethod || '-';
+                
+                // แสดง MaintenanceRecord ถ้ามี (Production_Data.MaintenanceRecord)
+                const hasMaintenanceText = prod.MaintenanceRecord && prod.MaintenanceRecord.trim();
+                const hasMethodImages = data.fileRecords && data.fileRecords.some(file => 
+                    file.FileType === 'วิธีการปลูก'
+                );
+                
+                if (hasMaintenanceText) {
+                    document.getElementById('prodMaintenanceRecord').textContent = prod.MaintenanceRecord;
+                } else {
+                    document.getElementById('prodMaintenanceRecord').textContent = '-';
+                }
+                
+                // แสดงส่วน MaintenanceRecord ถ้ามีข้อความหรือมีไฟล์วิธีการปลูก
+                if (hasMaintenanceText || hasMethodImages) {
+                    document.getElementById('maintenanceRecordSection').style.display = 'block';
+                } else {
+                    document.getElementById('maintenanceRecordSection').style.display = 'none';
+                }
+            }
+
+            // Display harvest data - ตรงกับ Harvest_Data Schema
+            const harvest = data.harvest || data.harvests?.[0] || {};
+            if (harvest && Object.keys(harvest).length > 0) {
+                // Harvest_Data Schema fields
+                document.getElementById('harvestShipDate').textContent = Utils.formatDateThai(harvest.ShipDate) || '-';
+                document.getElementById('harvestMethod').textContent = harvest.HarvestMethod || '-';
+                document.getElementById('harvestQuantity').textContent = harvest.Quantity || '-';
+                document.getElementById('harvestUnit').textContent = harvest.Unit || '-';
+                
+                document.getElementById('harvestPackagingCompany').textContent = harvest.PackagingCompany || '-';
+                document.getElementById('harvestPackagingLocation').textContent = harvest.PackagingLocation || '-';
+                document.getElementById('harvestResponsiblePerson').textContent = harvest.ResponsiblePerson || '-';
+            }
+
+            // Display transport data - ตรงกับ Transport_Data Schema
+            const transport = data.transport || data.transports?.[0] || {};
+            if (transport && Object.keys(transport).length > 0) {
+                // Transport_Data Schema fields (farmShipDate ไม่ใช่ ShipDate)
+                document.getElementById('transportShipDate').textContent = Utils.formatDateThai(transport.farmShipDate || transport.FarmShipDate) || '-';
+                document.getElementById('transportChannel').textContent = transport.TransportChannel || '-';
+                
+                // Handle transport method "อื่นๆ"
+                let transportMethod = transport.TransportMethod || '-';
+                if (transportMethod === 'อื่น ๆ ระบุ' && transport.TransportMethodOther) {
+                    transportMethod = transport.TransportMethodOther;
+                }
+                document.getElementById('transportMethod').textContent = transportMethod;
+                
+                document.getElementById('transportCompany').textContent = transport.TransportCompany || '-';
+            }
+
+            // Display file records (images and documents)
+            displayFileRecords(data.fileRecords);
+            
+            // Display additional info - ตรงกับ Additional_Info Schema
+            const additionalInfo = data.additionalInfo || data.additional || {};
+            const storyContent = additionalInfo.Story || additionalInfo.story || additionalInfo.comments || 'ไม่มีข้อมูล';
+            document.getElementById('storyContent').textContent = storyContent;
+        }
+
+        function displayFileRecords(fileRecords) {
+            console.log('Displaying file records:', fileRecords);
+            
+            if (!fileRecords || fileRecords.length === 0) {
+                document.getElementById('plotImages').innerHTML = '<small class="text-muted">ไม่มีข้อมูล</small>';
+                document.getElementById('productImages').innerHTML = '<small class="text-muted">ไม่มีข้อมูล</small>';
+                document.getElementById('activityImages').innerHTML = '<small class="text-muted">ไม่มีข้อมูล</small>';
+                document.getElementById('certificationDocs').innerHTML = '<small class="text-muted">ไม่มีข้อมูล</small>';
+                document.getElementById('prodImages').innerHTML = '<small class="text-muted">ไม่มีข้อมูล</small>';
+                return;
+            }
+            
+            // Group files by type - ตรงกับ FileRecords Schema
+            const plotImages = fileRecords.filter(file => file.FileType === 'รูปแปลงปลูก');
+            const productImages = fileRecords.filter(file => file.FileType === 'รูปสินค้า');
+            const activityImages = fileRecords.filter(file => file.FileType === 'รูปกิจกรรมการปลูก');
+            const certificationDocs = fileRecords.filter(file => file.FileType === 'เอกสารการรับรอง');
+            const methodImages = fileRecords.filter(file => file.FileType === 'วิธีการปลูก');
+            
+            console.log('File groups:', { plotImages, productImages, activityImages, certificationDocs, methodImages });
+            
+            // Display each group - all as button links (same style as certification docs)
+            document.getElementById('plotImages').innerHTML = displayFileList(plotImages, false);
+            document.getElementById('productImages').innerHTML = displayFileList(productImages, false);
+            document.getElementById('activityImages').innerHTML = displayFileList(activityImages, false);
+            document.getElementById('certificationDocs').innerHTML = displayFileList(certificationDocs, false);
+            
+            // Display method images in MaintenanceRecord section (same style as certification docs)
+            const methodImagesHtml = displayFileList(methodImages, false);
+            document.getElementById('prodImages').innerHTML = methodImagesHtml;
+        }
+        
+        function displayFileList(files, showAsThumbnails = false) {
+            if (!files || files.length === 0) {
+                return '<small class="text-muted">ไม่มีข้อมูล</small>';
+            }
+            
+            return files.map(file => {
+                // FileRecords Schema fields
+                const fileUrl = file.FileUrl || '';
+                const downloadUrl = file.DownloadUrl || '';
+                const fileName = (file.FileName || 'ไม่ทราบชื่อไฟล์').replace(/^.*_/, '');
+                const mimeType = file.MimeType || '';
+                const isImage = mimeType.startsWith('image/');
+                
+                // ใช้ downloadUrl สำหรับแสดงรูป และ fileUrl สำหรับลิงก์
+                const displayUrl = downloadUrl || fileUrl;
+                const linkUrl = fileUrl || downloadUrl;
+                
+                if (showAsThumbnails && isImage && displayUrl) {
+                    return `<div class="mb-2">
+                        <div class="thumbnail-container" style="width: 100px; height: 100px; display: inline-block; margin-right: 10px; margin-bottom: 10px;">
+                            <img src="${displayUrl}" alt="${fileName}" class="img-thumbnail" 
+                                 style="width: 100px; height: 100px; object-fit: cover; cursor: pointer;" 
+                                 onclick="window.open('${linkUrl}', '_blank')"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                            <div class="text-muted small text-center" style="display: none; padding: 10px;">
+                                <i class="fas fa-image"></i><br>${fileName}
+                            </div>
+                        </div>
+                    </div>`;
+                }
+                
+                if (linkUrl) {
+                    return `<div class="mb-1">
+                        <a href="${linkUrl}" target="_blank" class="btn btn-sm btn-outline-primary">
+                            <i class="fas ${isImage ? 'fa-image' : 'fa-file'} me-1"></i>${fileName}
+                        </a>
+                    </div>`;
+                } else {
+                    return `<div class="mb-1">
+                        <span class="text-muted">${fileName}</span>
+                    </div>`;
+                }
+            }).join('');
+        }
+
+        function editProduction() {
+            if (currentProductionId) {
+                window.location.href = `edit-production.html?id=${currentProductionId}`;
+            }
+        }
+
+        function showLoading(show) {
+            document.getElementById('loadingSection').style.display = show ? 'block' : 'none';
+            document.getElementById('productionDetail').style.display = show ? 'none' : 'block';
+            document.getElementById('noDataSection').style.display = 'none';
+        }
+
+        function showNoData(message) {
+            document.getElementById('noDataSection').style.display = 'block';
+            document.getElementById('productionDetail').style.display = 'none';
+            document.getElementById('loadingSection').style.display = 'none';
+            
+            if (message) {
+                const messageElement = document.querySelector('#noDataSection .text-muted');
+                if (messageElement) {
+                    messageElement.textContent = message;
+                }
+            }
+        }
+
+        function showImageModal(imageUrl, title) {
+            document.getElementById('modalImage').src = imageUrl;
+            document.getElementById('imageModalTitle').textContent = title || 'รูปภาพ';
+            new bootstrap.Modal(document.getElementById('imageModal')).show();
+        }
+
+        // Disable auth.js navigation setup
+        window.DISABLE_AUTH_NAVIGATION = true;
+    </script>
+</body>
+</html>

@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เข้าสู่ระบบ - ระบบสอบย้อนกลับผักอุดร</title>
+    
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      /* สดใสขึ้น */
+      --bg:#f5fff7;            /* page bg */
+      --card:#ffffff;          /* card bg */
+      --muted:#57756b;         /* muted text */
+      --text:#0e2b1f;          /* main text */
+      --brand:#198754;         /* primary */
+      --brand-2:#146c43;       /* primary darker */
+      --accent:#ff8a3d;        /* accent */
+      --ring: rgba(25,135,84,.35);
+      --shadow: 0 10px 30px rgba(22, 87, 62, .12);
+      --radius:18px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      font-family:"Noto Sans Thai", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background:
+        radial-gradient(900px 500px at 85% -10%, rgba(255,186,120,.22), transparent),
+        radial-gradient(800px 500px at -10% 10%, rgba(25,135,84,.18), transparent),
+        var(--bg);
+      color:var(--text);
+      line-height:1.6;
+    }
+    a{color:inherit;text-decoration:none}
+    .container{width:min(1120px, 92vw); margin-inline:auto}
+
+    /* NAVBAR */
+    .nav{
+      position:sticky; top:0; z-index:50;
+      backdrop-filter:saturate(160%) blur(8px);
+      background:rgba(255,255,255,.85);
+      border-bottom:1px solid rgba(14,43,31,.08);
+    }
+    .nav-inner{display:flex;align-items:center;gap:16px; padding:14px 0}
+    .brand{display:flex;align-items:center;gap:12px; font-weight:800; letter-spacing:.2px; color:#0a3c2a}
+    .brand .logo{width:36px;height:36px;display:grid;place-items:center;border-radius:10px;
+      background:conic-gradient(from 210deg at 50% 50%, #28a745 0 40%, #198754 40% 70%, #ffd166 70% 100%);
+      box-shadow:inset 0 0 0 4px rgba(0,0,0,.03), 0 6px 18px rgba(25,135,84,.25);
+    }
+    .spacer{flex:1}
+    .nav a.link{opacity:.85; transition:.2s; padding:.5rem .75rem; border-radius:10px}
+    .nav a.link:hover{opacity:1; background:rgba(25,135,84,.08)}
+
+    /* BUTTONS */
+    .btn{display:inline-flex; align-items:center; gap:8px; padding:.65rem 1rem; border-radius:12px;
+      background:linear-gradient(180deg, var(--brand), var(--brand-2)); box-shadow:0 10px 18px rgba(25,135,84,.25);
+      color:#fff; font-weight:800; border:none; cursor:pointer; transition:all .2s ease}
+    .btn:hover{filter:brightness(1.03); transform:translateY(-1px)}
+    .btn:disabled{opacity:.6; cursor:not-allowed; transform:none}
+    .btn-outline{display:inline-flex; align-items:center; gap:8px; padding:.55rem .95rem; border-radius:12px;
+      border:2px solid var(--brand); color:var(--brand); font-weight:800; background:transparent; cursor:pointer; transition:all .2s ease}
+    .btn-outline:hover{background:rgba(25,135,84,.08)}
+
+    /* LOGIN PAGE SPECIFIC */
+    .login-section{
+      padding:40px 0;
+      min-height:calc(100vh - 80px);
+      display:flex;
+      align-items:center;
+    }
+    .login-card{
+      background:var(--card);
+      border:1px solid rgba(14,43,31,.08);
+      border-radius:var(--radius);
+      padding:40px;
+      box-shadow:var(--shadow);
+      max-width:480px;
+      margin:0 auto;
+    }
+    .login-icon{
+      width:80px;
+      height:80px;
+      background:conic-gradient(from 210deg at 50% 50%, #28a745 0 40%, #198754 40% 70%, #ffd166 70% 100%);
+      border-radius:50%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      margin:0 auto 24px;
+      box-shadow:0 8px 24px rgba(25,135,84,.25);
+    }
+    .login-icon svg{
+      width:40px;
+      height:40px;
+      fill:white;
+    }
+    h3{margin:0 0 8px; font-weight:800; color:var(--text)}
+    .form-label{font-weight:600; color:var(--text); margin-bottom:8px; display:block}
+    .form-control{
+      width:100%;
+      padding:12px 16px;
+      border:2px solid rgba(14,43,31,.12);
+      border-radius:10px;
+      font-family:inherit;
+      font-size:16px;
+      transition:all .2s ease;
+      background:var(--card);
+    }
+    .form-control:focus{
+      outline:none;
+      border-color:var(--brand);
+      box-shadow:0 0 0 4px var(--ring);
+    }
+    .form-control-lg{
+      padding:14px 18px;
+      font-size:17px;
+    }
+    .input-group{
+      display:flex;
+      position:relative;
+    }
+    .input-group .form-control{
+      border-top-right-radius:0;
+      border-bottom-right-radius:0;
+      border-right:none;
+    }
+    .input-group .btn{
+      border-top-left-radius:0;
+      border-bottom-left-radius:0;
+      background:transparent;
+      border:2px solid rgba(14,43,31,.12);
+      border-left:none;
+      color:var(--muted);
+      padding:12px 16px;
+    }
+    .input-group .btn:hover{
+      background:rgba(25,135,84,.08);
+      color:var(--brand);
+    }
+    .form-check{
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+    .form-check-input{
+      width:18px;
+      height:18px;
+      accent-color:var(--brand);
+    }
+    .form-check-label{
+      font-weight:500;
+      color:var(--text);
+    }
+    .mb-3{margin-bottom:20px}
+    .mb-4{margin-bottom:24px}
+    .d-grid{display:grid}
+    .text-center{text-align:center}
+    .text-muted{color:var(--muted)}
+
+    /* MODAL */
+    .modal{
+      position:fixed;
+      top:0;
+      left:0;
+      width:100%;
+      height:100%;
+      background:rgba(0,0,0,.5);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index:1000;
+    }
+    .modal.show{
+      display:flex;
+    }
+    .modal-dialog{
+      max-width:500px;
+      width:90%;
+      margin:20px;
+    }
+    .modal-content{
+      background:var(--card);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+    }
+    .modal-header{
+      padding:20px 24px 0;
+      border-bottom:1px solid rgba(14,43,31,.08);
+      margin-bottom:20px;
+    }
+    .modal-title{
+      font-weight:700;
+      color:var(--text);
+      margin:0;
+    }
+    .modal-body{
+      padding:0 24px 24px;
+    }
+    .alert{
+      padding:12px 16px;
+      border-radius:8px;
+      border:1px solid rgba(13,202,240,.2);
+      background:rgba(13,202,240,.1);
+      color:#0c63e4;
+      margin-bottom:20px;
+    }
+    .form-text{
+      font-size:14px;
+      color:var(--muted);
+      margin-top:6px;
+    }
+    .spinner-border{
+      width:40px;
+      height:40px;
+      border:4px solid rgba(25,135,84,.2);
+      border-left-color:var(--brand);
+      border-radius:50%;
+      animation:spin 1s linear infinite;
+    }
+    @keyframes spin{
+      to{transform:rotate(360deg)}
+    }
+    .visually-hidden{
+      position:absolute !important;
+      width:1px !important;
+      height:1px !important;
+      padding:0 !important;
+      margin:-1px !important;
+      overflow:hidden !important;
+      clip:rect(0,0,0,0) !important;
+      white-space:nowrap !important;
+      border:0 !important;
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 640px){
+      .login-card{
+        padding:24px;
+        margin:20px;
+      }
+      .login-icon{
+        width:60px;
+        height:60px;
+      }
+      .login-icon svg{
+        width:30px;
+        height:30px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- NAVBAR -->
+  <nav class="nav">
+    <div class="container nav-inner">
+      <a href="index.html" class="brand" aria-label="กลับไปหน้าแรก">
+        <img src="assets/images/logo.png" width="32" height="32" alt="โลโก้" style="display:block;" />
+        <span>ระบบตรวจสอบย้อนกลับผักอุดร</span>
+      </a>
+      <div class="spacer"></div>
+      <a class="link" href="index.html">หน้าแรก</a>
+    </div>
+  </nav>
+
+  <!-- LOGIN SECTION -->
+  <section class="login-section">
+    <div class="container">
+      <div class="login-card">
+        <!-- Logo and Title -->
+        <div class="text-center mb-4">
+          <div class="login-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+              <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+            </svg>
+          </div>
+          <h3>เข้าสู่ระบบ</h3>
+          <p class="text-muted">กรุณาใส่ข้อมูลการเข้าสู่ระบบ</p>
+        </div>
+
+        <!-- Login Form -->
+        <form id="loginForm">
+          <div class="mb-3">
+            <label for="username" class="form-label">
+              ชื่อผู้ใช้
+            </label>
+            <input type="text" class="form-control form-control-lg" id="username" 
+                   placeholder="ใส่ชื่อผู้ใช้" required autocomplete="username">
+          </div>
+
+          <div class="mb-4">
+            <label for="password" class="form-label">
+              รหัสผ่าน
+            </label>
+            <div class="input-group">
+              <input type="password" class="form-control form-control-lg" id="password" 
+                     placeholder="ใส่รหัสผ่าน" required autocomplete="current-password">
+              <button class="btn" type="button" id="togglePassword">
+                👁️
+              </button>
+            </div>
+          </div>
+
+          <!-- Remember Me -->
+          <div class="mb-4">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="rememberMe">
+              <label class="form-check-label" for="rememberMe">
+                จดจำการเข้าสู่ระบบ
+              </label>
+            </div>
+          </div>
+
+          <!-- Login Button -->
+          <div class="d-grid">
+            <button type="submit" class="btn btn-lg" id="loginBtn" style="width:100%">
+              เข้าสู่ระบบ
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- Loading Modal -->
+  <div class="modal" id="loadingModal">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-body" style="text-center:center; padding:40px;">
+          <div class="spinner-border" role="status" style="margin:0 auto 20px;">
+            <span class="visually-hidden">กำลังเข้าสู่ระบบ...</span>
+          </div>
+          <h5>กำลังเข้าสู่ระบบ...</h5>
+          <p class="text-muted">กรุณารอสักครู่</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Password Change Modal for First Login -->
+  <div class="modal" id="passwordChangeModal">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header" style="background:#ffc107; color:#000;">
+          <h5 class="modal-title">
+            ⚠️ จำเป็นต้องเปลี่ยนรหัสผ่าน
+          </h5>
+        </div>
+        <div class="modal-body">
+          <div class="alert">
+            ℹ️ เนื่องจากนี่เป็นการเข้าสู่ระบบครั้งแรก กรุณาเปลี่ยนรหัสผ่านเพื่อความปลอดภัย
+          </div>
+          
+          <form id="passwordChangeForm">
+            <div class="mb-3">
+              <label for="currentPassword" class="form-label">
+                รหัสผ่านปัจจุบัน
+              </label>
+              <div class="input-group">
+                <input type="password" class="form-control" id="currentPassword" 
+                       placeholder="ใส่รหัสผ่านปัจจุบัน" required>
+                <button class="btn" type="button" id="toggleCurrentPassword">
+                  👁️
+                </button>
+              </div>
+            </div>
+            
+            <div class="mb-3">
+              <label for="newPassword" class="form-label">
+                รหัสผ่านใหม่
+              </label>
+              <div class="input-group">
+                <input type="password" class="form-control" id="newPassword" 
+                       placeholder="ใส่รหัสผ่านใหม่ (อย่างน้อย 6 ตัวอักษร)" required minlength="6">
+                <button class="btn" type="button" id="toggleNewPassword">
+                  👁️
+                </button>
+              </div>
+              <div class="form-text">
+                <small>รหัสผ่านควรมีอย่างน้อย 6 ตัวอักษร และควรผสมตัวอักษรและตัวเลข</small>
+              </div>
+            </div>
+            
+            <div class="mb-4">
+              <label for="confirmPassword" class="form-label">
+                ยืนยันรหัสผ่านใหม่
+              </label>
+              <div class="input-group">
+                <input type="password" class="form-control" id="confirmPassword" 
+                       placeholder="ใส่รหัสผ่านใหม่อีกครั้ง" required minlength="6">
+                <button class="btn" type="button" id="toggleConfirmPassword">
+                  👁️
+                </button>
+              </div>
+            </div>
+            
+            <div class="d-grid">
+              <button type="submit" class="btn btn-lg" id="changePasswordBtn" style="width:100%">
+                💾 เปลี่ยนรหัสผ่าน
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- External Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/axios@1.4.0/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  
+  <!-- Custom Scripts -->
+  <script src="assets/js/utils.js"></script>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/auth.js"></script>
+
+
+    <script>
+        // Initialize login page
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Login page DOM loaded');
+            
+            // Check if user is already logged in
+            const isLoggedIn = AuthAPI.isLoggedIn();
+            console.log('User logged in status:', isLoggedIn);
+            
+            if (isLoggedIn) {
+                const currentUser = AuthAPI.getCurrentUser();
+                console.log('Current user found:', currentUser);
+                
+                if (currentUser && currentUser.role) {
+                    console.log('User already logged in, redirecting to dashboard');
+                    
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'คุณเข้าสู่ระบบอยู่แล้ว',
+                        text: 'กำลังนำคุณไปยังหน้าหลัก...',
+                        timer: 2000,
+                        showConfirmButton: false
+                    }).then(() => {
+                        redirectBasedOnRole(currentUser.role);
+                    });
+                    return;
+                }
+            }
+
+            // Show login form if not logged in
+            console.log('User not logged in, showing login form');
+
+            // Bind form submit
+            document.getElementById('loginForm').addEventListener('submit', handleLogin);
+
+            // Toggle password visibility
+            document.getElementById('togglePassword').addEventListener('click', togglePasswordVisibility);
+
+            // Focus on username field
+            document.getElementById('username').focus();
+        });
+
+        // Handle login form submission
+        async function handleLogin(event) {
+            event.preventDefault();
+            console.log('Login form submitted');
+            
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const rememberMe = document.getElementById('rememberMe').checked;
+            
+            console.log('Login attempt:', { username, hasPassword: !!password, rememberMe });
+            
+            if (!username || !password) {
+                Utils.showWarning('ข้อมูลไม่ครบ', 'กรุณาใส่ชื่อผู้ใช้และรหัสผ่าน');
+                return;
+            }
+
+            // Get login button and store original state
+            const loginBtn = document.getElementById('loginBtn');
+            const originalLoginHTML = 'เข้าสู่ระบบ';
+            
+            // Function to reset login button
+            const resetLoginButton = () => {
+                if (loginBtn) {
+                    loginBtn.disabled = false;
+                    loginBtn.innerHTML = originalLoginHTML;
+                }
+            };
+
+            try {
+                console.log('Starting login process...');
+                
+                // Show loading state
+                loginBtn.disabled = true;
+                loginBtn.innerHTML = '⏳ กำลังเข้าสู่ระบบ...';
+                
+                // Set timeout as safety net (30 seconds)
+                const loginTimeoutId = setTimeout(() => {
+                    console.warn('Login timeout - resetting button');
+                    resetLoginButton();
+                }, 30000);
+                
+                // Call AuthAPI login
+                const user = await AuthAPI.login(username, password);
+                console.log('Login successful, user data:', user);
+                
+                // Clear timeout since operation completed
+                clearTimeout(loginTimeoutId);
+                
+                // Check if group user is logging in for the first time
+                if (user.role === 'group' && user.isFirstLogin) {
+                    console.log('First-time group login detected');
+                    // Show password change modal instead of proceeding
+                    showPasswordChangeModal(user);
+                    return; // Don't continue with normal login flow
+                }
+                
+                // Check if farmer user is logging in for the first time
+                if (user.role === 'farmer' && user.isFirstLogin) {
+                    console.log('First-time farmer login detected, redirecting to profile setup');
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'ยินดีต้อนรับ!',
+                        text: 'กรุณากรอกข้อมูลเกษตรกรและแปลงปลูกเพื่อเริ่มใช้งานระบบ',
+                        timer: 3000,
+                        showConfirmButton: true,
+                        confirmButtonColor: '#198754',
+                        confirmButtonText: 'เริ่มกรอกข้อมูล'
+                    }).then(() => {
+                        window.location.href = 'farmer/profile-setup.html';
+                    });
+                    
+                    return; // Don't continue with normal login flow
+                }
+                
+                // Store remember me preference
+                if (rememberMe) {
+                    Storage.set('remember_login', true);
+                    console.log('Remember me enabled');
+                }
+                
+                // Ensure complete session data is stored
+                const loginTime = new Date().toISOString();
+                const sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                const authToken = 'token_' + Date.now();
+                
+                // Create enhanced user data with all required fields
+                const enhancedUserData = {
+                    ...user, // Include ALL user data from backend (including groupID)
+                    username: user.username || username,
+                    role: user.role,
+                    fullName: user.fullName || user.username,
+                    groupId: user.groupID, // Map groupID to groupId for consistency
+                    GroupID: user.groupID, // Also keep original field name
+                    groupID: user.groupID, // Keep backend field name
+                    loginTime: loginTime,
+                    sessionId: sessionId,
+                    lastActivity: Date.now()
+                };
+                
+                // Store ALL required authentication data
+                Storage.set(CONFIG.STORAGE_KEYS.USER_DATA, enhancedUserData);
+                Storage.set(CONFIG.STORAGE_KEYS.LAST_LOGIN, loginTime);
+                Storage.set('auth_token', authToken);
+                Storage.set('session_id', sessionId);
+                
+                console.log('Complete authentication data stored:', {
+                    userData: enhancedUserData,
+                    authToken,
+                    sessionId,
+                    lastLogin: loginTime
+                });
+                
+                // Verify ALL required data is stored correctly
+                const authVerification = {
+                    userData: AuthAPI.getCurrentUser(),
+                    lastLogin: Storage.get(CONFIG.STORAGE_KEYS.LAST_LOGIN),
+                    authToken: Storage.get('auth_token'),
+                    sessionId: Storage.get('session_id')
+                };
+                
+                console.log('Authentication verification:', authVerification);
+                
+                // Check if ALL required authentication data is present
+                if (!authVerification.userData || !authVerification.userData.role || 
+                    !authVerification.lastLogin || !authVerification.authToken || !authVerification.sessionId) {
+                    console.error('Missing authentication data:', authVerification);
+                    throw new Error('Critical: Required authentication data not stored properly');
+                }
+                
+                // Additional verification using AuthAPI.isLoggedIn()
+                const isLoggedInCheck = AuthAPI.isLoggedIn();
+                console.log('AuthAPI.isLoggedIn() verification:', isLoggedInCheck);
+                
+                if (!isLoggedInCheck) {
+                    console.error('AuthAPI.isLoggedIn() returned false after storing data');
+                    throw new Error('Authentication verification failed');
+                }
+                
+                // Show success message
+                Swal.fire({
+                    icon: 'success',
+                    title: 'เข้าสู่ระบบสำเร็จ',
+                    text: `ยินดีต้อนรับ ${enhancedUserData.fullName}`,
+                    timer: 1500,
+                    showConfirmButton: false
+                }).then(() => {
+                    // Redirect based on user role with enhanced data
+                    console.log('Redirecting user with role:', enhancedUserData.role);
+                    redirectBasedOnRole(enhancedUserData.role);
+                });
+                
+            } catch (error) {
+                console.error('Login error:', error);
+                
+                // Clear timeout since operation completed (with error)
+                clearTimeout(loginTimeoutId);
+                
+                // Reset button before showing error
+                resetLoginButton();
+                
+                // Show error message
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เข้าสู่ระบบไม่สำเร็จ',
+                    text: error.message || 'เกิดข้อผิดพลาดในการเข้าสู่ระบบ',
+                    confirmButtonColor: '#198754'
+                });
+                
+            } finally {
+                // Double safety - ensure button is always reset
+                setTimeout(() => {
+                    resetLoginButton();
+                }, 1000);
+            }
+        }
+
+        // Show password change modal for first-time group login
+        function showPasswordChangeModal(user) {
+            console.log('Showing password change modal for user:', user.username);
+            
+            // Store user data temporarily
+            window.tempUserData = user;
+            
+            // Show modal
+            const passwordChangeModal = document.getElementById('passwordChangeModal');
+            passwordChangeModal.classList.add('show');
+            
+            // Setup form handlers
+            setupPasswordChangeHandlers();
+        }
+
+        // Setup password change form handlers
+        let passwordChangeHandlerAttached = false; // Flag to prevent duplicate handlers
+        let passwordToggleHandlersAttached = false; // Flag to prevent duplicate toggle handlers
+        
+        function setupPasswordChangeHandlers() {
+            // Password visibility toggles - only setup once
+            if (!passwordToggleHandlersAttached) {
+                setupPasswordToggle('toggleCurrentPassword', 'currentPassword');
+                setupPasswordToggle('toggleNewPassword', 'newPassword');
+                setupPasswordToggle('toggleConfirmPassword', 'confirmPassword');
+                passwordToggleHandlersAttached = true;
+                console.log('Password toggle handlers attached');
+            }
+            
+            // Add form submission handler only once
+            const form = document.getElementById('passwordChangeForm');
+            if (form && !passwordChangeHandlerAttached) {
+                form.addEventListener('submit', handlePasswordChange);
+                passwordChangeHandlerAttached = true;
+                console.log('Password change handler attached');
+            }
+        }
+
+        // Setup password toggle functionality
+        function setupPasswordToggle(buttonId, inputId) {
+            const button = document.getElementById(buttonId);
+            const input = document.getElementById(inputId);
+            
+            console.log('Setting up toggle for:', buttonId, inputId, 'Button found:', !!button, 'Input found:', !!input);
+            
+            if (button && input) {
+                // Remove existing event listeners by cloning
+                const newButton = button.cloneNode(true);
+                button.parentNode.replaceChild(newButton, button);
+                
+                newButton.addEventListener('click', function() {
+                    console.log('Toggle clicked for:', inputId);
+                    if (input.type === 'password') {
+                        input.type = 'text';
+                        newButton.textContent = '🙈';
+                        console.log('Changed to text for:', inputId);
+                    } else {
+                        input.type = 'password';
+                        newButton.textContent = '👁️';
+                        console.log('Changed to password for:', inputId);
+                    }
+                });
+                
+                console.log('Toggle handler added for:', buttonId);
+            } else {
+                console.error('Missing elements for toggle:', buttonId, inputId);
+            }
+        }
+
+        // Handle password change form submission
+        async function handlePasswordChange(event) {
+            event.preventDefault();
+            
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            // Validate inputs BEFORE touching the button
+            if (!currentPassword || !newPassword || !confirmPassword) {
+                Utils.showWarning('ข้อมูลไม่ครบ', 'กรุณาใส่ข้อมูลให้ครบทุกช่อง');
+                return;
+            }
+            
+            if (newPassword.length < 6) {
+                Utils.showWarning('รหัสผ่านสั้นเกินไป', 'รหัสผ่านใหม่ต้องมีอย่างน้อย 6 ตัวอักษร');
+                return;
+            }
+            
+            if (newPassword !== confirmPassword) {
+                Utils.showWarning('รหัสผ่านไม่ตรงกัน', 'กรุณาใส่รหัสผ่านใหม่ให้ตรงกันทั้งสองช่อง');
+                return;
+            }
+            
+            if (currentPassword === newPassword) {
+                Utils.showWarning('รหัสผ่านเดิม', 'รหัสผ่านใหม่ต้องแตกต่างจากรหัสผ่านปัจจุบัน');
+                return;
+            }
+            
+            // Get password change button and store original state
+            const changeBtn = document.getElementById('changePasswordBtn');
+            const originalChangeHTML = '💾 เปลี่ยนรหัสผ่าน';
+            
+            // Function to reset password change button
+            const resetChangeButton = () => {
+                if (changeBtn) {
+                    changeBtn.disabled = false;
+                    changeBtn.innerHTML = originalChangeHTML;
+                }
+            };
+
+            try {
+                // Show loading state
+                changeBtn.disabled = true;
+                changeBtn.innerHTML = '⏳ กำลังเปลี่ยน...';
+                
+                // Set timeout as safety net (30 seconds)
+                const changeTimeoutId = setTimeout(() => {
+                    console.warn('Password change timeout - resetting button');
+                    resetChangeButton();
+                }, 30000);
+                
+                // Call API to change password
+                await AuthAPI.changePasswordFirstTime(window.tempUserData.username, currentPassword, newPassword);
+                
+                // Clear timeout since operation completed
+                clearTimeout(changeTimeoutId);
+                
+                // Hide modal
+                const passwordChangeModal = document.getElementById('passwordChangeModal');
+                passwordChangeModal.classList.remove('show');
+                
+                // Show success and continue login
+                Swal.fire({
+                    icon: 'success',
+                    title: 'เปลี่ยนรหัสผ่านสำเร็จ',
+                    text: 'ขณะนี้คุณสามารถใช้งานระบบได้แล้ว',
+                    timer: 2000,
+                    showConfirmButton: false
+                }).then(() => {
+                    // Continue with normal login flow
+                    completeFirstTimeLogin(window.tempUserData);
+                });
+                
+            } catch (error) {
+                console.error('Password change error:', error);
+                
+                // Clear timeout since operation completed (with error)
+                clearTimeout(changeTimeoutId);
+                
+                // Reset button before showing error
+                resetChangeButton();
+                
+                // Show error message
+                Utils.showError('เปลี่ยนรหัสผ่านไม่สำเร็จ', error.message || 'กรุณาตรวจสอบรหัสผ่านปัจจุบันและลองใหม่อีกครั้ง');
+                
+            } finally {
+                // Double safety - ensure button is always reset
+                setTimeout(() => {
+                    resetChangeButton();
+                }, 1000);
+            }
+        }
+
+        // Complete first-time login after password change
+        function completeFirstTimeLogin(user) {
+            console.log('Completing first-time login for user:', user.username);
+            
+            // Mark user as no longer first-time login
+            user.isFirstLogin = false;
+            
+            // Store complete authentication data
+            const loginTime = new Date().toISOString();
+            const sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            const authToken = 'token_' + Date.now();
+            
+            const enhancedUserData = {
+                ...user, // Include ALL user data from backend (including groupID)
+                username: user.username || user.username,
+                role: user.role,
+                fullName: user.fullName || user.username,
+                groupId: user.groupID, // Map groupID to groupId for consistency
+                GroupID: user.groupID, // Also keep original field name
+                groupID: user.groupID, // Keep backend field name
+                loginTime: loginTime,
+                sessionId: sessionId,
+                lastActivity: Date.now(),
+                isFirstLogin: false
+            };
+            
+            // Store ALL required authentication data
+            Storage.set(CONFIG.STORAGE_KEYS.USER_DATA, enhancedUserData);
+            Storage.set(CONFIG.STORAGE_KEYS.LAST_LOGIN, loginTime);
+            Storage.set('auth_token', authToken);
+            Storage.set('session_id', sessionId);
+            
+            console.log('Enhanced user data stored:', enhancedUserData);
+            
+            // Clean up temporary data
+            delete window.tempUserData;
+            
+            // Redirect to appropriate dashboard
+            setTimeout(() => {
+                redirectBasedOnRole(user.role);
+            }, 500);
+        }
+
+        // Redirect user based on their role
+        function redirectBasedOnRole(role = null) {
+            console.log('redirectBasedOnRole called with role:', role);
+            console.log('Role type:', typeof role);
+            console.log('Role length:', role ? role.length : 'null');
+            console.log('Role JSON:', JSON.stringify(role));
+            
+            if (!role) {
+                const user = AuthAPI.getCurrentUser();
+                console.log('No role provided, getting from stored user:', user);
+                role = user ? user.role : null;
+            }
+            
+            if (!role) {
+                console.error('No role found, redirecting to home');
+                window.location.href = 'index.html';
+                return;
+            }
+
+            // Clean up the role string (remove whitespace, convert to lowercase for comparison)
+            const cleanRole = role.toString().trim().toLowerCase();
+            console.log('Clean role:', cleanRole);
+
+            let targetUrl = '';
+            
+            switch (cleanRole) {
+                case 'admin':
+                    targetUrl = './admin/dashboard.html';
+                    console.log('Admin role matched, redirecting to admin dashboard');
+                    break;
+                case 'group':
+                    targetUrl = './group/dashboard.html';
+                    console.log('Group role matched, redirecting to group dashboard');
+                    break;
+                case 'farmer':
+                    targetUrl = './farmer/dashboard.html';
+                    console.log('Farmer role matched, redirecting to farmer dashboard');
+                    break;
+                default:
+                    console.warn('Unknown role:', role, 'cleaned:', cleanRole, 'redirecting to home');
+                    targetUrl = './index.html';
+            }
+            
+            console.log('Final target URL:', targetUrl);
+            
+            // Add delay to ensure data is properly saved
+            setTimeout(() => {
+                console.log('Actually redirecting to:', targetUrl);
+                window.location.href = targetUrl;
+            }, 100);
+        }
+
+        // Toggle password visibility
+        function togglePasswordVisibility() {
+            const passwordInput = document.getElementById('password');
+            const toggleButton = document.getElementById('togglePassword');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleButton.textContent = '🙈';
+            } else {
+                passwordInput.type = 'password';
+                toggleButton.textContent = '👁️';
+            }
+        }
+
+
+    </script>
+</body>
+</html>

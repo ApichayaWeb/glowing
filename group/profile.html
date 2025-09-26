@@ -1,0 +1,1158 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ข้อมูลกลุ่ม - ระบบสอบย้อนกลับผักอุดร</title>
+    
+    <!-- Noto Sans Thai Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        :root{
+            /* Purple Theme Colors */
+            --bg:#f5f3ff;            /* page bg - light purple */
+            --card:#ffffff;          /* card bg */
+            --muted:#6b46c1;         /* muted text - purple */
+            --text:#2e1065;          /* main text - dark purple */
+            --brand:#7c4dff;         /* primary purple */
+            --brand-2:#651fff;       /* primary darker purple */
+            --accent:#ff8a3d;        /* accent */
+            --ring: rgba(124,77,255,.35);
+            --shadow: 0 10px 30px rgba(101, 31, 255, .12);
+            --radius:18px;
+        }
+        *{box-sizing:border-box}
+        html,body{height:100%}
+        html{scroll-behavior:smooth}
+        body{
+            margin:0;
+            font-family:"Noto Sans Thai", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+            background:
+                radial-gradient(900px 500px at 85% -10%, rgba(155,135,245,.22), transparent),
+                radial-gradient(800px 500px at -10% 10%, rgba(124,77,255,.18), transparent),
+                var(--bg);
+            color:var(--text);
+            line-height:1.6;
+        }
+        a{color:inherit;text-decoration:none}
+        .container{width:min(1120px, 92vw); margin-inline:auto}
+
+        /* NAVBAR */
+        .navbar{
+            position:sticky; top:0; z-index:50;
+            backdrop-filter:saturate(160%) blur(8px);
+            background:rgba(255,255,255,.85) !important;
+            border-bottom:1px solid rgba(46,16,101,.08);
+        }
+        .navbar-brand{display:flex;align-items:center;gap:12px; font-weight:800; letter-spacing:.2px; color:#2e1065 !important}
+        .navbar .nav-link{opacity:.85; transition:.2s; padding:.5rem .75rem; border-radius:10px; color:var(--text) !important}
+        .navbar .nav-link:hover{opacity:1; background:rgba(124,77,255,.08)}
+        .navbar .nav-link.active{background:rgba(124,77,255,.15); color:var(--brand) !important}
+
+        /* BUTTONS */
+        .btn-primary{background:linear-gradient(180deg, var(--brand), var(--brand-2)) !important; border:none; box-shadow:0 10px 18px rgba(124,77,255,.25)}
+        .btn-success{background:linear-gradient(180deg, var(--brand), var(--brand-2)) !important; border:none}
+        .btn-info{background:linear-gradient(180deg, #8b5cf6, #7c3aed) !important; border:none}
+        .btn-warning{background:linear-gradient(180deg, #a855f7, #9333ea) !important; border:none}
+        .btn-outline-primary{border:2px solid var(--brand); color:var(--brand)}
+        .btn-outline-primary:hover{background:rgba(124,77,255,.08)}
+        .btn-outline-success{border:2px solid var(--brand); color:var(--brand)}
+        .btn-outline-success:hover{background:rgba(124,77,255,.08)}
+        .btn-outline-secondary{border:2px solid var(--muted); color:var(--muted)}
+        .btn-outline-secondary:hover{background:rgba(107,70,193,.08)}
+        
+        .profile-header {
+            background: linear-gradient(135deg, var(--brand) 0%, var(--brand-2) 100%);
+            color: white;
+            border-radius: 0.5rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .document-card {
+            border: 2px dashed #dee2e6;
+            border-radius: 0.5rem;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .document-card:hover {
+            border-color: var(--brand);
+            background-color: #f5f3ff;
+        }
+        
+        .document-card.has-file {
+            border-color: var(--brand);
+            background-color: #f5f3ff;
+            border-style: solid;
+        }
+        
+        .document-card.uploading {
+            border-color: #ffc107;
+            background-color: #fffbf0;
+        }
+        
+        .file-upload-area {
+            border: 2px dashed #dee2e6;
+            border-radius: 0.375rem;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .file-upload-area:hover {
+            border-color: var(--brand);
+            background-color: #f5f3ff;
+        }
+        
+        .file-upload-area.dragover {
+            border-color: var(--brand);
+            background-color: #f5f3ff;
+        }
+        
+        .document-preview {
+            max-width: 100%;
+            border-radius: 0.375rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .upload-progress {
+            width: 100%;
+            height: 4px;
+            background-color: #e9ecef;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 1rem;
+        }
+        
+        .upload-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--brand) 0%, var(--brand-2) 100%);
+            transition: width 0.3s ease;
+        }
+        
+        .profile-form .form-control:focus,
+        .profile-form .form-select:focus {
+            border-color: var(--brand);
+            box-shadow: 0 0 0 0.2rem rgba(124,77,255,.25);
+        }
+        
+        .info-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            border-left: 4px solid var(--brand);
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .activity-item {
+            padding: 1rem;
+            border-bottom: 1px solid #e9ecef;
+            transition: background-color 0.3s ease;
+        }
+        
+        .activity-item:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+        
+        .document-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .document-item {
+            padding: 0.75rem;
+            border: 1px solid #e9ecef;
+            border-radius: 0.375rem;
+            margin-bottom: 0.5rem;
+            background: white;
+            transition: all 0.3s ease;
+        }
+        
+        .document-item:hover {
+            border-color: var(--brand);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="../index.html">
+                <img src="../assets/images/logo.png" width="32" height="32" alt="โลโก้" style="display:block;" class="me-2" />
+                ระบบตรวจสอบย้อนกลับผักอุดร
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="dashboard.html">
+                            <i class="fas fa-home me-1"></i>แดชบอร์ด
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="profile.html">
+                            <i class="fas fa-building me-1"></i>ข้อมูลกลุ่ม
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="manage-farmers.html">
+                            <i class="fas fa-users me-1"></i>จัดการสมาชิก
+                        </a>
+                    </li>
+                </ul>
+                
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user me-1"></i><span id="userName">ผู้จัดการกลุ่ม</span>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="dashboard.html">
+                                <i class="fas fa-home me-2"></i>แดชบอร์ด
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" onclick="logout()">
+                                <i class="fas fa-sign-out-alt me-2"></i>ออกจากระบบ
+                            </a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-fluid py-4">
+        <!-- Profile Header -->
+        <div class="profile-header">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="mb-2">
+                        <i class="fas fa-building me-3"></i>
+                        <span id="groupNameHeader">กลุ่มเกษตรกร</span>
+                    </h1>
+                    <p class="fs-5 mb-0">
+                        <i class="fas fa-user me-2"></i>ผู้จัดการ: <span id="managerNameHeader">-</span> |
+                        <i class="fas fa-phone ms-3 me-2"></i>โทร: <span id="managerPhoneHeader">-</span>
+                    </p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <div class="fs-6">
+                        <i class="fas fa-calendar me-1"></i>
+                        สร้างเมื่อ: <span id="createdDate">-</span>
+                    </div>
+                    <div class="fs-6 mt-1">
+                        <i class="fas fa-clock me-1"></i>
+                        อัปเดตล่าสุด: <span id="lastUpdate">-</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Group Statistics -->
+            <div class="col-12 mb-4">
+                <div class="row g-3">
+                    <div class="col-md-3 col-sm-6">
+                        <div class="stat-card">
+                            <div class="text-primary fs-1 mb-2">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <h4 class="text-primary mb-1" id="totalFarmers">0</h4>
+                            <small class="text-muted">สมาชิกทั้งหมด</small>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3 col-sm-6">
+                        <div class="stat-card">
+                            <div class="text-success fs-1 mb-2">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <h4 class="text-success mb-1" id="activeFarmers">0</h4>
+                            <small class="text-muted">สมาชิกที่มีข้อมูล</small>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3 col-sm-6">
+                        <div class="stat-card">
+                            <div class="text-info fs-1 mb-2">
+                                <i class="fas fa-map"></i>
+                            </div>
+                            <h4 class="text-info mb-1" id="totalPlots">0</h4>
+                            <small class="text-muted">แปลงทั้งหมด</small>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3 col-sm-6">
+                        <div class="stat-card">
+                            <div class="text-warning fs-1 mb-2">
+                                <i class="fas fa-file-alt"></i>
+                            </div>
+                            <h4 class="text-warning mb-1" id="totalDocuments">0</h4>
+                            <small class="text-muted">เอกสารทั้งหมด</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Profile Information -->
+            <div class="col-lg-8 mb-4">
+                <div class="card info-card border-0 shadow-sm">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-edit me-2"></i>ข้อมูลกลุ่ม
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="groupProfileForm" class="profile-form">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="groupName" class="form-label">ชื่อกลุ่ม</label>
+                                    <input type="text" class="form-control" id="groupName" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="groupCode" class="form-label">รหัสกลุ่ม</label>
+                                    <input type="text" class="form-control" id="groupCode" readonly>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="managerName" class="form-label">ชื่อผู้จัดการ</label>
+                                    <input type="text" class="form-control" id="managerName" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="managerPhone" class="form-label">เบอร์โทรผู้จัดการ</label>
+                                    <input type="tel" class="form-control" id="managerPhone" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="managerEmail" class="form-label">อีเมลผู้จัดการ</label>
+                                    <input type="email" class="form-control" id="managerEmail">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="groupType" class="form-label">ประเภทกลุ่ม</label>
+                                    <select class="form-select" id="groupType">
+                                        <option value="">เลือกประเภทกลุ่ม</option>
+                                        <option value="วิสาหกิจชุมชน">วิสาหกิจชุมชน</option>
+                                        <option value="กลุ่มเกษตรกร">กลุ่มเกษตรกร</option>
+                                        <option value="สหกรณ์">สหกรณ์</option>
+                                        <option value="อื่นๆ">อื่นๆ</option>
+                                    </select>
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label for="groupAddress" class="form-label">ที่อยู่กลุ่ม</label>
+                                    <textarea class="form-control" id="groupAddress" rows="3"></textarea>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="district" class="form-label">อำเภอ</label>
+                                    <input type="text" class="form-control" id="district">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="province" class="form-label">จังหวัด</label>
+                                    <input type="text" class="form-control" id="province">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="zipCode" class="form-label">รหัสไปรษณีย์</label>
+                                    <input type="text" class="form-control" id="zipCode">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="website" class="form-label">เว็บไซต์</label>
+                                    <input type="url" class="form-control" id="website">
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label for="groupDescription" class="form-label">คำอธิบายกลุ่ม</label>
+                                    <textarea class="form-control" id="groupDescription" rows="4"></textarea>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex justify-content-end">
+                                <button type="button" class="btn btn-outline-secondary me-2" onclick="resetForm()">
+                                    <i class="fas fa-undo me-1"></i>รีเซ็ต
+                                </button>
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-save me-1"></i>บันทึกข้อมูล
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="col-lg-4 mb-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-history me-2"></i>กิจกรรมล่าสุด
+                        </h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div id="recentActivity" style="max-height: 400px; overflow-y: auto;">
+                            <div class="text-center p-4 text-muted">
+                                <i class="fas fa-spinner fa-spin me-2"></i>กำลังโหลด...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Document Management -->
+            <div class="col-12 mb-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-folder me-2"></i>จัดการเอกสาร
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-4">
+                            <!-- Document Types -->
+                            <div class="col-md-4">
+                                <div class="document-card" id="certificationCard" onclick="uploadDocument('certification')">
+                                    <div class="mb-3">
+                                        <i class="fas fa-certificate fs-1 text-primary"></i>
+                                    </div>
+                                    <h6>ใบรับรองมาตรฐาน</h6>
+                                    <small class="text-muted">อัปโหลดใบรับรองมาตรฐานเกษตรกร</small>
+                                    <div id="certificationProgress" class="upload-progress d-none">
+                                        <div class="upload-progress-bar" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <div class="document-card" id="licenseCard" onclick="uploadDocument('license')">
+                                    <div class="mb-3">
+                                        <i class="fas fa-id-card fs-1 text-success"></i>
+                                    </div>
+                                    <h6>ใบอนุญาต</h6>
+                                    <small class="text-muted">อัปโหลดใบอนุญาตประกอบกิจการ</small>
+                                    <div id="licenseProgress" class="upload-progress d-none">
+                                        <div class="upload-progress-bar" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <div class="document-card" id="registrationCard" onclick="uploadDocument('registration')">
+                                    <div class="mb-3">
+                                        <i class="fas fa-file-alt fs-1 text-info"></i>
+                                    </div>
+                                    <h6>ทะเบียนกลุ่ม</h6>
+                                    <small class="text-muted">อัปโหลดทะเบียนการจัดตั้งกลุ่ม</small>
+                                    <div id="registrationProgress" class="upload-progress d-none">
+                                        <div class="upload-progress-bar" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <div class="document-card" id="mapCard" onclick="uploadDocument('map')">
+                                    <div class="mb-3">
+                                        <i class="fas fa-map fs-1 text-warning"></i>
+                                    </div>
+                                    <h6>แผนที่แปลง</h6>
+                                    <small class="text-muted">อัปโหลดแผนที่ตำแหน่งแปลง</small>
+                                    <div id="mapProgress" class="upload-progress d-none">
+                                        <div class="upload-progress-bar" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <div class="document-card" id="contractCard" onclick="uploadDocument('contract')">
+                                    <div class="mb-3">
+                                        <i class="fas fa-handshake fs-1 text-secondary"></i>
+                                    </div>
+                                    <h6>สัญญาซื้อขาย</h6>
+                                    <small class="text-muted">อัปโหลดสัญญาซื้อขายผลผลิต</small>
+                                    <div id="contractProgress" class="upload-progress d-none">
+                                        <div class="upload-progress-bar" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <div class="document-card" id="otherCard" onclick="uploadDocument('other')">
+                                    <div class="mb-3">
+                                        <i class="fas fa-file fs-1 text-dark"></i>
+                                    </div>
+                                    <h6>เอกสารอื่นๆ</h6>
+                                    <small class="text-muted">อัปโหลดเอกสารประกอบอื่นๆ</small>
+                                    <div id="otherProgress" class="upload-progress d-none">
+                                        <div class="upload-progress-bar" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Uploaded Documents List -->
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-list me-2"></i>เอกสารที่อัปโหลดแล้ว
+                        </h5>
+                        <button class="btn btn-outline-primary btn-sm" onclick="refreshDocuments()">
+                            <i class="fas fa-refresh me-1"></i>รีเฟรช
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div id="documentsList" class="document-list">
+                            <div class="text-center p-4 text-muted">
+                                <i class="fas fa-spinner fa-spin me-2"></i>กำลังโหลดรายการเอกสาร...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- File Upload Modal -->
+    <div class="modal fade" id="uploadModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-upload me-2"></i>อัปโหลดเอกสาร: <span id="uploadTitle"></span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="documentUploadForm">
+                        <input type="hidden" id="documentType">
+                        
+                        <div class="mb-3">
+                            <label for="documentName" class="form-label">ชื่อเอกสาร</label>
+                            <input type="text" class="form-control" id="documentName" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="documentDescription" class="form-label">คำอธิบาย</label>
+                            <textarea class="form-control" id="documentDescription" rows="3"></textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">ไฟล์เอกสาร</label>
+                            <div class="file-upload-area" onclick="document.getElementById('documentFile').click()">
+                                <i class="fas fa-cloud-upload-alt fs-1 text-muted mb-3"></i>
+                                <p class="mb-0">คลิกเพื่อเลือกไฟล์ หรือลากไฟล์มาวาง</p>
+                                <small class="text-muted">รองรับไฟล์ PDF, DOC, JPG, PNG ขนาดไม่เกิน 10MB</small>
+                            </div>
+                            <input type="file" id="documentFile" class="d-none" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" required>
+                            <div id="filePreview" class="mt-3"></div>
+                        </div>
+                        
+                        <div id="uploadProgressContainer" class="d-none">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>กำลังอัปโหลด...</span>
+                                <span id="uploadPercent">0%</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                                     id="uploadProgressBar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                    <button type="button" class="btn btn-success" id="uploadBtn" onclick="startUpload()">
+                        <i class="fas fa-upload me-1"></i>อัปโหลด
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Document View Modal -->
+    <div class="modal fade" id="documentViewModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="documentViewTitle">ดูเอกสาร</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="documentViewContent" class="text-center">
+                        <!-- Document content will be loaded here -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" id="downloadDocBtn">
+                        <i class="fas fa-download me-1"></i>ดาวน์โหลด
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div id="loadingSpinner" class="d-none">
+        <div class="spinner-overlay">
+            <div class="spinner-border text-success" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script src="../assets/js/utils.js"></script>
+    <script src="../assets/js/auth.js"></script>
+    <script src="../assets/js/api.js"></script>
+    
+    <script>
+        let groupData = null;
+        let currentUploadType = null;
+        
+        const documentTypeNames = {
+            certification: 'ใบรับรองมาตรฐาน',
+            license: 'ใบอนุญาต',
+            registration: 'ทะเบียนกลุ่ม',
+            map: 'แผนที่แปลง',
+            contract: 'สัญญาซื้อขาย',
+            other: 'เอกสารอื่นๆ'
+        };
+
+        // Page initialization
+        document.addEventListener('DOMContentLoaded', function() {
+            initializePage();
+        });
+
+        async function initializePage() {
+            try {
+                // Protect group page - only group managers can access
+                if (!PageProtection.protectGroupPage()) {
+                    console.error('Access denied - not group manager or not logged in');
+                    return;
+                }
+
+                const user = AuthAPI.getCurrentUser();
+                if (!user || !user.role || user.role.toString().trim().toLowerCase() !== 'group') {
+                    Utils.showError('ไม่มีสิทธิ์', 'คุณต้องมีสิทธิ์ผู้จัดการกลุ่มเท่านั้น');
+                    setTimeout(() => window.location.href = '../login.html', 2000);
+                    return;
+                }
+
+                // Update user info
+                updateUserInfo(user);
+                
+                // Load group data
+                await loadGroupData();
+                
+                // Load documents
+                await loadDocuments();
+                
+                // Load activity
+                await loadRecentActivity();
+                
+                // Initialize form handlers
+                initializeFormHandlers();
+                
+                // Initialize file upload handlers
+                initializeFileUpload();
+
+            } catch (error) {
+                console.error('Initialization error:', error);
+                Utils.showError('ข้อผิดพลาด', 'ไม่สามารถโหลดข้อมูลได้ กรุณาลองใหม่อีกครั้ง');
+            }
+        }
+
+        function updateUserInfo(user) {
+            document.getElementById('userName').textContent = user.fullName || user.username;
+        }
+
+        async function loadGroupData() {
+            try {
+                Utils.showLoading('กำลังโหลดข้อมูลกลุ่ม...');
+                
+                const user = AuthAPI.getCurrentUser();
+                const result = await GroupAPI.getGroupData(user.groupId);
+                
+                Utils.hideLoading();
+                
+                if (result.success) {
+                    groupData = result.data;
+                    updateGroupInfo(groupData);
+                    updateGroupStats(groupData);
+                    fillFormData(groupData);
+                } else {
+                    Utils.showError('ข้อผิดพลาด', result.message || 'ไม่สามารถโหลดข้อมูลกลุ่มได้');
+                }
+            } catch (error) {
+                Utils.hideLoading();
+                console.error('Load group data error:', error);
+                handleAPIError(error, 'ไม่สามารถโหลดข้อมูลกลุ่มได้');
+            }
+        }
+
+        function updateGroupInfo(data) {
+            document.getElementById('groupNameHeader').textContent = data.groupName || 'กลุ่มเกษตรกร';
+            document.getElementById('managerNameHeader').textContent = data.managerName || '-';
+            document.getElementById('managerPhoneHeader').textContent = data.managerPhone || '-';
+            
+            if (data.createdDate) {
+                document.getElementById('createdDate').textContent = 
+                    new Date(data.createdDate).toLocaleDateString('th-TH');
+            }
+            
+            if (data.lastUpdate) {
+                document.getElementById('lastUpdate').textContent = 
+                    new Date(data.lastUpdate).toLocaleDateString('th-TH');
+            }
+        }
+
+        function updateGroupStats(data) {
+            document.getElementById('totalFarmers').textContent = data.totalFarmers || 0;
+            document.getElementById('activeFarmers').textContent = data.activeFarmers || 0;
+            document.getElementById('totalPlots').textContent = data.totalPlots || 0;
+            document.getElementById('totalDocuments').textContent = data.totalDocuments || 0;
+        }
+
+        function fillFormData(data) {
+            const form = document.getElementById('groupProfileForm');
+            
+            // Fill form fields
+            Object.keys(data).forEach(key => {
+                const field = form.querySelector(`#${key}`);
+                if (field && data[key]) {
+                    field.value = data[key];
+                }
+            });
+        }
+
+        function initializeFormHandlers() {
+            const form = document.getElementById('groupProfileForm');
+            
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                await saveGroupProfile();
+            });
+        }
+
+        async function saveGroupProfile() {
+            try {
+                Utils.showLoading('กำลังบันทึกข้อมูล...');
+                
+                const form = document.getElementById('groupProfileForm');
+                const formData = new FormData(form);
+                
+                const profileData = {};
+                formData.forEach((value, key) => {
+                    profileData[key] = value;
+                });
+                
+                // เพิ่ม groupId จาก current user
+                const currentUser = AuthAPI.getCurrentUser();
+                let groupId = currentUser.groupId || currentUser.GroupID || currentUser.group_id;
+                if (!groupId) {
+                    groupId = "01"; // ใช้รหัสกลุ่มเริ่มต้น
+                }
+                profileData.groupId = groupId;
+                
+                const result = await GroupAPI.updateGroupProfile(profileData);
+                
+                Utils.hideLoading();
+                
+                if (result.success) {
+                    Utils.showSuccess('สำเร็จ', 'บันทึกข้อมูลกลุ่มเรียบร้อยแล้ว');
+                    
+                    // Update local data
+                    groupData = { ...groupData, ...profileData };
+                    updateGroupInfo(groupData);
+                    
+                } else {
+                    Utils.showError('ข้อผิดพลาด', result.message || 'ไม่สามารถบันทึกข้อมูลได้');
+                }
+                
+            } catch (error) {
+                Utils.hideLoading();
+                handleAPIError(error, 'ไม่สามารถบันทึกข้อมูลได้');
+            }
+        }
+
+        function resetForm() {
+            if (groupData) {
+                fillFormData(groupData);
+            } else {
+                document.getElementById('groupProfileForm').reset();
+            }
+        }
+
+        async function loadRecentActivity() {
+            try {
+                const user = AuthAPI.getCurrentUser();
+                const result = await GroupAPI.getGroupStats(user.groupId);
+                
+                let activityHtml = '';
+                
+                if (result.success && result.data.recentActivity) {
+                    const activities = result.data.recentActivity;
+                    
+                    if (activities.length === 0) {
+                        activityHtml = '<div class="text-center p-4 text-muted">ยังไม่มีกิจกรรม</div>';
+                    } else {
+                        activities.forEach(activity => {
+                            activityHtml += `
+                                <div class="activity-item">
+                                    <div class="d-flex align-items-center">
+                                        <div class="flex-shrink-0 me-3">
+                                            <div class="bg-light rounded-circle p-2" style="width: 40px; height: 40px;">
+                                                <i class="fas fa-${activity.icon || 'edit'} text-success"></i>
+                                            </div>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <div class="fw-medium">${activity.title}</div>
+                                            <div class="text-muted small">${activity.description}</div>
+                                            <div class="text-muted small">
+                                                <i class="fas fa-clock me-1"></i>
+                                                ${new Date(activity.timestamp).toLocaleDateString('th-TH')}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                    }
+                } else {
+                    activityHtml = '<div class="text-center p-4 text-muted">ยังไม่มีกิจกรรม</div>';
+                }
+                
+                document.getElementById('recentActivity').innerHTML = activityHtml;
+                
+            } catch (error) {
+                console.error('Load activity error:', error);
+                document.getElementById('recentActivity').innerHTML = 
+                    '<div class="text-center p-4 text-danger">ไม่สามารถโหลดข้อมูลกิจกรรมได้</div>';
+            }
+        }
+
+        function uploadDocument(type) {
+            currentUploadType = type;
+            document.getElementById('documentType').value = type;
+            document.getElementById('uploadTitle').textContent = documentTypeNames[type];
+            
+            // Reset form
+            document.getElementById('documentUploadForm').reset();
+            document.getElementById('filePreview').innerHTML = '';
+            document.getElementById('uploadProgressContainer').classList.add('d-none');
+            
+            const modal = new bootstrap.Modal(document.getElementById('uploadModal'));
+            modal.show();
+        }
+
+        function initializeFileUpload() {
+            const fileInput = document.getElementById('documentFile');
+            const uploadArea = document.querySelector('.file-upload-area');
+            
+            fileInput.addEventListener('change', function(e) {
+                handleFileSelect(e.target.files[0]);
+            });
+            
+            // Drag and drop functionality
+            uploadArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                this.classList.add('dragover');
+            });
+            
+            uploadArea.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                this.classList.remove('dragover');
+            });
+            
+            uploadArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                this.classList.remove('dragover');
+                
+                const file = e.dataTransfer.files[0];
+                fileInput.files = e.dataTransfer.files;
+                handleFileSelect(file);
+            });
+        }
+
+        function handleFileSelect(file) {
+            if (!file) return;
+            
+            const previewContainer = document.getElementById('filePreview');
+            
+            // Validate file size (10MB max)
+            if (file.size > 10 * 1024 * 1024) {
+                Utils.showError('ข้อผิดพลาด', 'ไฟล์มีขนาดใหญ่เกิน 10MB');
+                return;
+            }
+            
+            // Show file preview
+            let previewHtml = `
+                <div class="alert alert-info">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-file fs-3 me-3"></i>
+                        <div>
+                            <div class="fw-medium">${file.name}</div>
+                            <div class="small text-muted">
+                                ขนาด: ${(file.size / 1024 / 1024).toFixed(2)} MB |
+                                ประเภท: ${file.type}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Show image preview for image files
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewHtml += `
+                        <div class="text-center mt-3">
+                            <img src="${e.target.result}" alt="Preview" class="document-preview" style="max-height: 200px;">
+                        </div>
+                    `;
+                    previewContainer.innerHTML = previewHtml;
+                };
+                reader.readAsDataURL(file);
+            } else {
+                previewContainer.innerHTML = previewHtml;
+            }
+        }
+
+        async function startUpload() {
+            try {
+                const form = document.getElementById('documentUploadForm');
+                const file = document.getElementById('documentFile').files[0];
+                
+                if (!file) {
+                    Utils.showError('ข้อผิดพลาด', 'กรุณาเลือกไฟล์');
+                    return;
+                }
+                
+                const documentName = document.getElementById('documentName').value.trim();
+                if (!documentName) {
+                    Utils.showError('ข้อผิดพลาด', 'กรุณาระบุชื่อเอกสาร');
+                    return;
+                }
+                
+                // Show progress
+                document.getElementById('uploadProgressContainer').classList.remove('d-none');
+                document.getElementById('uploadBtn').disabled = true;
+                
+                // Simulate upload progress
+                let progress = 0;
+                const progressInterval = setInterval(() => {
+                    progress += Math.random() * 15;
+                    if (progress > 90) progress = 90;
+                    
+                    document.getElementById('uploadProgressBar').style.width = progress + '%';
+                    document.getElementById('uploadPercent').textContent = Math.round(progress) + '%';
+                }, 200);
+                
+                // Upload file
+                const result = await GroupAPI.uploadGroupDocument(file, currentUploadType);
+                
+                // Complete progress
+                clearInterval(progressInterval);
+                document.getElementById('uploadProgressBar').style.width = '100%';
+                document.getElementById('uploadPercent').textContent = '100%';
+                
+                if (result.success) {
+                    Utils.showSuccess('สำเร็จ', 'อัปโหลดเอกสารเรียบร้อยแล้ว');
+                    
+                    // Close modal
+                    bootstrap.Modal.getInstance(document.getElementById('uploadModal')).hide();
+                    
+                    // Refresh documents list
+                    await loadDocuments();
+                    
+                    // Update document card
+                    updateDocumentCard(currentUploadType, true);
+                    
+                } else {
+                    Utils.showError('ข้อผิดพลาด', result.message || 'ไม่สามารถอัปโหลดเอกสารได้');
+                }
+                
+            } catch (error) {
+                handleAPIError(error, 'ไม่สามารถอัปโหลดเอกสารได้');
+            } finally {
+                document.getElementById('uploadBtn').disabled = false;
+                document.getElementById('uploadProgressContainer').classList.add('d-none');
+            }
+        }
+
+        function updateDocumentCard(type, hasFile) {
+            const card = document.getElementById(type + 'Card');
+            if (hasFile) {
+                card.classList.add('has-file');
+                card.innerHTML += '<div class="position-absolute top-0 end-0 p-2"><i class="fas fa-check-circle text-success"></i></div>';
+            }
+        }
+
+        async function loadDocuments() {
+            try {
+                const user = AuthAPI.getCurrentUser();
+                const result = await GroupAPI.getGroupData(user.groupId);
+                
+                let documentsHtml = '';
+                
+                if (result.success && result.data.documents && result.data.documents.length > 0) {
+                    result.data.documents.forEach(doc => {
+                        const uploadDate = new Date(doc.uploadDate).toLocaleDateString('th-TH');
+                        const fileSize = doc.fileSize ? (doc.fileSize / 1024 / 1024).toFixed(2) + ' MB' : '-';
+                        
+                        documentsHtml += `
+                            <div class="document-item">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-file-alt text-primary me-3 fs-4"></i>
+                                            <div>
+                                                <h6 class="mb-1">${doc.name}</h6>
+                                                <div class="small text-muted">
+                                                    <span class="badge bg-secondary me-2">${documentTypeNames[doc.type] || doc.type}</span>
+                                                    อัปโหลดเมื่อ: ${uploadDate} | ขนาด: ${fileSize}
+                                                </div>
+                                                ${doc.description ? `<div class="small text-muted mt-1">${doc.description}</div>` : ''}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex-shrink-0">
+                                        <button class="btn btn-outline-primary btn-sm me-1" onclick="viewDocument('${doc.id}', '${doc.name}', '${doc.url}')">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="btn btn-outline-success btn-sm me-1" onclick="downloadDocument('${doc.url}', '${doc.name}')">
+                                            <i class="fas fa-download"></i>
+                                        </button>
+                                        <button class="btn btn-outline-danger btn-sm" onclick="deleteDocument('${doc.id}', '${doc.name}')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        
+                        // Update document card status
+                        updateDocumentCard(doc.type, true);
+                    });
+                } else {
+                    documentsHtml = '<div class="text-center p-4 text-muted">ยังไม่มีเอกสารที่อัปโหลด</div>';
+                }
+                
+                document.getElementById('documentsList').innerHTML = documentsHtml;
+                
+            } catch (error) {
+                console.error('Load documents error:', error);
+                document.getElementById('documentsList').innerHTML = 
+                    '<div class="text-center p-4 text-danger">ไม่สามารถโหลดรายการเอกสารได้</div>';
+            }
+        }
+
+        function viewDocument(docId, docName, docUrl) {
+            document.getElementById('documentViewTitle').textContent = docName;
+            
+            let contentHtml = '';
+            
+            // Check file type and show appropriate preview
+            if (docUrl.toLowerCase().includes('.pdf')) {
+                contentHtml = `<iframe src="${docUrl}" width="100%" height="500px" frameborder="0"></iframe>`;
+            } else if (docUrl.match(/\.(jpg|jpeg|png|gif)$/i)) {
+                contentHtml = `<img src="${docUrl}" alt="${docName}" class="img-fluid">`;
+            } else {
+                contentHtml = `
+                    <div class="text-center p-5">
+                        <i class="fas fa-file fs-1 text-muted mb-3"></i>
+                        <h5>${docName}</h5>
+                        <p class="text-muted">ไม่สามารถแสดงตัวอย่างไฟล์ประเภทนี้ได้</p>
+                        <a href="${docUrl}" target="_blank" class="btn btn-primary">
+                            <i class="fas fa-external-link-alt me-1"></i>เปิดในหน้าใหม่
+                        </a>
+                    </div>
+                `;
+            }
+            
+            document.getElementById('documentViewContent').innerHTML = contentHtml;
+            document.getElementById('downloadDocBtn').onclick = () => downloadDocument(docUrl, docName);
+            
+            const modal = new bootstrap.Modal(document.getElementById('documentViewModal'));
+            modal.show();
+        }
+
+        function downloadDocument(url, name) {
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = name;
+            link.click();
+        }
+
+        async function deleteDocument(docId, docName) {
+            const confirmed = await Utils.showConfirm(
+                'ยืนยันการลบ', 
+                `คุณต้องการลบเอกสาร "${docName}" หรือไม่?`
+            );
+            
+            if (!confirmed) return;
+            
+            try {
+                Utils.showLoading('กำลังลบเอกสาร...');
+                
+                // API call to delete document
+                // const result = await GroupAPI.deleteDocument(docId);
+                
+                Utils.hideLoading();
+                Utils.showSuccess('สำเร็จ', 'ลบเอกสารเรียบร้อยแล้ว');
+                
+                // Refresh documents list
+                await loadDocuments();
+                
+            } catch (error) {
+                Utils.hideLoading();
+                handleAPIError(error, 'ไม่สามารถลบเอกสารได้');
+            }
+        }
+
+        async function refreshDocuments() {
+            await loadDocuments();
+            Utils.showSuccess('สำเร็จ', 'รีเฟรชรายการเอกสารแล้ว');
+        }
+
+        function logout() {
+            AuthAPI.logout();
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>แก้ไขรอบการผลิต - ระบบสอบย้อนกลับผักอุดร</title>
+    
+    <!-- Noto Sans Thai Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root{
+            /* Brown nature theme colors */
+            --bg:#f9f7f4;            /* page bg - warm cream */
+            --card:#ffffff;          /* card bg */
+            --muted:#8d6e63;         /* muted text - brown */
+            --text:#3e2723;          /* main text - dark brown */
+            --brand:#8d6e63;         /* primary - brown */
+            --brand-2:#6d4c41;       /* primary darker - darker brown */
+            --accent:#d4a574;        /* accent - warm brown */
+            --ring: rgba(141,110,99,.35);
+            --shadow: 0 10px 30px rgba(109, 76, 65, .12);
+            --radius:18px;
+        }
+        *{box-sizing:border-box}
+        html,body{height:100%}
+        html{scroll-behavior:smooth}
+        body{
+            margin:0;
+            font-family:"Noto Sans Thai", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+            background:
+                radial-gradient(900px 500px at 85% -10%, rgba(212,165,116,.22), transparent),
+                radial-gradient(800px 500px at -10% 10%, rgba(141,110,99,.18), transparent),
+                var(--bg);
+            color:var(--text);
+            line-height:1.6;
+        }
+        a{color:inherit;text-decoration:none}
+        .container{width:min(1120px, 92vw); margin-inline:auto}
+
+        /* NAVBAR */
+        .nav{
+            position:sticky; top:0; z-index:50;
+            backdrop-filter:saturate(160%) blur(8px);
+            background:rgba(255,255,255,.85);
+            border-bottom:1px solid rgba(62,39,35,.08);
+        }
+        .nav-inner{display:flex;align-items:center;gap:16px; padding:14px 0}
+        .brand{display:flex;align-items:center;gap:12px; font-weight:800; letter-spacing:.2px; color:#3e2723}
+        .brand .logo{width:36px;height:36px;display:grid;place-items:center;border-radius:10px;
+            background:conic-gradient(from 210deg at 50% 50%, #8d6e63 0 40%, #6d4c41 40% 70%, #d4a574 70% 100%);
+            box-shadow:inset 0 0 0 4px rgba(0,0,0,.03), 0 6px 18px rgba(141,110,99,.25);
+        }
+        .spacer{flex:1}
+        .nav a.link{opacity:.85; transition:.2s; padding:.5rem .75rem; border-radius:10px}
+        .nav a.link:hover{opacity:1; background:rgba(141,110,99,.08)}
+
+        /* BUTTONS */
+        .btn{display:inline-flex; align-items:center; gap:8px; padding:.65rem 1rem; border-radius:12px;
+            background:linear-gradient(180deg, var(--brand), var(--brand-2)); box-shadow:0 10px 18px rgba(141,110,99,.25);
+            color:#fff; font-weight:800}
+        .btn:hover{filter:brightness(1.03)}
+        .btn-outline{display:inline-flex; align-items:center; gap:8px; padding:.55rem .95rem; border-radius:12px;
+            border:2px solid var(--brand); color:var(--brand); font-weight:800; background:transparent}
+        .btn-outline:hover{background:rgba(141,110,99,.08)}
+        .btn-success{
+            background:linear-gradient(180deg, var(--brand), var(--brand-2));
+            border:none;
+            box-shadow:var(--shadow);
+        }
+        .btn-success:hover{filter:brightness(1.1)}
+        .text-success{color:var(--brand) !important}
+        .bg-success{background:linear-gradient(135deg, var(--brand), var(--brand-2)) !important}
+        
+        /* Cards */
+        .card {
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(62,39,35,.08);
+            transition: all 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, var(--brand), var(--brand-2));
+            color: white;
+            border-radius: var(--radius) var(--radius) 0 0;
+        }
+        
+        .bg-warning {
+            background: linear-gradient(135deg, #d4a574, #c09853) !important;
+        }
+        
+        .bg-info {
+            background: linear-gradient(135deg, var(--accent), #b89765) !important;
+        }
+        
+        .bg-secondary {
+            background: linear-gradient(135deg, var(--muted), #6d4c41) !important;
+        }
+        
+        .bg-primary {
+            background: linear-gradient(135deg, var(--brand), var(--brand-2)) !important;
+        }
+        
+        .form-control, .form-select {
+            border-radius: 12px;
+            border: 2px solid rgba(141,110,99,.2);
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: var(--brand);
+            box-shadow: 0 0 0 4px var(--ring);
+        }
+        
+        .main-content {
+            margin-top: 20px;
+            background: var(--bg);
+            min-height: 100vh;
+            padding: 2rem 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="container nav-inner">
+            <a href="dashboard.html" class="brand" aria-label="กลับสู่แผงควบคุม">
+                <img src="../assets/images/logo.png" width="32" height="32" alt="โลโก้" style="display:block;" />
+                <span>แก้ไขรอบการผลิต</span>
+            </a>
+            <div class="spacer"></div>
+            <a class="btn-outline" href="dashboard.html" aria-label="กลับแผงควบคุม">
+                <i class="fas fa-arrow-left me-1"></i>กลับ
+            </a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container main-content">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <!-- Header -->
+                <div class="card shadow-sm border-0 mb-4" style="border-radius: 15px;">
+                    <div class="card-body text-center py-4">
+                        <h4 class="text-success fw-bold mb-2">แก้ไขรอบการผลิต</h4>
+                        <p class="text-muted" id="productionSubtitle">กำลังโหลดข้อมูล...</p>
+                    </div>
+                </div>
+
+                <!-- Loading Indicator -->
+                <div id="loadingIndicator" class="text-center mb-4">
+                    <div class="spinner-border text-success" role="status">
+                        <span class="visually-hidden">กำลังโหลด...</span>
+                    </div>
+                    <p class="mt-2 text-muted" id="loadingText">กำลังโหลดข้อมูลการผลิต...</p>
+                    <div class="progress mt-3" style="height: 6px; display: none;" id="loadingProgress">
+                        <div class="progress-bar bg-success" role="progressbar" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- Error Message -->
+                <div id="errorMessage" class="alert alert-danger" role="alert" style="display: none;">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <span id="errorText"></span>
+                </div>
+
+                <!-- Production Form -->
+                <div id="editForm" style="display: none;">
+                    <form id="productionForm" novalidate>
+                        <!-- ส่วนที่ 1: ข้อมูลการผลิต -->
+                        <div class="card shadow-sm border-0 mb-4">
+                            <div class="card-header bg-success text-white">
+                                <h5 class="mb-0"><i class="fas fa-seedling me-2"></i>ส่วนที่ 1: ข้อมูลการผลิตและแหล่งที่มา</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">ชนิดพืชผักที่ปลูก <span class="text-danger">*</span></label>
+                                        <select class="form-select" id="cropType" required>
+                                            <option value="">เลือกชนิดพืชผักที่ปลูก</option>
+                                            <option value="ผักคะน้า">ผักคะน้า</option>
+                                            <option value="กวางตุ้ง">กวางตุ้ง</option>
+                                            <option value="มะเขือเทศ">มะเขือเทศ</option>
+                                            <option value="ผักสลัดเรดโอ๊ค">ผักสลัดเรดโอ๊ค</option>
+                                            <option value="ผักสลัดกรีนโอ๊ค">ผักสลัดกรีนโอ๊ค</option>
+                                            <option value="ผักสลัดคอส">ผักสลัดคอส</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 mb-3" id="cropVarietyDiv" style="display: none;">
+                                        <label class="form-label">สายพันธุ์</label>
+                                        <select class="form-select" id="cropVariety">
+                                            <option value="">เลือกสายพันธุ์</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">วันที่เริ่มเพาะปลูก <span class="text-danger">*</span></label>
+                                        <input type="date" class="form-control" id="plantDate" required>
+                                        <small class="text-muted" id="plantDateBE"></small>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">วันที่เก็บเกี่ยว <span class="text-danger">*</span></label>
+                                        <input type="date" class="form-control" id="harvestDate" required>
+                                        <small class="text-muted" id="harvestDateBE"></small>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">วิธีการปลูก</label>
+                                        <select class="form-select" id="plantingMethod" onchange="togglePlantingMethodOther()">
+                                            <option value="">เลือกวิธีการปลูก</option>
+                                            <option value="ลงดิน">ลงดิน</option>
+                                            <option value="ไฮโดรโปนิกส์">ไฮโดรโปนิกส์</option>
+                                            <option value="อื่น ๆ ระบุ">อื่น ๆ ระบุ</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 mb-3" id="plantingMethodOtherDiv" style="display: none;">
+                                        <label class="form-label">วิธีการปลูกอื่นๆ ระบุ</label>
+                                        <input type="text" class="form-control" id="plantingMethodOther">
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">การใช้ปุ๋ย (ชื่อ)</label>
+                                        <input type="text" class="form-control" id="fertilizer">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">การใช้ยาฆ่าแมลง (ชื่อ)</label>
+                                        <input type="text" class="form-control" id="pesticide">
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">แหล่งน้ำ</label>
+                                        <select class="form-select" id="waterSourceType">
+                                            <option value="">เลือกแหล่งน้ำ</option>
+                                            <option value="น้ำฝน">น้ำฝน</option>
+                                            <option value="น้ำบาดาล">น้ำบาดาล</option>
+                                            <option value="น้ำประปา">น้ำประปา</option>
+                                            <option value="น้ำคลอง">น้ำคลอง</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">การจัดการน้ำ</label>
+                                        <select class="form-select" id="waterManagement">
+                                            <option value="">เลือกการจัดการน้ำ</option>
+                                            <option value="รดน้ำด้วยมือ">รดน้ำด้วยมือ</option>
+                                            <option value="ระบบสปริงเกอร์">ระบบสปริงเกอร์</option>
+                                            <option value="ระบบน้ำหยด">ระบบน้ำหยด</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">การบันทึกวิธีการปลูก</label>
+                                        <select class="form-select" id="recordMethod" onchange="toggleRecordMethodImages()">
+                                            <option value="">เลือกการบันทึก</option>
+                                            <option value="มี">มี</option>
+                                            <option value="ไม่มี">ไม่มี</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 mb-3" id="recordMethodImages" style="display: none;">
+                                        <label class="form-label">อัพโหลดรูปการบันทึกวิธีการปลูก</label>
+                                        <input type="file" class="form-control" id="plantingMethodImages" multiple accept="image/*">
+                                        <small class="text-muted">อัพโหลดได้หลายไฟล์</small>
+                                        <div id="existingMethodImages" class="mt-2"></div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12 mb-3">
+                                        <label class="form-label">การใช้สารป้องกัน/กำจัดศัตรูพืช (ถ้ามี) ให้ระบุ</label>
+                                        <input type="text" class="form-control" id="pestControl" placeholder="ระบุชื่อสารป้องกัน/กำจัดศัตรูพืช (ถ้ามี)">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ส่วนที่ 2: ข้อมูลการเก็บเกี่ยวและการบรรจุ -->
+                        <div class="card shadow-sm border-0 mb-4">
+                            <div class="card-header bg-warning text-dark">
+                                <h5 class="mb-0"><i class="fas fa-box-open me-2"></i>ส่วนที่ 2: ข้อมูลการเก็บเกี่ยวและการบรรจุ</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">วันที่จัดส่ง</label>
+                                        <input type="date" class="form-control" id="shipDate">
+                                        <small class="text-muted" id="shipDateBE"></small>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">ระบุ</label>
+                                        <input type="text" class="form-control" id="harvestMethod" placeholder="ระบุวิธีการเก็บเกี่ยว">
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">ปริมาณที่เก็บได้</label>
+                                        <input type="number" class="form-control" id="quantity" step="0.01">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">มาตรวัดน้ำหนัก</label>
+                                        <select class="form-select" id="unit" onchange="toggleUnitOther()">
+                                            <option value="">เลือกมาตรวัด</option>
+                                            <option value="กิโลกรัม">กิโลกรัม</option>
+                                            <option value="กรัม">กรัม</option>
+                                            <option value="ตัน">ตัน</option>
+                                            <option value="ชิ้น">ชิ้น</option>
+                                            <option value="หีบ">หีบ</option>
+                                            <option value="ลัง">ลัง</option>
+                                            <option value="มัด">มัด</option>
+                                            <option value="อื่น ๆ ระบุ">อื่น ๆ ระบุ</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 mb-3" id="unitOtherDiv" style="display: none;">
+                                        <label class="form-label">มาตรวัดน้ำหนักอื่นๆ ระบุ</label>
+                                        <input type="text" class="form-control" id="unitOther">
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">การรับคัดแยกและบรรจุ ระบุ ชื่อบริษัท</label>
+                                        <input type="text" class="form-control" id="packagingCompany">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">สถานที่บรรจุ ให้ระบุ จังหวัด</label>
+                                        <input type="text" class="form-control" id="packagingLocation">
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12 mb-3">
+                                        <label class="form-label">ชื่อผู้รับผิดชอบการเก็บเกี่ยว</label>
+                                        <input type="text" class="form-control" id="responsiblePerson">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ส่วนที่ 3: ข้อมูลการขนส่ง -->
+                        <div class="card shadow-sm border-0 mb-4">
+                            <div class="card-header bg-info text-white">
+                                <h5 class="mb-0"><i class="fas fa-truck me-2"></i>ส่วนที่ 3: ข้อมูลการขนส่ง</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">วันที่ส่งออกจากฟาร์ม</label>
+                                        <input type="date" class="form-control" id="farmShipDate">
+                                        <small class="text-muted" id="farmShipDateBE"></small>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">ช่องทางการขนส่ง</label>
+                                        <select class="form-select" id="transportChannel">
+                                            <option value="">เลือกช่องทางการขนส่ง</option>
+                                            <option value="ส่งสินค้าไปยังผู้รับสินค้า">ส่งสินค้าไปยังผู้รับสินค้า</option>
+                                            <option value="ผู้รับสินค้ามารับที่ฟาร์ม">ผู้รับสินค้ามารับที่ฟาร์ม</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">วิธีการขนส่ง</label>
+                                        <select class="form-select" id="transportMethod" onchange="toggleTransportMethodOther()">
+                                            <option value="">เลือกวิธีการขนส่ง</option>
+                                            <option value="รถมอเตอร์ไซด์">รถมอเตอร์ไซด์</option>
+                                            <option value="รถยนต์">รถยนต์</option>
+                                            <option value="รถควบคุมอุณหภูมิ">รถควบคุมอุณหภูมิ</option>
+                                            <option value="อื่น ๆ ระบุ">อื่น ๆ ระบุ</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 mb-3" id="transportMethodOtherDiv" style="display: none;">
+                                        <label class="form-label">วิธีการขนส่งอื่นๆ ระบุ</label>
+                                        <input type="text" class="form-control" id="transportMethodOther">
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">ชื่อผู้ขนส่ง/บริษัทขนส่ง</label>
+                                        <input type="text" class="form-control" id="transportCompany">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">บริษัทผู้กระจายสินค้า <span class="text-danger">*</span></label>
+                                        <select class="form-select" id="distributorCode" required>
+                                            <option value="">เลือกบริษัทผู้กระจายสินค้า</option>
+                                            <option value="001">001 บริษัท คิงส์ วิช จำกัด สาขาขอนแก่น</option>
+                                            <option value="002">002 ห้างหุ้นส่วนจำกัด ธาวินเฟรช</option>
+                                            <option value="003">003 บริษัท ฟาร์ม สเตชั่น จำกัด</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ส่วนที่ 4: ข้อมูลเอกสารและการรับรอง -->
+                        <div class="card shadow-sm border-0 mb-4">
+                            <div class="card-header bg-secondary text-white">
+                                <h5 class="mb-0"><i class="fas fa-upload me-2"></i>ส่วนที่ 4: ข้อมูลเอกสารและการรับรอง</h5>
+                            </div>
+                            <div class="card-body">
+                                <!-- ไฟล์เดิม -->
+                                <div class="row mb-4" id="existingFilesSection" style="display: none;">
+                                    <div class="col-12">
+                                        <h6 class="text-secondary border-bottom pb-2 mb-3">
+                                            <i class="fas fa-folder-open me-2"></i>ไฟล์ที่อัปโหลดแล้ว
+                                        </h6>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">รูปถ่ายแปลงปลูก (ถ้ามี)</label>
+                                        <input type="file" class="form-control" id="plotImages" multiple accept="image/*">
+                                        <small class="text-muted">อัปโหลดได้หลายไฟล์</small>
+                                        <div id="existingPlotImages" class="mt-2"></div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">รูปถ่ายสินค้า (ถ้ามี)</label>
+                                        <input type="file" class="form-control" id="productImages" multiple accept="image/*">
+                                        <small class="text-muted">อัปโหลดได้หลายไฟล์</small>
+                                        <div id="existingProductImages" class="mt-2"></div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">รูปถ่ายกิจกรรมการปลูก (ถ้ามี)</label>
+                                        <input type="file" class="form-control" id="plantingImages" multiple accept="image/*">
+                                        <small class="text-muted">อัปโหลดได้หลายไฟล์</small>
+                                        <div id="existingPlantingImages" class="mt-2"></div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">เอกสารการรับรองอื่น ๆ (ถ้ามี)</label>
+                                        <input type="file" class="form-control" id="certificationDocs" multiple accept="image/*,.pdf">
+                                        <small class="text-muted">รูปภาพหรือ PDF</small>
+                                        <div id="existingCertificationDocs" class="mt-2"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ส่วนที่ 5: ความคิดเห็น/ข้อมูลเพิ่มเติม -->
+                        <div class="card shadow-sm border-0 mb-4">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0"><i class="fas fa-comment me-2"></i>ส่วนที่ 5: ความคิดเห็น/ข้อมูลเพิ่มเติม (เช่น เรื่องราวแปลงปลูก, ปรัชญาเกษตร, ความโดดเด่น ฯลฯ)</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label class="form-label">หมายเหตุ</label>
+                                    <textarea class="form-control" id="additionalInfo" rows="3" placeholder="ระบุความคิดเห็น/ข้อมูลเพิ่มเติม เช่น เรื่องราวแปลงปลูก, ปรัชญาเกษตร, ความโดดเด่น (ถ้ามี)"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-success btn-lg px-5" id="saveButton">
+                                <i class="fas fa-save me-2"></i>บันทึกการเปลี่ยนแปลง
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary btn-lg px-5 ms-3" onclick="cancelEdit()">
+                                <i class="fas fa-times me-2"></i>ยกเลิก
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Modal -->
+    <div class="modal fade" id="loadingModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-body text-center py-5">
+                    <div class="spinner-border text-success mb-3" style="width: 3rem; height: 3rem;"></div>
+                    <h5 id="loadingTitle">กำลังบันทึกข้อมูล...</h5>
+                    <p class="text-muted mb-0" id="loadingMessage">กรุณารอสักครู่</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div class="modal fade" id="successModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-body text-center py-5">
+                    <div class="mb-3">
+                        <i class="fas fa-check-circle text-success" style="font-size: 4rem;"></i>
+                    </div>
+                    <h4 class="text-success mb-3">บันทึกข้อมูลสำเร็จ!</h4>
+                    <p class="text-muted mb-3">ข้อมูลการผลิตได้รับการอัพเดตแล้ว</p>
+                    <div class="mt-4">
+                        <button type="button" class="btn btn-success me-2" onclick="goToDetail()">
+                            ดูรายละเอียด
+                        </button>
+                        <button type="button" class="btn btn-outline-success" onclick="window.location.href='dashboard.html'">
+                            กลับสู่แผงควบคุม
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Core Dependencies -->
+    <script src="../assets/js/utils.js"></script>
+    <script src="../assets/js/api.js"></script>
+    <script src="../assets/js/farmer-api.js"></script>
+    <script src="../assets/js/auth.js"></script>
+
+    <script>
+        let currentProductionId = null;
+        let productionData = null;
+        let isSubmitting = false;
+        let filesToDelete = [];
+    
+        // Caching functions
+        function getCachedData(key) {
+            try {
+                const cached = localStorage.getItem(key);
+                if (!cached) return null;
+                const data = JSON.parse(cached);
+                const now = new Date().getTime();
+                if (data.expiry && now > data.expiry) {
+                    localStorage.removeItem(key);
+                    return null;
+                }
+                return data.value;
+            } catch (error) {
+                console.warn('Error reading cache:', error);
+                localStorage.removeItem(key);
+                return null;
+            }
+        }
+        
+        function setCachedData(key, value, minutesToCache = 5) {
+            try {
+                const expiry = new Date().getTime() + (minutesToCache * 60 * 1000);
+                const data = { value: value, expiry: expiry };
+                localStorage.setItem(key, JSON.stringify(data));
+            } catch (error) {
+                console.warn('Error setting cache:', error);
+            }
+        }
+    
+        // UI Toggles & Helpers
+        function togglePlantingMethodOther() {
+            document.getElementById('plantingMethodOtherDiv').style.display = document.getElementById('plantingMethod').value === 'อื่น ๆ ระบุ' ? 'block' : 'none';
+        }
+    
+        function toggleTransportMethodOther() {
+            document.getElementById('transportMethodOtherDiv').style.display = document.getElementById('transportMethod').value === 'อื่น ๆ ระบุ' ? 'block' : 'none';
+        }
+    
+        function toggleUnitOther() {
+            document.getElementById('unitOtherDiv').style.display = document.getElementById('unit').value === 'อื่น ๆ ระบุ' ? 'block' : 'none';
+        }
+    
+        function toggleRecordMethodImages() {
+            document.getElementById('recordMethodImages').style.display = document.getElementById('recordMethod').value === 'มี' ? 'block' : 'none';
+        }
+    
+        function convertToBuddhistEra(dateString) {
+            if (!dateString) return '';
+            try {
+                const date = new Date(dateString);
+                const day = String(date.getDate()).padStart(2, '0');
+                const monthNames = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+                const monthName = monthNames[date.getMonth()];
+                const year = date.getFullYear() + 543;
+                return `${day} ${monthName} ${year}`;
+            } catch (error) { return ''; }
+        }
+        
+        function setupDateConverters() {
+            const dateInputs = [
+                { input: 'plantDate', display: 'plantDateBE' },
+                { input: 'harvestDate', display: 'harvestDateBE' },
+                { input: 'shipDate', display: 'shipDateBE' },
+                { input: 'farmShipDate', display: 'farmShipDateBE' }
+            ];
+            dateInputs.forEach(({ input, display }) => {
+                const inputEl = document.getElementById(input);
+                const displayEl = document.getElementById(display);
+                const update = () => { displayEl.textContent = inputEl.value ? `(${convertToBuddhistEra(inputEl.value)})` : ''; };
+                if (inputEl && displayEl) {
+                    update();
+                    inputEl.addEventListener('change', update);
+                    inputEl.addEventListener('input', update);
+                }
+            });
+        }
+    
+        // Page Initialization
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            currentProductionId = urlParams.get('id');
+            if (!currentProductionId) {
+                showError('ไม่พบรหัสการผลิต กรุณาระบุ ProductionID ใน URL');
+                return;
+            }
+            loadProductionData();
+            setupFormHandlers();
+        });
+    
+        function setupFormHandlers() {
+            document.getElementById('productionForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                if (isSubmitting) return;
+                await submitForm();
+            });
+        }
+    
+        async function loadProductionData() {
+            try {
+                showLoading(true, 'กำลังตรวจสอบแคช...', 10);
+                const cacheKey = `productionDetail_${currentProductionId}`;
+                let responseData = getCachedData(cacheKey);
+                
+                if (responseData) {
+                    console.log(`✅ Using cached data for: ${currentProductionId}`);
+                    showLoading(true, 'กำลังโหลดข้อมูลจากแคช...', 90);
+                    await new Promise(resolve => setTimeout(resolve, 200)); // Simulate loading
+                } else {
+                    console.log(`🔄 Fetching fresh data for: ${currentProductionId}`);
+                    showLoading(true, 'กำลังเชื่อมต่อเซิร์ฟเวอร์...', 30);
+                    
+                    // 🔧 PERFORMANCE FIX: Add timeout and better error handling
+                    const response = await API.call('getProductionDetail', {
+                        productionId: currentProductionId 
+                    }, 'POST', 45000); // 45 second timeout for data loading
+                    
+                    showLoading(true, 'กำลังประมวลผลข้อมูล...', 70);
+                    
+                    if (response.success && response.data) {
+                        responseData = response.data;
+                        setCachedData(cacheKey, responseData, 15); // Cache for 15 minutes (longer cache)
+                        showLoading(true, 'กำลังบันทึกแคช...', 85);
+                    } else {
+                        throw new Error(response.message || 'ไม่พบข้อมูลการผลิตสำหรับ ProductionID นี้');
+                    }
+                }
+                
+                showLoading(true, 'กำลังเตรียมฟอร์ม...', 95);
+                productionData = responseData;
+                populateForm(responseData);
+                showLoading(true, 'เสร็จสิ้น...', 100);
+                showForm();
+            } catch (error) {
+                console.error('Error loading production data:', error);
+                showError(error.message);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function populateForm(data) {
+            document.getElementById('productionSubtitle').textContent = `รหัสการผลิต: ${currentProductionId} | ${data.farmer?.FullName || 'ไม่ระบุชื่อ'}`;
+            
+            if (data.productions && data.productions.length > 0) {
+                const prod = data.productions[0];
+                const cropType = prod.CropType || '';
+                const cropVariety = prod.CropVariety || '';
+                
+                // Set crop type
+                document.getElementById('cropType').value = cropType;
+                
+                // Manually handle crop variety display and value setting
+                const varietySelect = document.getElementById('cropVariety');
+                const varietyDiv = document.getElementById('cropVarietyDiv');
+                varietySelect.innerHTML = '<option value="">เลือกสายพันธุ์</option>';
+                
+                if (['ผักคะน้า', 'กวางตุ้ง', 'มะเขือเทศ'].includes(cropType)) {
+                    varietyDiv.style.display = 'block';
+                    if (cropType === 'ผักคะน้า') {
+                        varietySelect.innerHTML += '<option value="คะน้าต้น">คะน้าต้น</option><option value="คะน้าเห็ดหอม">คะน้าเห็ดหอม</option>';
+                    }
+                    if (cropType === 'กวางตุ้ง') {
+                        varietySelect.innerHTML += '<option value="ต้น">ต้น</option><option value="ฮ่องเต้">ฮ่องเต้</option>';
+                    }
+                    if (cropType === 'มะเขือเทศ') {
+                        varietySelect.innerHTML += '<option value="ท้อ">ท้อ</option><option value="ราชินี">ราชินี</option>';
+                    }
+                    // Set the variety value after options are populated
+                    varietySelect.value = cropVariety;
+                } else {
+                    varietyDiv.style.display = 'none';
+                }
+                
+                document.getElementById('plantDate').value = Utils.formatDateForInput(prod.PlantDate);
+                document.getElementById('harvestDate').value = Utils.formatDateForInput(prod.HarvestDate);
+                const plantingMethod = prod.PlantingMethod || '';
+                document.getElementById('plantingMethod').value = plantingMethod;
+                document.getElementById('plantingMethodOther').value = prod.PlantingMethodOther || '';
+                // Show/hide plantingMethodOther based on value
+                const plantingMethodOtherDiv = document.getElementById('plantingMethodOtherDiv');
+                if (plantingMethodOtherDiv) {
+                    plantingMethodOtherDiv.style.display = plantingMethod === 'อื่น ๆ ระบุ' ? 'block' : 'none';
+                }
+                
+                document.getElementById('fertilizer').value = prod.Fertilizer || '';
+                document.getElementById('pesticide').value = prod.Pesticide || '';
+                document.getElementById('waterSourceType').value = prod.WaterSourceType || '';
+                document.getElementById('waterManagement').value = prod.WaterManagement || '';
+                
+                const recordMethod = prod.RecordMethod || '';
+                document.getElementById('recordMethod').value = recordMethod;
+                // Show/hide recordMethodImages based on value
+                const recordMethodImages = document.getElementById('recordMethodImages');
+                if (recordMethodImages) {
+                    recordMethodImages.style.display = recordMethod === 'มี' ? 'block' : 'none';
+                }
+                
+                document.getElementById('pestControl').value = prod.PestControl || '';
+            }
+
+            if (data.harvests && data.harvests.length > 0) {
+                const harvest = data.harvests[0];
+                document.getElementById('shipDate').value = Utils.formatDateForInput(harvest.ShipDate);
+                document.getElementById('harvestMethod').value = harvest.HarvestMethod || '';
+                document.getElementById('quantity').value = harvest.Quantity || '';
+                
+                const unit = harvest.Unit || '';
+                document.getElementById('unit').value = unit;
+                document.getElementById('unitOther').value = harvest.UnitOther || '';
+                // Show/hide unitOther based on value
+                const unitOtherDiv = document.getElementById('unitOtherDiv');
+                if (unitOtherDiv) {
+                    unitOtherDiv.style.display = unit === 'อื่น ๆ ระบุ' ? 'block' : 'none';
+                }
+                
+                document.getElementById('packagingCompany').value = harvest.PackagingCompany || '';
+                document.getElementById('packagingLocation').value = harvest.PackagingLocation || '';
+                document.getElementById('responsiblePerson').value = harvest.ResponsiblePerson || '';
+            }
+
+            if (data.transports && data.transports.length > 0) {
+                const transport = data.transports[0];
+                document.getElementById('farmShipDate').value = Utils.formatDateForInput(transport.ShipDate);
+                document.getElementById('transportChannel').value = transport.TransportChannel || '';
+                
+                const transportMethod = transport.TransportMethod || '';
+                document.getElementById('transportMethod').value = transportMethod;
+                document.getElementById('transportMethodOther').value = transport.TransportMethodOther || '';
+                // Show/hide transportMethodOther based on value
+                const transportMethodOtherDiv = document.getElementById('transportMethodOtherDiv');
+                if (transportMethodOtherDiv) {
+                    transportMethodOtherDiv.style.display = transportMethod === 'อื่น ๆ ระบุ' ? 'block' : 'none';
+                }
+                
+                document.getElementById('transportCompany').value = transport.TransportCompany || '';
+                document.getElementById('distributorCode').value = transport.DistributorCode || '';
+            }
+
+            if (data.additionalInfo && data.additionalInfo.length > 0) {
+                document.getElementById('additionalInfo').value = data.additionalInfo[0].Story || '';
+            }
+
+            displayExistingFiles(data.fileRecords);
+            setupDateConverters();
+        }
+
+        function displayExistingFiles(fileRecords) {
+            if (!fileRecords || fileRecords.length === 0) {
+                document.getElementById('existingFilesSection').style.display = 'none';
+                return;
+            }
+            document.getElementById('existingFilesSection').style.display = 'block';
+            
+            const groupedFiles = fileRecords.reduce((acc, file) => {
+                const type = file.FileType || file.fileType;
+                if (!acc[type]) acc[type] = [];
+                acc[type].push(file);
+                return acc;
+            }, {});
+            
+            document.getElementById('existingPlotImages').innerHTML = displayFileList(groupedFiles['รูปแปลงปลูก'], 'รูปแปลงปลูก');
+            document.getElementById('existingProductImages').innerHTML = displayFileList(groupedFiles['รูปสินค้า'], 'รูปสินค้า');
+            document.getElementById('existingPlantingImages').innerHTML = displayFileList(groupedFiles['รูปกิจกรรมการปลูก'], 'รูปกิจกรรมการปลูก');
+            document.getElementById('existingCertificationDocs').innerHTML = displayFileList(groupedFiles['เอกสารการรับรอง'], 'เอกสารการรับรอง');
+            document.getElementById('existingMethodImages').innerHTML = displayFileList(groupedFiles['วิธีการปลูก'], 'วิธีการปลูก');
+        }
+    
+        function displayFileList(files, category) {
+            if (!files || files.length === 0) return '<small class="text-muted">ไม่มีไฟล์เดิม</small>';
+            return files.map(file => {
+                const fileName = (file.FileName || file.fileName || 'N/A');
+                const fileUrl = file.FileUrl || file.fileUrl || '#';
+                const fileId = file.FileID || file.fileId || fileName;
+                const fileSize = file.FileSize || file.fileSize || 0;
+                const formattedSize = Utils.formatBytes(fileSize);
+
+                return `
+                    <div class="d-flex align-items-center p-2 mb-2 border rounded" id="file-${fileId}" style="background-color: #f8f9fa;">
+                        <i class="fas fa-file-alt me-3 text-secondary"></i>
+                        <div class="flex-grow-1">
+                            <a href="${fileUrl}" target="_blank" class="fw-medium text-decoration-none">${fileName}</a>
+                            <small class="text-muted d-block">${formattedSize}</small>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="markFileForDeletion('${fileId}', '${category}')" title="ลบไฟล์">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>`;
+            }).join('');
+        }
+    
+        function markFileForDeletion(fileId, category) {
+             if(confirm('ต้องการลบไฟล์นี้หรือไม่? การลบจะมีผลเมื่อกดบันทึก')) {
+                filesToDelete.push({ fileId, category });
+                console.log('🗑️ Marked file for deletion:', { fileId, category });
+                console.log('📋 Current filesToDelete array:', filesToDelete);
+                
+                // ซ่อนไฟล์ทันทีแทนการทำให้มัว
+                const el = document.getElementById(`file-${fileId}`);
+                if(el) {
+                    el.style.display = 'none';
+                    // เพิ่ม hidden marker
+                    el.setAttribute('data-deleted', 'true');
+                }
+            }
+        }
+        
+        async function submitForm() {
+            console.log('🚀 submitForm() called');
+            console.log('📊 isSubmitting:', isSubmitting);
+            
+            const isValid = validateForm();
+            console.log('✅ Form validation result:', isValid);
+            
+            if (isSubmitting) {
+                console.log('⏳ Already submitting, returning...');
+                return;
+            }
+            
+            if (!isValid) {
+                console.log('❌ Form validation failed, returning...');
+                return;
+            }
+            
+            console.log('🎯 Proceeding with form submission...');
+            isSubmitting = true;
+            showLoadingModal(true);
+            try {
+                const currentUser = Auth.getCurrentUser();
+                const formData = collectFormData();
+                
+                // Helper function to ensure text format (match farmer-api.js)
+                const ensureText = (v) => {
+                    return v == null ? '' : String(v);
+                };
+
+                // 🔧 FIX: ส่งข้อมูลแบบเดียวกับ add-production-cycle.html (ไม่ใช้ ensureText ส่วนใหญ่)
+                const apiData = {
+                    action: 'updateProductionData',
+                    // ใช้ ensureText เฉพาะ ID fields
+                    productionId: ensureText(currentProductionId),
+                    farmerId: ensureText(currentUser.farmerID),
+                    // Production data (flat) - ไม่ใช้ ensureText
+                    cropType: formData.production.cropType || '',
+                    cropVariety: formData.production.cropVariety || '',
+                    plantDate: formData.production.plantDate || '',
+                    harvestDate: formData.production.harvestDate || '',
+                    plantingMethod: formData.production.plantingMethod || '',
+                    plantingMethodOther: formData.production.plantingMethodOther || '',
+                    fertilizer: formData.production.fertilizer || '',
+                    pesticide: formData.production.pesticide || '',
+                    waterSourceType: formData.production.waterSourceType || '',
+                    waterManagement: formData.production.waterManagement || '',
+                    recordMethod: formData.production.recordMethod || '',
+                    pestControl: formData.production.pestControl || '',
+                    // Harvest data (flat) - ไม่ใช้ ensureText
+                    shipDate: formData.harvest.shipDate || '',
+                    harvestMethod: formData.harvest.harvestMethod || '',
+                    quantity: formData.harvest.quantity || '',
+                    unit: formData.harvest.unit || '',
+                    unitOther: formData.harvest.unitOther || '',
+                    packagingCompany: formData.harvest.packagingCompany || '',
+                    packagingLocation: formData.harvest.packagingLocation || '',
+                    responsiblePerson: formData.harvest.responsiblePerson || '',
+                    // Transport data (flat) - ไม่ใช้ ensureText
+                    farmShipDate: formData.transport.farmShipDate || '',
+                    transportChannel: formData.transport.transportChannel || '',
+                    transportMethod: formData.transport.transportMethod || '',
+                    transportMethodOther: formData.transport.transportMethodOther || '',
+                    transportCompany: formData.transport.transportCompany || '',
+                    distributorCode: formData.transport.distributorCode || '',
+                    // Additional info (flat) - ไม่ใช้ ensureText
+                    story: formData.additionalInfo.story || '',
+                    // Files to delete (as JSON string since it's array)
+                    filesToDelete: filesToDelete.length > 0 ? JSON.stringify(filesToDelete) : '[]'
+                };
+                
+                console.log('=== SUBMITTING UPDATE FORM ===');
+                console.log('Production ID:', currentProductionId);
+                console.log('Form Data collected:', formData);
+                console.log('Files to delete:', filesToDelete);
+                console.log('Files to delete (stringified):', JSON.stringify(filesToDelete));
+                console.log('API Data to send:', apiData);
+                console.log('============================');
+                
+                const response = await API.call('updateProductionData', apiData);
+                
+                console.log('=== API RESPONSE ===');
+                console.log('Response object:', response);
+                console.log('Success status:', response.success);
+                console.log('Response message:', response.message);
+                console.log('==================');
+
+                if (response.success) {
+                    console.log('✅ Update successful, clearing cache and showing success modal');
+                    localStorage.removeItem(`productionDetail_${currentProductionId}`);
+                    
+                    // แสดงข้อมูลการลบไฟล์ถ้ามี
+                    if (filesToDelete.length > 0) {
+                        console.log(`🗑️ Requested deletion of ${filesToDelete.length} files:`, filesToDelete);
+                    }
+                    
+                    showSuccessModal();
+                } else {
+                    console.error('❌ API returned failure:', response);
+                    throw new Error(response.message || 'ไม่สามารถบันทึกข้อมูลได้');
+                }
+            } catch (error) {
+                showError(error.message);
+            } finally {
+                isSubmitting = false;
+                showLoadingModal(false);
+            }
+        }
+    
+        function collectFormData() {
+            const getVal = id => document.getElementById(id)?.value || '';
+            return {
+                production: {
+                    cropType: getVal('cropType'), cropVariety: getVal('cropVariety'), plantDate: getVal('plantDate'),
+                    harvestDate: getVal('harvestDate'), plantingMethod: getVal('plantingMethod'),
+                    plantingMethodOther: getVal('plantingMethodOther'), fertilizer: getVal('fertilizer'),
+                    pesticide: getVal('pesticide'), waterSourceType: getVal('waterSourceType'),
+                    waterManagement: getVal('waterManagement'), recordMethod: getVal('recordMethod'),
+                    pestControl: getVal('pestControl')
+                },
+                harvest: {
+                    shipDate: getVal('shipDate'), harvestMethod: getVal('harvestMethod'), quantity: getVal('quantity'),
+                    unit: getVal('unit'), unitOther: getVal('unitOther'), packagingCompany: getVal('packagingCompany'),
+                    packagingLocation: getVal('packagingLocation'), responsiblePerson: getVal('responsiblePerson')
+                },
+                transport: {
+                    farmShipDate: getVal('farmShipDate'), transportChannel: getVal('transportChannel'),
+                    transportMethod: getVal('transportMethod'), transportMethodOther: getVal('transportMethodOther'),
+                    transportCompany: getVal('transportCompany'), distributorCode: getVal('distributorCode')
+                },
+                additionalInfo: { story: getVal('additionalInfo') }
+            };
+        }
+    
+        function cancelEdit() {
+            if (confirm('คุณแน่ใจหรือไม่ที่จะยกเลิกการแก้ไข?')) {
+                window.location.href = 'dashboard.html';
+            }
+        }
+    
+        function goToDetail() {
+            window.location.href = `production-detail.html?id=${currentProductionId}`;
+        }
+    
+        function showLoading(show, text = 'กำลังโหลดข้อมูลการผลิต...', progress = 0) {
+            const indicator = document.getElementById('loadingIndicator');
+            const textEl = document.getElementById('loadingText');
+            const progressEl = document.getElementById('loadingProgress');
+            const progressBar = progressEl?.querySelector('.progress-bar');
+            
+            indicator.style.display = show ? 'block' : 'none';
+            if (textEl) textEl.textContent = text;
+            
+            if (progress > 0 && progressEl && progressBar) {
+                progressEl.style.display = 'block';
+                progressBar.style.width = progress + '%';
+            } else if (progressEl) {
+                progressEl.style.display = 'none';
+            }
+        }
+    
+        function showForm() {
+            document.getElementById('editForm').style.display = 'block';
+            setupCropVarietyHandler();
+        }
+    
+        function setupCropVarietyHandler() {
+            document.getElementById('cropType').addEventListener('change', function() {
+                const cropType = this.value;
+                const varietySelect = document.getElementById('cropVariety');
+                const varietyDiv = document.getElementById('cropVarietyDiv');
+                varietySelect.innerHTML = '<option value="">เลือกสายพันธุ์</option>';
+                if (['ผักคะน้า', 'กวางตุ้ง', 'มะเขือเทศ'].includes(cropType)) {
+                    varietyDiv.style.display = 'block';
+                    if (cropType === 'ผักคะน้า') varietySelect.innerHTML += '<option value="คะน้าต้น">คะน้าต้น</option><option value="คะน้าเห็ดหอม">คะน้าเห็ดหอม</option>';
+                    if (cropType === 'กวางตุ้ง') varietySelect.innerHTML += '<option value="ต้น">ต้น</option><option value="ฮ่องเต้">ฮ่องเต้</option>';
+                    if (cropType === 'มะเขือเทศ') varietySelect.innerHTML += '<option value="ท้อ">ท้อ</option><option value="ราชินี">ราชินี</option>';
+                } else {
+                    varietyDiv.style.display = 'none';
+                }
+            });
+        }
+    
+        function showError(message) {
+            document.getElementById('errorText').innerHTML = message.replace(/\n/g, '<br>');
+            document.getElementById('errorMessage').style.display = 'block';
+        }
+        
+        function showLoadingModal(show) {
+            const el = document.getElementById('loadingModal');
+            const modal = bootstrap.Modal.getOrCreateInstance(el);
+            show ? modal.show() : modal.hide();
+        }
+
+        function showSuccessModal() {
+            const el = document.getElementById('successModal');
+            const modal = bootstrap.Modal.getOrCreateInstance(el);
+            modal.show();
+        }
+    
+        function validateForm() {
+            console.log('🔍 Starting form validation...');
+            
+            // ตรวจสอบเฉพาะฟิลด์ที่จำเป็นจริงๆ สำหรับการแก้ไข
+            const requiredFields = [
+                { id: 'cropType', name: 'ชื่อพืช' },
+                { id: 'plantDate', name: 'วันที่เริ่มปลูก' },
+                { id: 'harvestDate', name: 'วันที่เก็บเกี่ยว' },
+                { id: 'distributorCode', name: 'บริษัทผู้กระจายสินค้า' }
+            ];
+            
+            for (const field of requiredFields) {
+                const element = document.getElementById(field.id);
+                if (!element) {
+                    console.warn(`⚠️ Element not found: ${field.id}`);
+                    continue;
+                }
+                const value = element.value ? element.value.trim() : '';
+                console.log(`📋 Checking ${field.name}:`, value);
+                
+                if (!value || value === '') {
+                    console.error(`❌ Missing required field: ${field.name}`);
+                    showError(`กรุณากรอก${field.name}`);
+                    element.focus();
+                    return false;
+                }
+            }
+            
+            console.log('✅ Form validation passed!');
+            return true;
+        }
+        
+        function showError(message) {
+            const alertHtml = `
+                <div class="alert alert-danger alert-dismissible fade show position-fixed" 
+                     style="top: 100px; right: 20px; z-index: 9999; min-width: 300px;">
+                    <i class="fas fa-exclamation-circle me-2"></i>${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', alertHtml);
+            
+            setTimeout(() => {
+                const alert = document.querySelector('.alert:last-child');
+                if (alert) {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                }
+            }, 5000);
+        }
+    
+        window.DISABLE_AUTH_NAVIGATION = true;
+    </script>
+</body>
+</html>
+

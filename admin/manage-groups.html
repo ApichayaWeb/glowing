@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>จัดการกลุ่มเกษตรกร - ระบบสอบย้อนกลับผักอุดร</title>
+    
+    <!-- Critical CSS - Load immediately -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="../assets/css/main.css">
+    
+    <!-- Non-critical resources - Load asynchronously -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;600;700&display=swap" rel="stylesheet"></noscript>
+    
+    <!-- Font Awesome - Load asynchronously -->
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
+</head>
+<body>
+    <!-- Enhanced Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top custom-navbar">
+        <div class="container-fluid px-4">
+            <!-- Brand -->
+            <a class="navbar-brand d-flex align-items-center" href="../index.html">
+                <div class="brand-icon me-3">
+                    <img src="../assets/images/logo.png" width="36" height="36" alt="โลโก้" style="display:block; border-radius: 6px;" />
+                </div>
+                <div class="brand-text">
+                    <div class="brand-title">ระบบสอบย้อนกลับผักอุดร</div>
+                    <div class="brand-subtitle">Admin Dashboard</div>
+                </div>
+            </a>
+
+            <!-- Mobile Toggle -->
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <!-- Navigation Items -->
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <!-- Main Navigation -->
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item mx-1">
+                        <a class="nav-link nav-link-custom" href="dashboard.html">
+                            <i class="fas fa-tachometer-alt nav-icon"></i>
+                            <span class="nav-text">แผงควบคุม</span>
+                        </a>
+                    </li>
+                    <li class="nav-item mx-1">
+                        <a class="nav-link nav-link-custom active" href="manage-groups.html">
+                            <i class="fas fa-users nav-icon"></i>
+                            <span class="nav-text">จัดการกลุ่ม</span>
+                        </a>
+                    </li>
+                </ul>
+
+                <!-- User Menu -->
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle user-menu" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <div class="user-info d-flex align-items-center">
+                                <div class="user-avatar me-2">
+                                    <i class="fas fa-user-circle"></i>
+                                </div>
+                                <div class="user-details d-none d-lg-block">
+                                    <div class="user-name user-display">Admin</div>
+                                    <div class="user-role">ผู้ดูแลระบบ</div>
+                                </div>
+                                <span class="d-lg-none ms-2">Admin (ผู้ดูแลระบบ)</span>
+                            </div>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end user-dropdown">
+                            <li class="dropdown-header">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-user-circle me-2 text-success"></i>
+                                    <div>
+                                        <div class="fw-bold user-display">Admin</div>
+                                        <small class="text-muted">ผู้ดูแลระบบ</small>
+                                    </div>
+                                </div>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item dropdown-item-custom" href="#" onclick="changePassword()">
+                                    <i class="fas fa-key me-3 text-primary"></i>
+                                    <span>เปลี่ยนรหัสผ่าน</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item dropdown-item-custom" href="#">
+                                    <i class="fas fa-cog me-3 text-secondary"></i>
+                                    <span>ตั้งค่าบัญชี</span>
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item dropdown-item-custom logout-btn" href="#" onclick="console.log('Logout clicked'); AuthAPI.confirmLogout(); return false;">
+                                    <i class="fas fa-sign-out-alt me-3 text-danger"></i>
+                                    <span>ออกจากระบบ</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container-fluid">
+            <!-- Header -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="page-header d-flex justify-content-between align-items-center">
+                        <div>
+                            <h1 class="h3 mb-3 fw-bold text-success">
+                                <i class="fas fa-users me-3"></i>
+                                จัดการกลุ่มเกษตรกร
+                            </h1>
+                            <p class="text-muted">จัดการข้อมูลกลุ่มเกษตรกรและสมาชิกในระบบ</p>
+                        </div>
+                        <div>
+                            <button class="btn btn-success" onclick="showAddGroupModal()">
+                                <i class="fas fa-plus me-2"></i>เพิ่มกลุ่มใหม่
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- Groups Table -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="fas fa-table me-2"></i>รายการกลุ่มเกษตรกร
+                            </h5>
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-outline-success" onclick="refreshData()">
+                                    <i class="fas fa-sync-alt me-1"></i>รีเฟรช
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover" id="groupsTable">
+                                    <thead class="table-success">
+                                        <tr>
+                                            <th>รหัสกลุ่ม</th>
+                                            <th>ชื่อกลุ่ม</th>
+                                            <th>สถานะ</th>
+                                            <th>วันที่สร้าง</th>
+                                            <th>จัดการ</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Data will be loaded here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Add Group Modal -->
+    <div class="modal fade" id="addGroupModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-plus me-2"></i>เพิ่มกลุ่มเกษตรกร
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="addGroupForm">
+                    <div class="modal-body">
+                        <div class="alert alert-info mb-4">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>หมายเหตุ:</strong> รหัสกลุ่มจะถูกสร้างอัตโนมัติ (01, 02, 03...) ผู้จัดการสามารถเปลี่ยนรหัสผ่านได้ภายหลัง
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="managerUsername" class="form-label">Username ผู้จัดการ *</label>
+                                <input type="text" class="form-control" id="managerUsername" required 
+                                       placeholder="เช่น group_manager01">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="managerPassword" class="form-label">รหัสผ่านเบื้องต้น *</label>
+                                <input type="password" class="form-control" id="managerPassword" required 
+                                       placeholder="กรอกรหัสผ่าน" minlength="6">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-plus me-2"></i>เพิ่มกลุ่ม
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Group Modal -->
+    <div class="modal fade" id="editGroupModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-edit me-2"></i>แก้ไขกลุ่มเกษตรกร
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="editGroupForm">
+                    <input type="hidden" id="editGroupId">
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editGroupCode" class="form-label">รหัสกลุ่ม</label>
+                                <input type="text" class="form-control" id="editGroupCode" readonly>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editManagerUsername" class="form-label">ผู้จัดการ</label>
+                                <input type="text" class="form-control" id="editManagerUsername" readonly>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editGroupStatus" class="form-label">สถานะ</label>
+                                <select class="form-select" id="editGroupStatus">
+                                    <option value="active">เปิดใช้งาน</option>
+                                    <option value="inactive">ปิดใช้งาน</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>บันทึก
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Group Details Modal -->
+    <div class="modal fade" id="groupDetailsModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-info-circle me-2"></i>รายละเอียดกลุ่มเกษตรกร
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="groupDetailsContent">
+                        <!-- Group details will be loaded here -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Modal -->
+    <div class="modal fade" id="loadingModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body text-center py-5">
+                    <div class="spinner-border text-success mb-3" role="status">
+                        <span class="visually-hidden">กำลังโหลด...</span>
+                    </div>
+                    <h5>กำลังโหลดข้อมูล...</h5>
+                    <p class="text-muted">กรุณารอสักครู่</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Critical scripts - Load immediately -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../assets/js/utils.js"></script>
+    <script src="../assets/js/api.js"></script>
+    <script src="../assets/js/auth.js"></script>
+    
+    <!-- Non-critical scripts - Load asynchronously -->
+    <script>
+        // Load external libraries asynchronously after page load
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                // Load SweetAlert2
+                const sweetAlert = document.createElement('script');
+                sweetAlert.src = 'https://cdn.jsdelivr.net/npm/sweetalert2@11';
+                sweetAlert.async = true;
+                document.head.appendChild(sweetAlert);
+                
+                // Load Axios
+                const axios = document.createElement('script');
+                axios.src = 'https://cdn.jsdelivr.net/npm/axios@1.4.0/dist/axios.min.js';
+                axios.async = true;
+                document.head.appendChild(axios);
+            }, 100);
+        });
+    </script>
+
+    <style>
+        :root {
+            /* Blue color scheme */
+            --bg: #f5f9ff;
+            --card: #ffffff;
+            --muted: #576b75;
+            --text: #0e1f2b;
+            --brand: #1976d2;
+            --brand-2: #1565c0;
+            --accent: #ff8a3d;
+            --ring: rgba(25, 118, 210, .35);
+            --shadow: 0 10px 30px rgba(21, 101, 192, .12);
+            --radius: 18px;
+        }
+        
+        * {
+            box-sizing: border-box;
+        }
+        
+        html, body {
+            height: 100%;
+        }
+        
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        body {
+            margin: 0;
+            font-family: "Noto Sans Thai", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+            background:
+                radial-gradient(900px 500px at 85% -10%, rgba(255,186,120,.22), transparent),
+                radial-gradient(800px 500px at -10% 10%, rgba(25,118,210,.18), transparent),
+                var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+        
+        .main-content {
+            padding-top: 80px;
+            padding-bottom: 1rem;
+            background: transparent;
+            min-height: 100vh;
+        }
+
+        .page-header {
+            background: white;
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            margin-bottom: 1.5rem;
+            border: 1px solid rgba(14,31,43,.08);
+        }
+        
+        .page-header h1 {
+            color: var(--brand);
+        }
+
+        .card {
+            border: none;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            border: 1px solid rgba(14,31,43,.08);
+        }
+
+        .card-header {
+            border: none;
+            background: linear-gradient(135deg, var(--brand) 0%, var(--brand-2) 100%);
+            color: white;
+            padding: 1rem;
+        }
+        
+        .card-header.bg-light {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
+            color: var(--text) !important;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: .65rem 1rem;
+            border-radius: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-success {
+            background: linear-gradient(180deg, var(--brand), var(--brand-2));
+            border-color: var(--brand);
+            box-shadow: 0 10px 18px rgba(25,118,210,.25);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(180deg, var(--brand), var(--brand-2));
+            border-color: var(--brand);
+            box-shadow: 0 10px 18px rgba(25,118,210,.25);
+        }
+        
+        .btn-outline-success {
+            border: 2px solid var(--brand);
+            color: var(--brand);
+            background: transparent;
+        }
+        
+        .btn-outline-success:hover {
+            background: rgba(25,118,210,.08);
+        }
+        
+        .btn-outline-primary {
+            border: 2px solid var(--brand);
+            color: var(--brand);
+            background: transparent;
+        }
+        
+        .btn-outline-primary:hover {
+            background: rgba(25,118,210,.08);
+        }
+        
+        .btn-outline-info {
+            border: 2px solid var(--brand);
+            color: var(--brand);
+            background: transparent;
+        }
+        
+        .btn-outline-info:hover {
+            background: rgba(25,118,210,.08);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.03);
+        }
+        
+        .text-success {
+            color: var(--brand) !important;
+        }
+        
+        .spinner-border.text-success {
+            color: var(--brand) !important;
+        }
+        
+        .text-primary {
+            color: var(--brand) !important;
+        }
+        
+        .text-info {
+            color: var(--brand) !important;
+        }
+        
+        .bg-success {
+            background: linear-gradient(135deg, var(--brand) 0%, var(--brand-2) 100%) !important;
+        }
+        
+        .table-success th {
+            background: linear-gradient(135deg, var(--brand) 0%, var(--brand-2) 100%) !important;
+            color: white !important;
+        }
+
+        /* Enhanced Navbar Styles */
+        .custom-navbar {
+            background: linear-gradient(135deg, #1565c0 0%, #1976d2 50%, #42a5f5 100%);
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            padding: 0.5rem 0;
+        }
+
+        .brand-icon {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--brand);
+            font-size: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .brand-text {
+            line-height: 1.2;
+        }
+
+        .brand-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: white;
+        }
+
+        .brand-subtitle {
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.8);
+            font-weight: 400;
+        }
+
+        .nav-link-custom {
+            padding: 0.75rem 1rem !important;
+            margin: 0 0.25rem;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            color: rgba(255,255,255,0.9) !important;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-link-custom::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            border-radius: 10px;
+        }
+
+        .nav-link-custom:hover::before,
+        .nav-link-custom.active::before {
+            opacity: 1;
+        }
+
+        .nav-link-custom:hover,
+        .nav-link-custom.active {
+            color: white !important;
+            background: rgba(255,255,255,0.15);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .nav-icon {
+            width: 18px;
+            text-align: center;
+            margin-right: 0.5rem;
+        }
+
+        .nav-text {
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .user-menu {
+            padding: 0.5rem 1rem !important;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            color: rgba(255,255,255,0.9) !important;
+        }
+
+        .user-menu:hover {
+            background: rgba(255,255,255,0.1);
+            color: white !important;
+        }
+
+        .user-avatar i {
+            font-size: 2rem;
+            color: #fff;
+        }
+
+        .user-name {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: white;
+            line-height: 1.2;
+        }
+
+        .user-role {
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.8);
+            line-height: 1.2;
+        }
+
+        .user-dropdown {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            padding: 0.5rem 0;
+            margin-top: 0.5rem;
+            min-width: 280px;
+        }
+
+        .dropdown-header {
+            padding: 1rem 1.25rem;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 10px 10px 0 0;
+            margin-bottom: 0.5rem;
+        }
+        
+        .dropdown-header .text-success {
+            color: var(--brand) !important;
+        }
+
+        .dropdown-item-custom {
+            padding: 0.75rem 1.25rem;
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            margin: 0.25rem 0.5rem;
+        }
+
+        .dropdown-item-custom:hover {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            transform: translateX(5px);
+        }
+        
+        .dropdown-item-custom .text-primary {
+            color: var(--brand) !important;
+        }
+
+        .navbar-toggler {
+            padding: 0.5rem;
+            border-radius: 8px;
+        }
+
+        .navbar-toggler:focus {
+            box-shadow: 0 0 0 0.2rem rgba(255,255,255,0.25);
+        }
+
+        .border-left-success {
+            border-left: 4px solid var(--brand) !important;
+        }
+
+        .border-left-info {
+            border-left: 4px solid var(--brand) !important;
+        }
+
+        .border-left-warning {
+            border-left: 4px solid var(--brand) !important;
+        }
+
+        .border-left-danger {
+            border-left: 4px solid #dc3545 !important;
+        }
+
+        .text-xs {
+            font-size: 0.75rem;
+        }
+
+        .font-weight-bold {
+            font-weight: 700 !important;
+        }
+
+        .text-gray-800 {
+            color: #343a40 !important;
+        }
+
+        .group-badge {
+            font-size: 0.875rem;
+            padding: 0.375rem 0.75rem;
+        }
+
+        .action-buttons .btn {
+            margin: 0 2px;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                padding-top: 90px;
+            }
+            
+            .page-header {
+                flex-direction: column;
+                gap: 1rem;
+                padding: 1.5rem;
+            }
+            
+            .action-buttons {
+                display: flex;
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .brand-title {
+                font-size: 0.95rem;
+            }
+
+            .brand-subtitle {
+                font-size: 0.7rem;
+            }
+
+            .nav-link-custom {
+                margin: 0.25rem 0;
+            }
+
+            .user-dropdown {
+                min-width: 250px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .brand-text {
+                display: none;
+            }
+
+            .main-content {
+                padding-top: 80px;
+            }
+        }
+    </style>
+
+    <script>
+        // Global variables
+        let groupsTable = null;
+        let allGroups = [];
+        let currentGroup = null;
+        
+        // Track loading time
+        window.loadStartTime = Date.now();
+
+        // Initialize page
+        // Aggressively override setupNavigation BEFORE DOM loaded
+        if (typeof AuthAPI !== 'undefined') {
+            AuthAPI.setupNavigation = function() {
+                console.log('setupNavigation blocked in manage-groups');
+                return;
+            };
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Override setupNavigation again to be sure
+            if (typeof AuthAPI !== 'undefined') {
+                AuthAPI.setupNavigation = function() {
+                    console.log('setupNavigation blocked in manage-groups DOM ready');
+                    return;
+                };
+            }
+            
+            // Check admin permission first
+            const currentUser = AuthAPI.getCurrentUser();
+            console.log('Admin manage-groups - Current user:', currentUser);
+            
+            if (!currentUser || !currentUser.role || currentUser.role.toString().trim().toLowerCase() !== 'admin') {
+                console.error('Permission denied: Admin role required for manage-groups');
+                Utils.showError('ไม่มีสิทธิ์', 'คุณต้องมีสิทธิ์ผู้ดูแลระบบเท่านั้น');
+                setTimeout(() => window.location.href = '../login.html', 2000);
+                return;
+            }
+            
+            // Clear any existing auth navigation items aggressively
+            cleanupAuthNavItems();
+            
+            // Setup page without navigation creation
+            AuthAPI.setupPage({ setupNavigation: false });
+            
+            initializePage();
+            setupEventListeners();
+            
+            // Load data first, then check URL parameter
+            loadGroupsData().then(() => {
+                // Check URL parameter for direct group view after data is loaded
+                checkURLForGroupView();
+            });
+            
+            // Single cleanup after initial setup - no continuous monitoring needed
+            setTimeout(cleanupAuthNavItems, 1000);
+        });
+
+        // Simple cleanup function - one time only
+        function cleanupAuthNavItems() {
+            const authNavItems = document.querySelectorAll('.auth-nav-item');
+            const navbarTexts = document.querySelectorAll('.navbar-text');
+            const mainNavbar = document.querySelector('.navbar-nav.me-auto');
+            
+            authNavItems.forEach(item => item.remove());
+            navbarTexts.forEach(text => {
+                if (text.textContent.includes('สวัสดี,') || text.textContent.includes('admin')) {
+                    text.parentElement?.remove();
+                }
+            });
+            
+            if (mainNavbar) {
+                const allItems = Array.from(mainNavbar.children);
+                allItems.forEach((item, index) => {
+                    if (index >= 2) item.remove();
+                });
+            }
+            
+            console.log('Navbar cleanup completed');
+        }
+
+
+        // Initialize page with simple table
+        function initializePage() {
+            console.log('Page initialized with native Bootstrap table');
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Add group form
+            document.getElementById('addGroupForm').addEventListener('submit', handleAddGroup);
+            
+            // Edit group form
+            document.getElementById('editGroupForm').addEventListener('submit', handleEditGroup);
+        }
+
+        // Check URL parameter for direct group view
+        async function checkURLForGroupView() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const groupId = urlParams.get('group');
+            
+            console.log('checkURLForGroupView called, groupId from URL:', groupId);
+            console.log('allGroups available:', allGroups ? allGroups.length : 'null');
+            
+            if (groupId && allGroups && allGroups.length > 0) {
+                console.log('Showing group details for:', groupId);
+                
+                // Small delay to ensure DOM is ready
+                setTimeout(async () => {
+                    try {
+                        await viewGroup(groupId);
+                        // Clean up URL parameter after showing
+                        window.history.replaceState({}, document.title, window.location.pathname);
+                        console.log('Group modal shown and URL cleaned');
+                    } catch (error) {
+                        console.error('Error showing group from URL:', error);
+                        Utils.showError('เกิดข้อผิดพลาด', 'ไม่สามารถแสดงรายละเอียดกลุ่มได้');
+                    }
+                }, 500);
+            } else if (groupId) {
+                console.error('Group ID found but no groups data available');
+                Utils.showError('ไม่พบข้อมูล', 'ไม่สามารถโหลดรายละเอียดกลุ่มได้');
+            }
+        }
+
+        // Load groups data
+        async function loadGroupsData() {
+            try {
+                Utils.showLoading('กำลังโหลดข้อมูลกลุ่ม...\n⚠️ หากใช้เวลานานกว่าปกติ เนื่องจาก Google Apps Script กำลังประมวลผลสถิติ\nกรุณารอสักครู่...');
+                
+                const result = await AdminAPI.getAllGroups();
+                console.log('getAllGroups result:', result);
+                
+                if (result.success) {
+                    allGroups = result.groups;
+                    console.log('Loaded groups:', allGroups);
+                    console.log('Number of groups loaded:', allGroups.length);
+                    
+                    displayGroups(allGroups);
+                    
+                    // Success message with optimization note
+                    const loadTime = Date.now() - window.loadStartTime || 0;
+                    if (loadTime > 15000) {
+                        Utils.showSuccess('โหลดข้อมูลสำเร็จ', 
+                            `ข้อมูลโหลดเสร็จแล้ว (${Math.round(loadTime/1000)}s)<br>` +
+                            '<small>💡 หมายเหตุ: เพื่อความเร็วในการโหลด แนะนำให้ Deploy Google Apps Script เวอร์ชันใหม่ที่ลบการคำนวณสถิติออกแล้ว</small>'
+                        );
+                    }
+                } else {
+                    console.error('Failed to load groups:', result.message);
+                    Utils.showError('เกิดข้อผิดพลาด', result.message);
+                }
+                
+                Utils.hideLoading();
+                
+            } catch (error) {
+                Utils.hideLoading();
+                console.error('loadGroupsData error:', error);
+                handleAPIError(error, 'เกิดข้อผิดพลาดในการโหลดข้อมูล');
+            }
+        }
+
+        // Display groups in native Bootstrap table
+        function displayGroups(groups) {
+            const tableBody = document.querySelector('#groupsTable tbody');
+            
+            // Clear existing data
+            tableBody.innerHTML = '';
+            
+            if (!groups || groups.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="text-center text-muted py-4">
+                            ไม่มีข้อมูลกลุ่มเกษตรกร
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            // Add new data
+            groups.forEach(group => {
+                const statusBadge = group.status === 'active' ? 
+                    '<span class="badge bg-success">เปิดใช้งาน</span>' : 
+                    '<span class="badge bg-secondary">ปิดใช้งาน</span>';
+                
+                const actions = `
+                    <div class="action-buttons">
+                        <button class="btn btn-sm btn-outline-info" onclick="viewGroup('${group.groupId}')" title="ดูรายละเอียด">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteGroup('${group.groupId}', '${group.groupName}')" title="ลบ">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><span class="badge bg-outline-primary group-badge">${group.groupCode}</span></td>
+                    <td>${group.groupName}</td>
+                    <td>${statusBadge}</td>
+                    <td>${Utils.formatDateThai(group.created)}</td>
+                    <td>${actions}</td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+        }
+
+
+        // Show add group modal
+        function showAddGroupModal() {
+            const modal = new bootstrap.Modal(document.getElementById('addGroupModal'));
+            modal.show();
+        }
+
+        // Handle add group
+        async function handleAddGroup(event) {
+            event.preventDefault();
+            
+            const managerUsername = document.getElementById('managerUsername').value.trim();
+            const managerPassword = document.getElementById('managerPassword').value.trim();
+            
+            if (!managerUsername || !managerPassword) {
+                Utils.showWarning('ข้อมูลไม่ครบ', 'กรุณากรอกข้อมูลให้ครบถ้วน');
+                return;
+            }
+            
+            const formData = {
+                managerUsername: managerUsername,
+                managerPassword: managerPassword
+            };
+            
+            if (formData.managerPassword.length < 6) {
+                Utils.showWarning('รหัสผ่านสั้นเกินไป', 'รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร');
+                return;
+            }
+
+            try {
+                Utils.showLoading('กำลังเพิ่มกลุ่มเกษตรกร...');
+                
+                const result = await AdminAPI.createGroup(formData);
+				
+				// รองรับทั้งรูปแบบ {group:{...}} และ {data:{...}}
+				const group = result?.group ?? result?.data;
+                
+                Utils.hideLoading();
+                
+                if (result?.success && group) {
+					
+                    Utils.showSuccess('เพิ่มกลุ่มสำเร็จ', `สร้างกลุ่ม ${result.group.groupName} เรียบร้อยแล้ว`);
+                    
+                    // Close modal and refresh data
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('addGroupModal'));
+                    modal.hide();
+                    document.getElementById('addGroupForm').reset();
+                    
+                    // Reload data
+                    setTimeout(() => {
+                        loadGroupsData();
+                    }, 500);
+                } else {
+                    Utils.showError('เกิดข้อผิดพลาด', result?.message || 'รูปแบบผลลัพธ์ไม่ถูกต้อง');
+					console.warn('Unexpected result shape:', result);
+                }
+                
+            } catch (error) {
+                Utils.hideLoading();
+                handleAPIError(error, 'เกิดข้อผิดพลาดในการเพิ่มกลุ่ม');
+            }
+        }
+
+        // View group details
+        async function viewGroup(groupId) {
+            try {
+                // Check if data is available first
+                if (!allGroups || allGroups.length === 0) {
+                    console.log('allGroups not ready, waiting...');
+                    
+                    // Wait for data to be loaded (no loading modal)
+                    await loadGroupsData();
+                    
+                    if (!allGroups || allGroups.length === 0) {
+                        Utils.showError('ไม่พบข้อมูล', 'ไม่สามารถโหลดข้อมูลกลุ่มได้');
+                        return;
+                    }
+                }
+                // No loading modal - direct processing
+                
+                console.log('viewGroup called with groupId:', groupId);
+                console.log('Available groups:', allGroups.length, 'groups');
+                
+                const group = allGroups.find(g => g.groupId === groupId);
+                if (!group) {
+                    Utils.hideLoading();
+                    Utils.showError('ไม่พบข้อมูล', 'ไม่พบข้อมูลกลุ่มที่ต้องการ');
+                    return;
+                }
+                
+                console.log('Found group:', group);
+                currentGroup = group;
+                
+                // Display group details with error handling
+                try {
+                    displayGroupDetails(group);
+                    console.log('Group details displayed successfully');
+                } catch (displayError) {
+                    console.error('Error displaying group details:', displayError);
+                    Utils.showError('ข้อผิดพลาดการแสดงผล', 'ไม่สามารถแสดงรายละเอียดกลุ่มได้');
+                    return;
+                }
+                
+                // Show group details modal directly (no loading modal interference)
+                try {
+                    const modal = new bootstrap.Modal(document.getElementById('groupDetailsModal'));
+                    modal.show();
+                    console.log('Group details modal shown directly');
+                } catch (modalError) {
+                    console.error('Error showing modal:', modalError);
+                    Utils.showError('ข้อผิดพลาด Modal', 'ไม่สามารถแสดงหน้าต่างรายละเอียดได้');
+                }
+                
+            } catch (error) {
+                Utils.hideLoading();
+                console.error('viewGroup error:', error);
+                handleAPIError(error, 'เกิดข้อผิดพลาดในการโหลดรายละเอียด');
+            }
+        }
+
+        // Display group details
+        function displayGroupDetails(group) {
+            try {
+                console.log('displayGroupDetails called with:', group);
+                
+                const content = document.getElementById('groupDetailsContent');
+                if (!content) {
+                    throw new Error('groupDetailsContent element not found');
+                }
+                
+                
+                // Safe date formatting
+                let formattedDate;
+                try {
+                    formattedDate = group.created ? Utils.formatDateTimeThai(group.created) : 'ไม่ระบุ';
+                } catch (dateError) {
+                    console.warn('Date formatting error:', dateError);
+                    formattedDate = group.created || 'ไม่ระบุ';
+                }
+                
+                content.innerHTML = `
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-success mb-3">ข้อมูลพื้นฐาน</h6>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td class="fw-bold">รหัสกลุ่ม:</td>
+                                    <td><span class="badge bg-primary">${group.groupCode || 'ไม่ระบุ'}</span></td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">ชื่อกลุ่ม:</td>
+                                    <td>${group.groupName || group.groupCode || 'ไม่ระบุ'}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">ผู้จัดการ:</td>
+                                    <td>${group.managerUsername || 'ไม่ระบุ'}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">สถานะ:</td>
+                                    <td>
+                                        ${group.status === 'active' ? 
+                                            '<span class="badge bg-success">เปิดใช้งาน</span>' : 
+                                            '<span class="badge bg-secondary">ปิดใช้งาน</span>'
+                                        }
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">วันที่สร้าง:</td>
+                                    <td>${formattedDate}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <hr class="my-4">
+                
+                <div class="row">
+                    <div class="col-12">
+                        <h6 class="text-success mb-3">เอกสาร</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card border-light">
+                                    <div class="card-body">
+                                        <h6 class="card-title">
+                                            <i class="fas fa-file-alt text-info me-2"></i>
+                                            หนังสือจดทะเบียนวิสาหกิจชุมชน
+                                        </h6>
+                                        ${group.registrationDoc ? 
+                                            '<span class="badge bg-success">อัพโหลดแล้ว</span>' : 
+                                            '<span class="badge bg-warning">ยังไม่อัพโหลด</span>'
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card border-light">
+                                    <div class="card-body">
+                                        <h6 class="card-title">
+                                            <i class="fas fa-certificate text-success me-2"></i>
+                                            ใบรับรองแหล่งผลิต GAP
+                                        </h6>
+                                        ${group.gapCert ? 
+                                            '<span class="badge bg-success">อัพโหลดแล้ว</span>' : 
+                                            '<span class="badge bg-warning">ยังไม่อัพโหลด</span>'
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            console.log('Group details HTML generated and inserted successfully');
+            
+        } catch (error) {
+            console.error('Error in displayGroupDetails:', error);
+            throw error;
+        }
+    }
+
+        // Edit group
+        function editGroup(groupId) {
+            const group = allGroups.find(g => g.groupId === groupId);
+            if (!group) return;
+            
+            // Fill form data
+            document.getElementById('editGroupId').value = group.groupId;
+            document.getElementById('editGroupCode').value = group.groupCode;
+            document.getElementById('editManagerUsername').value = group.managerUsername;
+            document.getElementById('editGroupStatus').value = group.status;
+            
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('editGroupModal'));
+            modal.show();
+        }
+
+        // Edit current group (from details modal)
+        function editCurrentGroup() {
+            if (currentGroup) {
+                // Close details modal
+                const detailsModal = bootstrap.Modal.getInstance(document.getElementById('groupDetailsModal'));
+                detailsModal.hide();
+                
+                // Open edit modal
+                setTimeout(() => {
+                    editGroup(currentGroup.groupId);
+                }, 300);
+            }
+        }
+
+        // Handle edit group
+        async function handleEditGroup(event) {
+            event.preventDefault();
+            
+            const groupId = document.getElementById('editGroupId').value;
+            const formData = {
+                status: document.getElementById('editGroupStatus').value
+            };
+
+            try {
+                Utils.showLoading('กำลังอัพเดทข้อมูล...');
+                
+                const result = await AdminAPI.updateGroup(groupId, formData);
+                
+                Utils.hideLoading();
+                
+                if (result.success) {
+                    Utils.showSuccess('อัพเดทสำเร็จ', 'อัพเดทข้อมูลกลุ่มเรียบร้อยแล้ว');
+                    
+                    // Close modal and refresh data
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('editGroupModal'));
+                    modal.hide();
+                    
+                    // Reload data
+                    setTimeout(() => {
+                        loadGroupsData();
+                    }, 1000);
+                } else {
+                    Utils.showError('เกิดข้อผิดพลาด', result.message);
+                }
+                
+            } catch (error) {
+                Utils.hideLoading();
+                handleAPIError(error, 'เกิดข้อผิดพลาดในการอัพเดทข้อมูล');
+            }
+        }
+
+        // Delete group
+        async function deleteGroup(groupId, groupName) {
+            const result = await Utils.showConfirm(
+                'ลบกลุ่มเกษตรกร',
+                `คุณต้องการลบกลุ่ม "${groupName}" หรือไม่?\n\nการดำเนินการนี้จะลบข้อมูลทั้งหมดและไม่สามารถกู้คืนได้`,
+                'ลบ',
+                'ยกเลิก'
+            );
+
+            if (result.isConfirmed) {
+                try {
+                    Utils.showLoading('กำลังลบข้อมูล...');
+                    
+                    const deleteResult = await AdminAPI.deleteGroup(groupId);
+                    
+                    Utils.hideLoading();
+                    
+                    if (deleteResult.success) {
+                        Utils.showSuccess('ลบสำเร็จ', 'ลบกลุ่มเกษตรกรเรียบร้อยแล้ว');
+                        
+                        // Reload data
+                        setTimeout(() => {
+                            loadGroupsData();
+                        }, 1000);
+                    } else {
+                        Utils.showError('ไม่สามารถลบได้', deleteResult.message);
+                    }
+                    
+                } catch (error) {
+                    Utils.hideLoading();
+                    handleAPIError(error, 'เกิดข้อผิดพลาดในการลบข้อมูล');
+                }
+            }
+        }
+
+        // Refresh data
+        function refreshData() {
+            loadGroupsData();
+        }
+
+        // Change password function (placeholder)
+        function changePassword() {
+            Utils.showSuccess('ฟีเจอร์เปลี่ยนรหัสผ่าน', 'ฟีเจอร์นี้จะเปิดใช้งานในเร็วๆ นี้');
+        }
+
+    </script>
+</body>
+</html>

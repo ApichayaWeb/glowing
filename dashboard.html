@@ -1,0 +1,1408 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>แผงควบคุมเกษตรกร - ระบบสอบย้อนกลับผักอุดร</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <style>
+        /* Modern UX Enhancements */
+        body {
+            font-family: 'Kanit', 'Sarabun', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        .card {
+            transition: all 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .table tbody tr {
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            transition: all 0.2s ease;
+        }
+        
+        .table tbody tr:hover {
+            background: linear-gradient(135deg, rgba(13, 110, 253, 0.05), rgba(102, 16, 242, 0.03));
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .btn {
+            transition: all 0.3s ease;
+        }
+        
+        .btn:hover {
+            transform: translateY(-1px);
+        }
+        
+        /* Glassmorphism effect */
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+        
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #198754, #20c997);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #146c43, #198754);
+        }
+        
+        /* Animation for cards */
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .card {
+            animation: slideInUp 0.5s ease-out;
+        }
+        
+        /* Quick action cards hover effects */
+        .quick-action-card {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .quick-action-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .quick-action-card:hover::before {
+            left: 100%;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top" style="background: #ffffff; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); border-bottom: 1px solid #e0e0e0;">
+        <div class="container-fluid px-4">
+            <!-- Brand -->
+            <a class="navbar-brand d-flex align-items-center" href="../index.html" style="font-weight: 700; color: #198754;">
+                <div class="me-3" style="width: 45px; height: 45px; background: #198754; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-seedling" style="font-size: 20px; color: white;"></i>
+                </div>
+                <div>
+                    <div style="font-size: 1.2rem; line-height: 1.2; font-weight: 700;">ระบบสอบย้อนกลับผักอุดร</div>
+                    <div style="font-size: 0.8rem; color: #6c757d; font-weight: 500;">แผงควบคุมเกษตรกร</div>
+                </div>
+            </a>
+
+            <!-- Mobile Toggle -->
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <!-- Navigation Items -->
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <!-- Main Navigation -->
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item mx-1">
+                        <a class="nav-link active d-flex align-items-center" href="dashboard.html" style="padding: 0.7rem 1.2rem; border-radius: 10px; background: #198754; color: white; font-weight: 600;">
+                            <i class="fas fa-home me-2"></i>
+                            <span>หน้าหลัก</span>
+                        </a>
+                    </li>
+                    <li class="nav-item mx-1">
+                        <a class="nav-link d-flex align-items-center" href="add-production-cycle.html" style="padding: 0.7rem 1.2rem; border-radius: 10px; color: #495057; font-weight: 500; transition: all 0.3s;" onmouseover="this.style.background='rgba(25, 135, 84, 0.1)'" onmouseout="this.style.background='transparent'">
+                            <i class="fas fa-plus-circle me-2 text-success"></i>
+                            <span>บันทึกการผลิต</span>
+                        </a>
+                    </li>
+                </ul>
+
+                <!-- User Menu -->
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="padding: 0.7rem 1rem; border-radius: 12px; background: #f8f9fa; border: 1px solid #e0e0e0; transition: all 0.3s;" onmouseover="this.style.background='#e9ecef'" onmouseout="this.style.background='#f8f9fa'">
+                            <div class="d-flex align-items-center">
+                                <div class="me-2" style="width: 36px; height: 36px; background: #198754; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                    <i class="fas fa-user" style="font-size: 16px; color: white;"></i>
+                                </div>
+                                <div class="d-none d-lg-block">
+                                    <div style="font-size: 0.9rem; font-weight: 600; line-height: 1.2; color: #198754;" id="navbarDisplayName">เกษตรกร</div>
+                                    <div style="font-size: 0.75rem; color: #6c757d; font-weight: 500;" id="navbarRole">(เกษตรกร)</div>
+                                </div>
+                                <span class="d-lg-none ms-2" id="navbarMobileDisplayName" style="color: #198754; font-weight: 600;">เกษตรกร</span>
+                            </div>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" style="border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.15); border-radius: 10px; padding: 0.5rem 0;">
+                            <li class="dropdown-header" style="padding: 0.75rem 1rem;">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-user-circle me-2 text-success" style="font-size: 20px;"></i>
+                                    <div>
+                                        <div class="fw-bold" style="font-size: 0.9rem;" id="dropdownDisplayName">เกษตรกร</div>
+                                        <small class="text-muted" id="dropdownRole">บัญชีเกษตรกร</small>
+                                        <div class="text-muted" style="font-size: 0.75rem;" id="dropdownPlotInfo"></div>
+                                    </div>
+                                </div>
+                            </li>
+                            <li><hr class="dropdown-divider" style="margin: 0.5rem 0;"></li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center" href="profile-setup.html" style="padding: 0.6rem 1rem; border-radius: 6px; margin: 0 0.5rem; transition: all 0.2s;">
+                                    <i class="fas fa-user-edit me-3 text-success"></i>
+                                    <span>แก้ไขข้อมูลเกษตรกร</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center" href="add-production-cycle.html" style="padding: 0.6rem 1rem; border-radius: 6px; margin: 0 0.5rem; transition: all 0.2s;">
+                                    <i class="fas fa-plus-circle me-3 text-info"></i>
+                                    <span>บันทึกข้อมูลการผลิต</span>
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider" style="margin: 0.5rem 0;"></li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center" href="#" onclick="changePassword()" style="padding: 0.6rem 1rem; border-radius: 6px; margin: 0 0.5rem; transition: all 0.2s;">
+                                    <i class="fas fa-key me-3 text-primary"></i>
+                                    <span>เปลี่ยนรหัสผ่าน</span>
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider" style="margin: 0.5rem 0;"></li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center" href="#" onclick="confirmLogout(); return false;" style="padding: 0.6rem 1rem; border-radius: 6px; margin: 0 0.5rem; transition: all 0.2s;">
+                                    <i class="fas fa-sign-out-alt me-3 text-danger"></i>
+                                    <span>ออกจากระบบ</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content" style="margin-top: 90px; background: #f8f9fa; min-height: 100vh;">
+        <div class="container-fluid px-4 py-5">
+            
+            <!-- Loading Indicator -->
+            <div id="loadingIndicator" class="text-center py-5" style="display: none;">
+                <div class="spinner-border text-success" role="status">
+                    <span class="visually-hidden">กำลังโหลด...</span>
+                </div>
+                <p class="mt-3 text-muted">กำลังโหลดข้อมูล...</p>
+            </div>
+
+            <!-- Welcome Section - Show when part1 not completed -->
+            <div id="welcomeSection" style="display: none;">
+                <div class="row justify-content-center">
+                    <div class="col-lg-8">
+                        <div class="card border-0 shadow" style="border-radius: 15px; background: #ffffff;">
+                            <div class="card-body p-5 text-center">
+                                <div class="mb-4">
+                                    <div class="d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px; background: #198754; border-radius: 50%;">
+                                        <i class="fas fa-seedling fa-2x text-white"></i>
+                                    </div>
+                                </div>
+                                <h3 class="mb-3" style="color: #198754; font-weight: 700;">ยินดีต้อนรับสู่ระบบสอบย้อนกลับผักอุดร</h3>
+                                <p class="text-muted mb-4" style="font-size: 1.1rem;">เริ่มต้นการใช้งานด้วยการกรอกข้อมูลเกษตรกรและแปลงปลูกของคุณ</p>
+                                <a href="profile-setup.html" class="btn btn-success btn-lg" style="padding: 0.8rem 2rem; border-radius: 10px; font-weight: 600;">
+                                    <i class="fas fa-user-edit me-2"></i>เริ่มกรอกข้อมูล
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Dashboard - Show when part1 completed -->
+            <div id="dashboardContent" style="display: none;">
+                
+                <!-- Quick Actions Row -->
+                <div class="row mb-4">
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="card border-0 shadow-sm h-100 quick-action-card" style="border-radius: 15px; background: linear-gradient(135deg, #198754, #20c997); transition: all 0.3s;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 10px 25px rgba(25, 135, 84, 0.3)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 3px 10px rgba(0, 0, 0, 0.1)'">
+                            <div class="card-body text-center text-white p-4">
+                                <div class="mb-3">
+                                    <i class="fas fa-plus-circle fa-3x"></i>
+                                </div>
+                                <h6 class="fw-bold mb-2">บันทึกการผลิต</h6>
+                                <p class="small mb-3 opacity-75">เพิ่มรอบการผลิตใหม่</p>
+                                <a href="add-production-cycle.html" class="btn btn-light btn-sm fw-bold" style="border-radius: 8px;">
+                                    <i class="fas fa-arrow-right me-1"></i>เริ่มบันทึก
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="card border-0 shadow-sm h-100" style="border-radius: 15px; background: #dc3545; transition: all 0.3s;" onmouseover="this.style.transform='translateY(-3px)';" onmouseout="this.style.transform='translateY(0)';">
+                            <div class="card-body text-center text-white p-4">
+                                <div class="mb-3">
+                                    <i class="fas fa-user-edit fa-3x"></i>
+                                </div>
+                                <h6 class="fw-bold mb-2">ข้อมูลส่วนตัว</h6>
+                                <p class="small mb-3 opacity-75">จัดการข้อมูลเกษตรกร</p>
+                                <a href="profile-setup.html" class="btn btn-light btn-sm fw-bold" style="border-radius: 8px;">
+                                    <i class="fas fa-arrow-right me-1"></i>จัดการ
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="card border-0 shadow-sm h-100" style="border-radius: 15px; background: #6f42c1; transition: all 0.3s;" onmouseover="this.style.transform='translateY(-3px)';" onmouseout="this.style.transform='translateY(0)';">
+                            <div class="card-body text-center text-white p-4">
+                                <div class="mb-3">
+                                    <i class="fas fa-qrcode fa-3x"></i>
+                                </div>
+                                <h6 class="fw-bold mb-2">QR Code</h6>
+                                <p class="small mb-3 opacity-75">จัดการและดาวน์โหลด</p>
+                                <a href="#qrCodeSection" class="btn btn-light btn-sm fw-bold" style="border-radius: 8px;" onclick="document.getElementById('qrCodeSection').scrollIntoView({behavior: 'smooth'});">
+                                    <i class="fas fa-arrow-right me-1"></i>ดู QR Code
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 1: Farmer Profile Card -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card border-0 shadow" style="border-radius: 15px; background: #ffffff;">
+                            <div class="card-header border-0 py-4" style="background: #198754; border-radius: 15px 15px 0 0;"
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h4 class="mb-0 text-white fw-bold">
+                                        <i class="fas fa-user-circle me-3"></i>ข้อมูลเกษตรกรและแปลงปลูก
+                                    </h4>
+                                    <button class="btn btn-light btn-sm fw-bold" onclick="editFarmerProfile()" style="border-radius: 10px; padding: 0.5rem 1rem;">
+                                        <i class="fas fa-edit me-1"></i>แก้ไขข้อมูล
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="card-body p-4">
+                                <div class="row">
+                                    <div class="col-lg-4 mb-4">
+                                        <div class="text-center">
+                                            <div class="mb-3" style="width: 100px; height: 100px; background: linear-gradient(135deg, #198754, #20c997); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 10px 25px rgba(25, 135, 84, 0.3);">
+                                                <i class="fas fa-user text-white" style="font-size: 2.5rem;"></i>
+                                            </div>
+                                            <h4 class="fw-bold text-success mb-1" id="farmerName">-</h4>
+                                            <p class="text-muted">เกษตรกร</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-8">
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <div class="d-flex align-items-center p-3" style="background: #f8f9fa; border-radius: 10px; border-left: 4px solid #198754;">
+                                                    <div class="me-3">
+                                                        <i class="fas fa-map-marker-alt text-success fa-lg"></i>
+                                                    </div>
+                                                    <div>
+                                                        <div class="fw-bold text-success">เลขแปลง</div>
+                                                        <div class="text-muted" id="plotNumber">-</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <div class="d-flex align-items-center p-3" style="background: #f8f9fa; border-radius: 10px; border-left: 4px solid #0d6efd;">
+                                                    <div class="me-3">
+                                                        <i class="fas fa-phone text-primary fa-lg"></i>
+                                                    </div>
+                                                    <div>
+                                                        <div class="fw-bold text-primary">เบอร์โทร</div>
+                                                        <div class="text-muted" id="farmerPhone">-</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <div class="d-flex align-items-center p-3" style="background: #f8f9fa; border-radius: 10px; border-left: 4px solid #fd7e14;">
+                                                    <div class="me-3">
+                                                        <i class="fas fa-users text-warning fa-lg"></i>
+                                                    </div>
+                                                    <div>
+                                                        <div class="fw-bold text-warning">กลุ่ม</div>
+                                                        <div class="text-muted" id="groupName">-</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <div class="d-flex align-items-center p-3" style="background: #f8f9fa; border-radius: 10px; border-left: 4px solid #20c997;">
+                                                    <div class="me-3">
+                                                        <i class="fas fa-expand-arrows-alt text-info fa-lg"></i>
+                                                    </div>
+                                                    <div>
+                                                        <div class="fw-bold text-info">พื้นที่</div>
+                                                        <div class="text-muted" id="farmerArea">-</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-12 mb-3">
+                                                <div class="d-flex align-items-start p-3" style="background: #f8f9fa; border-radius: 10px; border-left: 4px solid #6f42c1;">
+                                                    <div class="me-3 mt-1">
+                                                        <i class="fas fa-home" style="color: #6f42c1;" fa-lg"></i>
+                                                    </div>
+                                                    <div class="w-100">
+                                                        <div class="fw-bold" style="color: #6f42c1;">ที่อยู่แปลง</div>
+                                                        <div class="text-muted" id="farmerAddress">-</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- QR Code Section -->
+                                <div class="mt-4" id="qrCodeSection" style="display: none;">
+                                    <div class="card border-0 shadow" style="background: #6f42c1; border-radius: 15px;">
+                                        <div class="card-body p-4">
+                                            <div class="row align-items-center">
+                                                <div class="col-lg-8">
+                                                    <div class="text-white">
+                                                        <h4 class="fw-bold mb-2">
+                                                            <i class="fas fa-qrcode me-2"></i>QR Code ของแปลง
+                                                        </h4>
+                                                        <p class="mb-3">ใช้สำหรับตรวจสอบและระบุตัวตนผลิตภัณฑ์จากแปลงของคุณ</p>
+                                                        <div id="qrCodeActions" class="d-flex gap-2 flex-wrap">
+                                                            <button id="downloadPDFBtn" class="btn btn-primary fw-bold" onclick="downloadPDF()" style="border-radius: 8px; padding: 0.5rem 1.5rem;">
+                                                                <i class="fas fa-file-pdf me-1"></i>ดาวน์โหลด PDF Stickers
+                                                            </button>
+                                                            <button id="createQRBtn" class="btn btn-outline-light fw-bold" onclick="createQRCode()" style="display: none; border-radius: 8px; padding: 0.5rem 1rem;">
+                                                                <i class="fas fa-plus me-1"></i>สร้าง QR Code ใหม่
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-lg-4 text-center">
+                                                    <div class="p-3" style="background: rgba(255, 255, 255, 0.15); border-radius: 12px;">
+                                                        <div id="qrCodeDisplay" style="min-height: 100px; min-width: 100px; background: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
+                                                            <i class="fas fa-qrcode fa-3x text-muted"></i>
+                                                        </div>
+                                                        <div class="text-white mt-2">
+                                                            <small>สแกน QR Code เพื่อดูข้อมูล</small>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                <!-- Production Records Table -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card border-0 shadow" style="border-radius: 15px; background: #ffffff;">
+                            <div class="card-header border-0 py-4" style="background: #0d6efd; border-radius: 15px 15px 0 0;">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h4 class="mb-0 text-white fw-bold">
+                                        <i class="fas fa-list me-3"></i>รายการการผลิตทั้งหมด
+                                    </h4>
+                                </div>
+                            </div>
+                            <div class="card-body p-4">
+                                <!-- Search and Controls -->
+                                <div class="row mb-4" id="productionControls" style="display: none;">
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label fw-bold">🔍 ค้นหาตามวันที่:</label>
+                                        <input type="date" class="form-control" id="dateFilter" placeholder="เลือกวันที่...">
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <label class="form-label fw-bold">📊 เรียงตาม:</label>
+                                        <select class="form-select" id="sortSelect">
+                                            <option value="date_desc">วันที่ (ใหม่→เก่า)</option>
+                                            <option value="date_asc">วันที่ (เก่า→ใหม่)</option>
+                                            <option value="name_asc">ชื่อผลิตภัณฑ์ (A-Z)</option>
+                                            <option value="name_desc">ชื่อผลิตภัณฑ์ (Z-A)</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <label class="form-label fw-bold">📄 แสดงต่อหน้า:</label>
+                                        <select class="form-select" id="itemsPerPageSelect">
+                                            <option value="10">10 รายการ</option>
+                                            <option value="25">25 รายการ</option>
+                                            <option value="50">50 รายการ</option>
+                                            <option value="100" selected>100 รายการ</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2 mb-3 d-flex align-items-end">
+                                        <button class="btn btn-outline-secondary w-100" id="resetFiltersBtn" onclick="resetFilters()">
+                                            <i class="fas fa-undo me-1"></i>รีเซ็ต
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <!-- Loading Indicator -->
+                                <div id="productionLoading" class="text-center py-4" style="display: none;">
+                                    <div class="spinner-border text-success" role="status">
+                                        <span class="visually-hidden">กำลังโหลดข้อมูล...</span>
+                                    </div>
+                                    <p class="mt-2 text-muted">กำลังโหลดข้อมูลการผลิต...</p>
+                                </div>
+                                
+                                <div id="noRecordsMessage" class="text-center py-5" style="display: none;">
+                                    <div class="mb-4">
+                                        <div class="d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px; background: #e3f2fd; border-radius: 50%;">
+                                            <i class="fas fa-seedling fa-3x text-primary"></i>
+                                        </div>
+                                    </div>
+                                    <h4 class="fw-bold text-primary mb-2">เริ่มต้นการผลิต</h4>
+                                    <p class="text-muted mb-4">ยังไม่มีข้อมูลการผลิต เริ่มบันทึกข้อมูลการผลิตแรกของคุณ</p>
+                                    <a href="add-production-cycle.html" class="btn btn-primary btn-lg" style="padding: 0.8rem 2rem; border-radius: 10px; font-weight: 600;">
+                                        <i class="fas fa-plus me-2"></i>เริ่มบันทึกการผลิต
+                                    </a>
+                                </div>
+                                <div id="productionTable" style="display: none;">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover mb-0">
+                                            <thead>
+                                                <tr style="background: #f8f9fa;">
+                                                    <th class="border-0 py-3 fw-bold text-dark">วันที่เริ่มปลูก</th>
+                                                    <th class="border-0 py-3 fw-bold text-dark">พืชที่ปลูก</th>
+                                                    <th class="border-0 py-3 fw-bold text-dark">พันธุ์</th>
+                                                    <th class="border-0 py-3 fw-bold text-dark">วันที่เก็บ</th>
+                                                    <th class="border-0 py-3 fw-bold text-dark">รหัสค้นหา</th>
+                                                    <th class="border-0 py-3 fw-bold text-dark">วันที่จัดส่ง</th>
+                                                    <th class="border-0 py-3 fw-bold text-dark">วันที่ส่งออกจากฟาร์ม</th>
+                                                    <th class="border-0 py-3 fw-bold text-dark text-center">จัดการ</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="productionTableBody">
+                                                <!-- Dynamic content -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <!-- Summary and Pagination -->
+                                    <div class="d-flex justify-content-between align-items-center mt-4" id="paginationContainer">
+                                        <div id="summaryInfo" class="text-muted">
+                                            <!-- Summary will be inserted here -->
+                                        </div>
+                                        <nav id="paginationNav">
+                                            <!-- Pagination will be inserted here -->
+                                        </nav>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Core Dependencies - Load in correct order -->
+    <script src="../assets/js/utils.js"></script>
+    <script src="../assets/js/api.js"></script>
+    <script src="../assets/js/farmer-api.js"></script>
+    <script src="../assets/js/auth.js"></script>
+
+    <script>
+        let dashboardState = {};
+        let waitCount = 0;
+        let authCheckInterval;
+
+        // Wait for all dependencies to load
+        function waitForAuth() {
+            waitCount++;
+            console.log(`Waiting for dependencies... attempt ${waitCount}`);
+            console.log('Auth:', typeof Auth);
+            console.log('FarmerAPI:', typeof window.FarmerAPI);
+            console.log('Utils:', typeof Utils);
+            console.log('API:', typeof API);
+            
+            if (typeof Auth !== 'undefined' && 
+                typeof window.FarmerAPI !== 'undefined' && 
+                typeof Utils !== 'undefined' &&
+                typeof API !== 'undefined') {
+                console.log('All dependencies loaded successfully!');
+                clearInterval(authCheckInterval);
+                initializeDashboard();
+            } else if (waitCount > 100) {
+                console.error('Timeout waiting for dependencies after', waitCount, 'attempts');
+                clearInterval(authCheckInterval);
+                showError('เกิดข้อผิดพลาดในการโหลดระบบ กรุณาลองรีเฟรชหน้าใหม่อีกครั้ง');
+            }
+        }
+
+        // Initialize dashboard
+        async function initializeDashboard() {
+            try {
+                console.log('Initializing farmer dashboard...');
+                console.log('Available objects:', {
+                    Auth: typeof Auth,
+                    FarmerAPI: typeof FarmerAPI,
+                    API: typeof API,
+                    Utils: typeof Utils
+                });
+                
+                // Check authentication
+                if (!Auth || !Auth.isAuthenticated()) {
+                    console.log('Not authenticated, redirecting to login...');
+                    window.location.href = '../login.html';
+                    return;
+                }
+
+                const currentUser = Auth.getCurrentUser();
+                console.log('Current user:', currentUser);
+                
+                if (!currentUser || currentUser.role !== 'farmer') {
+                    console.log('User not farmer or missing, redirecting...');
+                    window.location.href = '../login.html';
+                    return;
+                }
+
+                // Update navbar display
+                updateNavbarUserDisplay(currentUser);
+                
+                showLoading(true);
+                
+                // Check if FarmerAPI is available and has getDashboardState method
+                if (!window.FarmerAPI || typeof window.FarmerAPI.getDashboardState !== 'function') {
+                    console.error('FarmerAPI not available or getDashboardState method missing');
+                    console.log('window.FarmerAPI object:', window.FarmerAPI);
+                    console.log('Available FarmerAPI methods:', window.FarmerAPI ? Object.keys(window.FarmerAPI) : 'undefined');
+                    throw new Error('FarmerAPI.getDashboardState is not available');
+                }
+                
+                // Get farmer dashboard data
+                console.log('Calling window.FarmerAPI.getDashboardState...');
+                const response = await window.FarmerAPI.getDashboardState();
+                console.log('Dashboard response:', response);
+                
+                if (response && response.success) {
+                    dashboardState = response;
+                    renderDashboard(response);
+                } else {
+                    showError(response?.message || 'ไม่สามารถดึงข้อมูลได้');
+                }
+                
+            } catch (error) {
+                console.error('Dashboard initialization error:', error);
+                console.error('Error stack:', error.stack);
+                showError('เกิดข้อผิดพลาดในการโหลดข้อมูล: ' + error.message);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Update navbar user display
+        function updateNavbarUserDisplay(currentUser, farmerData = null) {
+            let displayName = 'เกษตรกร';
+            let plotInfo = '';
+            let roleText = '(เกษตรกร)';
+            
+            if (farmerData?.FullName) {
+                displayName = farmerData.FullName;
+                if (farmerData.PlotNumber && farmerData.GroupName) {
+                    plotInfo = `แปลง ${farmerData.PlotNumber} - ${farmerData.GroupName}`;
+                } else if (farmerData.PlotNumber) {
+                    plotInfo = `แปลงเลขที่ ${farmerData.PlotNumber}`;
+                }
+            } else if (currentUser?.fullName || currentUser?.FullName) {
+                displayName = currentUser.fullName || currentUser.FullName;
+            } else if (currentUser?.username) {
+                displayName = currentUser.username;
+            }
+            
+            // Update navbar elements
+            const navbarName = document.getElementById('navbarDisplayName');
+            const dropdownName = document.getElementById('dropdownDisplayName'); 
+            const mobileName = document.getElementById('navbarMobileDisplayName');
+            const navbarRole = document.getElementById('navbarRole');
+            const dropdownRole = document.getElementById('dropdownRole');
+            const dropdownPlot = document.getElementById('dropdownPlotInfo');
+            
+            if (navbarName) navbarName.textContent = displayName;
+            if (dropdownName) dropdownName.textContent = displayName;
+            if (mobileName) mobileName.textContent = displayName;
+            if (navbarRole) navbarRole.textContent = roleText;
+            if (dropdownRole) dropdownRole.textContent = 'บัญชีเกษตรกร';
+            if (dropdownPlot) dropdownPlot.textContent = plotInfo;
+        }
+
+        // Render dashboard content
+        function renderDashboard(state) {
+            const welcomeSection = document.getElementById('welcomeSection');
+            const dashboardContent = document.getElementById('dashboardContent');
+            
+            if (!state.part1Complete) {
+                // Show welcome section for new users
+                welcomeSection.style.display = 'block';
+                dashboardContent.style.display = 'none';
+            } else {
+                // Show main dashboard
+                welcomeSection.style.display = 'none';
+                dashboardContent.style.display = 'block';
+                
+                // Update farmer profile
+                updateFarmerProfile(state.farmer);
+                
+                // Update QR code
+                updateQRCode(state.qrCode);
+                
+                // Update production records
+                updateProductionRecords(state.productionRecords);
+                
+                // Update navbar with farmer data
+                const currentUser = Auth.getCurrentUser();
+                updateNavbarUserDisplay(currentUser, state.farmer);
+            }
+        }
+
+        // Update farmer profile display
+        function updateFarmerProfile(farmer) {
+            if (!farmer) return;
+            
+            document.getElementById('farmerName').textContent = farmer.FullName || '-';
+            document.getElementById('plotNumber').textContent = farmer.PlotNumber || '-';
+            document.getElementById('farmerPhone').textContent = farmer.Phone || '-';
+            document.getElementById('groupName').textContent = farmer.GroupName || '-';
+            document.getElementById('farmerArea').textContent = farmer.Area ? farmer.Area + ' ไร่' : '-';
+            document.getElementById('farmerAddress').textContent = farmer.Address || '-';
+        }
+
+        // Update QR code display
+        function updateQRCode(qrData) {
+            const qrSection = document.getElementById('qrCodeSection');
+            const qrDisplay = document.getElementById('qrCodeDisplay');
+            const createStickersBtn = document.getElementById('createStickersBtn');
+            const downloadBtn = document.getElementById('downloadQRBtn');
+            const createBtn = document.getElementById('createQRBtn');
+            
+            console.log('updateQRCode called with:', qrData);
+            
+            // แสดง QR Code section เสมอถ้ามี PlotNumber
+            const farmer = dashboardState.farmer;
+            if (farmer && farmer.PlotNumber) {
+                qrSection.style.display = 'block';
+                
+                // ตรวจสอบ QR Code หลายรูปแบบ
+                const hasQRCode = qrData && (qrData.qrCodeUrl || qrData.qrCode);
+                
+                if (hasQRCode) {
+                    console.log('QR Code found, displaying QR image');
+                    
+                    // สร้าง QR Code URL ถ้ายังไม่มี
+                    let qrCodeUrl = qrData.qrCodeUrl;
+                    if (!qrCodeUrl && qrData.qrCode) {
+                        // สร้าง QR Code URL จาก Google Charts API
+                        const qrCodeText = encodeURIComponent(qrData.qrCode);
+                        qrCodeUrl = `https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=${qrCodeText}&choe=UTF-8`;
+                    }
+                    
+                    // แสดง QR Code
+                    qrDisplay.innerHTML = `<img src="${qrCodeUrl}" alt="QR Code: ${qrData.qrCode || 'QR Code'}" style="width: 80px; height: 80px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                        <div class="text-center" style="display: none;">
+                            <div class="badge bg-success p-2">${qrData.qrCode || 'QR Code'}</div>
+                            <div class="small text-muted mt-1">QR Code Text</div>
+                        </div>`;
+                    
+                    // ตั้งค่าปุ่ม PDF (เรียบง่าย)
+                    const pdfBtn = document.getElementById('downloadPDFBtn');
+                    if (pdfBtn) {
+                        pdfBtn.setAttribute('data-qr-text', qrData.qrCode);
+                        pdfBtn.style.display = 'inline-block';
+                    }
+                    createBtn.style.display = 'none';
+                    
+                } else {
+                    console.log('No QR Code found, showing create button');
+                    
+                    // ไม่มี QR Code - แสดงปุ่มสร้าง QR Code
+                    qrDisplay.innerHTML = `
+                        <div class="text-center">
+                            <i class="fas fa-qrcode fa-2x text-muted mb-2"></i>
+                            <div class="small text-muted">ยังไม่มี QR Code</div>
+                        </div>
+                    `;
+                    const pdfBtn = document.getElementById('downloadPDFBtn');
+                    if (pdfBtn) pdfBtn.style.display = 'none';
+                    createBtn.style.display = 'inline-block';
+                }
+            } else {
+                qrSection.style.display = 'none';
+            }
+        }
+
+        // =============================================================================
+        // CLIENT-SIDE PDF GENERATION - เร็วมาก!
+        // =============================================================================
+        
+        async function downloadPDF() {
+            const btn = document.getElementById('downloadPDFBtn');
+            if (!btn) return;
+            
+            try {
+                // Get QR Code
+                const qrText = btn.getAttribute('data-qr-text');
+                if (!qrText) {
+                    showAlert('warning', 'ไม่พบรหัส QR Code');
+                    return;
+                }
+                
+                // Show loading
+                const originalHTML = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>กำลังสร้าง PDF...';
+                btn.disabled = true;
+                
+                console.log('🚀 Generating PDF client-side for:', qrText);
+                
+                // Generate PDF HTML locally (เร็ว!)
+                const html = await generateQRStickersClientSide(qrText);
+                
+                // Open print window
+                console.log('✅ Opening PDF print window');
+                
+                const printWindow = window.open('', '_blank', 'width=900,height=700');
+                printWindow.document.write(html);
+                printWindow.document.close();
+                
+                // Success message
+                showAlert('success', `✅ เปิดหน้าต่างพิมพ์แล้ว<br>📄 เลือก "Save as PDF" เพื่อดาวน์โหลด<br>🏷️ ชื่อไฟล์: QR-Stickers-${qrText}.pdf`);
+                
+            } catch (error) {
+                console.error('❌ PDF Error:', error);
+                showAlert('error', 'เกิดข้อผิดพลาด: ' + error.message);
+                
+            } finally {
+                // Reset button
+                if (btn) {
+                    btn.innerHTML = originalHTML;
+                    btn.disabled = false;
+                }
+            }
+        }
+        
+        // =============================================================================
+        // CLIENT-SIDE QR STICKER GENERATOR
+        // =============================================================================
+        
+        async function generateQRStickersClientSide(qrCode) {
+            console.log('📱 Loading images client-side...');
+            
+            // 1. Generate QR Code (online API - เร็ว)
+            const searchUrl = `https://www.udtrace.com/search.html?code=${qrCode}`;
+            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(searchUrl)}&format=png`;
+            
+            // 2. Load logos from local assets
+            const logoFiles = [
+                'assets/images/logoUdon/mhest.png',
+                'assets/images/logoUdon/NIA.png',
+                'assets/images/logoUdon/tsri.png',
+                'assets/images/logoUdon/SSRU.png',
+                'assets/images/logoUdon/irdssru.png',
+                'assets/images/logoUdon/tru.png'
+            ];
+            
+            // 3. Create single sticker HTML
+            const stickerHTML = createClientSideSticker(qrCode, qrUrl, logoFiles);
+            
+            // 4. Create full document (14 stickers = 2x7)
+            const allStickers = Array(14).fill(stickerHTML).join('');
+            
+            return createClientSideDocument(qrCode, allStickers);
+        }
+        
+        function createClientSideSticker(qrCode, qrUrl, logoFiles) {
+            // Create logo elements (ใช้ path ตรงๆ ไม่ต้อง Base64)
+            const logoElements = logoFiles.map(logoPath => 
+                `<img src="${logoPath}" class="logo" onerror="this.style.display='none'">`
+            ).join('');
+            
+            return `
+                <div class="sticker">
+                    <div class="logo-row">${logoElements}</div>
+                    
+                    <div class="content">
+                        <div class="qr-section">
+                            <img src="${qrUrl}" class="qr-code" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                            <div class="qr-fallback" style="display: none; width: 22mm; height: 22mm; border: 2px solid #000; align-items: center; justify-content: center; font-size: 8px; text-align: center;">${qrCode}</div>
+                            <div class="qr-text">${qrCode}</div>
+                        </div>
+                        
+                        <div class="date-section">
+                            <div class="date-line">
+                                <span>วันที่เก็บเกี่ยว:</span>
+                                <div class="line"></div>
+                            </div>
+                            <div class="date-line">
+                                <span>วันที่ส่งออก:</span>
+                                <div class="line"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function createClientSideDocument(qrCode, stickers) {
+            return `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>QR Stickers - ${qrCode}</title>
+    <style>
+        @page { size: A4; margin: 8mm; }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background: white;
+        }
+        
+        .page {
+            width: 100%;
+            height: 100vh;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-template-rows: repeat(7, 1fr);
+            gap: 3mm;
+            padding: 2mm;
+        }
+        
+        .sticker {
+            border: 2px solid #000;
+            padding: 2mm;
+            display: flex;
+            flex-direction: column;
+            background: white;
+            width: 9.5cm;
+            height: 3.5cm;
+        }
+        
+        .logo-row {
+            height: 8mm;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 1mm;
+            margin-bottom: 2mm;
+        }
+        
+        .logo {
+            height: 6mm;
+            width: auto;
+            max-width: 10mm;
+            object-fit: contain;
+        }
+        
+        .content {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 4mm;
+        }
+        
+        .qr-section {
+            flex: 0 0 30mm;
+            text-align: center;
+        }
+        
+        .qr-code {
+            width: 22mm;
+            height: 22mm;
+            border: 1px solid #ddd;
+            margin-bottom: 2mm;
+        }
+        
+        .qr-text {
+            font-size: 9px;
+            font-weight: bold;
+            word-break: break-all;
+            line-height: 1.1;
+        }
+        
+        .date-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4mm;
+        }
+        
+        .date-line {
+            display: flex;
+            align-items: center;
+            gap: 2mm;
+        }
+        
+        .date-line span {
+            font-size: 11px;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+        
+        .line {
+            flex: 1;
+            height: 1px;
+            border-bottom: 1px solid #000;
+        }
+        
+        /* Print optimizations */
+        @media print {
+            body { -webkit-print-color-adjust: exact; }
+            .page { height: 100vh; page-break-after: avoid; }
+            .sticker { page-break-inside: avoid; }
+        }
+        
+        /* Mobile responsive */
+        @media screen and (max-width: 768px) {
+            .page {
+                grid-template-columns: 1fr;
+                grid-template-rows: repeat(14, auto);
+                max-width: 100%;
+            }
+            
+            .sticker {
+                width: 100%;
+                height: auto;
+                min-height: 80px;
+            }
+            
+            .qr-code { width: 60px; height: 60px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="page">${stickers}</div>
+    
+    <scr` + `ipt>
+        // Auto print dialog
+        window.onload = function() {
+            setTimeout(() => window.print(), 1000);
+        };
+    </scr` + `ipt>
+</body>
+</html>`;
+        }
+
+        // Global variables for pagination and filtering
+        let allProductionRecords = [];
+        let filteredRecords = [];
+        let currentPage = 1;
+        let itemsPerPage = 100;
+
+        // Update production records table
+        function updateProductionRecords(records) {
+            console.log('updateProductionRecords called with:', records);
+            
+            allProductionRecords = records || [];
+            
+            const noRecordsMessage = document.getElementById('noRecordsMessage');
+            const productionTable = document.getElementById('productionTable');
+            const productionControls = document.getElementById('productionControls');
+            
+            if (!records || records.length === 0) {
+                console.log('No production records found, showing no records message');
+                noRecordsMessage.style.display = 'block';
+                productionTable.style.display = 'none';
+                productionControls.style.display = 'none';
+                return;
+            }
+            
+            // Show controls and table
+            noRecordsMessage.style.display = 'none';
+            productionTable.style.display = 'block';
+            productionControls.style.display = 'block';
+            
+            // Initialize filtering and sorting
+            applyFiltersAndSort();
+            
+            // Set up event listeners
+            setupEventListeners();
+        }
+
+        // Apply filters and sorting
+        function applyFiltersAndSort() {
+            let records = [...allProductionRecords];
+            
+            // Apply date filter
+            const dateFilter = document.getElementById('dateFilter').value;
+            if (dateFilter) {
+                records = records.filter(record => {
+                    const plantDate = record.PlantDate ? new Date(record.PlantDate).toISOString().split('T')[0] : '';
+                    const harvestDate = record.HarvestDate ? new Date(record.HarvestDate).toISOString().split('T')[0] : '';
+                    const shipDate = record.ShipDate ? new Date(record.ShipDate).toISOString().split('T')[0] : '';
+                    const farmShipDate = record.FarmShipDate ? new Date(record.FarmShipDate).toISOString().split('T')[0] : '';
+                    
+                    return plantDate === dateFilter || harvestDate === dateFilter || 
+                           shipDate === dateFilter || farmShipDate === dateFilter;
+                });
+            }
+            
+            // Apply sorting
+            const sortValue = document.getElementById('sortSelect').value;
+            records = sortRecords(records, sortValue);
+            
+            filteredRecords = records;
+            currentPage = 1; // Reset to first page
+            
+            // Update items per page
+            itemsPerPage = parseInt(document.getElementById('itemsPerPageSelect').value);
+            
+            renderTableAndPagination();
+        }
+
+        // Sort records
+        function sortRecords(records, sortValue) {
+            return records.sort((a, b) => {
+                switch (sortValue) {
+                    case 'date_desc':
+                        return new Date(b.PlantDate || 0) - new Date(a.PlantDate || 0);
+                    case 'date_asc':
+                        return new Date(a.PlantDate || 0) - new Date(b.PlantDate || 0);
+                    case 'name_asc':
+                        return (a.CropType || '').localeCompare(b.CropType || '');
+                    case 'name_desc':
+                        return (b.CropType || '').localeCompare(a.CropType || '');
+                    default:
+                        return 0;
+                }
+            });
+        }
+
+        // Render table and pagination
+        function renderTableAndPagination() {
+            const tableBody = document.getElementById('productionTableBody');
+            const summaryInfo = document.getElementById('summaryInfo');
+            const paginationNav = document.getElementById('paginationNav');
+            
+            // Calculate pagination
+            const totalRecords = filteredRecords.length;
+            const totalPages = Math.ceil(totalRecords / itemsPerPage);
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const currentRecords = filteredRecords.slice(startIndex, endIndex);
+            
+            // Render table rows
+            tableBody.innerHTML = currentRecords.map(record => `
+                <tr>
+                    <td class="py-3">${Utils.formatDateThai(record.PlantDate) || '-'}</td>
+                    <td class="py-3">${record.CropType || '-'}</td>
+                    <td class="py-3">
+                        <small class="text-muted">
+                            ${record.CropVariety || '-'}
+                        </small>
+                    </td>
+                    <td class="py-3">${Utils.formatDateThai(record.HarvestDate) || '-'}</td>
+                    <td class="py-3">
+                        ${record.SearchCode ? `
+                            <span class="badge bg-success">${record.SearchCode}</span>
+                        ` : '-'}
+                    </td>
+                    <td class="py-3">${Utils.formatDateThai(record.ShipDate) || '-'}</td>
+                    <td class="py-3">${Utils.formatDateThai(record.FarmShipDate) || '-'}</td>
+                    <td class="py-3 text-center">
+                        <div class="btn-group" role="group">
+                            <button class="btn btn-sm btn-outline-primary" onclick="viewRecord('${record.ProductionID}')" title="ดูรายละเอียด">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-warning" onclick="editRecord('${record.ProductionID}')" title="แก้ไข">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+            
+            // Render summary
+            const startRecord = totalRecords > 0 ? startIndex + 1 : 0;
+            const endRecord = Math.min(endIndex, totalRecords);
+            summaryInfo.innerHTML = `แสดง ${startRecord}-${endRecord} จาก ${totalRecords} รายการ`;
+            
+            // Render pagination
+            renderPagination(totalPages);
+        }
+
+        // Render pagination
+        function renderPagination(totalPages) {
+            const paginationNav = document.getElementById('paginationNav');
+            
+            if (totalPages <= 1) {
+                paginationNav.innerHTML = '';
+                return;
+            }
+            
+            let paginationHTML = '<ul class="pagination pagination-sm mb-0">';
+            
+            // Previous button
+            paginationHTML += `
+                <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                    <button class="page-link" onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                </li>
+            `;
+            
+            // Page numbers
+            const startPage = Math.max(1, currentPage - 2);
+            const endPage = Math.min(totalPages, currentPage + 2);
+            
+            if (startPage > 1) {
+                paginationHTML += `<li class="page-item"><button class="page-link" onclick="changePage(1)">1</button></li>`;
+                if (startPage > 2) {
+                    paginationHTML += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+                }
+            }
+            
+            for (let i = startPage; i <= endPage; i++) {
+                paginationHTML += `
+                    <li class="page-item ${i === currentPage ? 'active' : ''}">
+                        <button class="page-link" onclick="changePage(${i})">${i}</button>
+                    </li>
+                `;
+            }
+            
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    paginationHTML += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+                }
+                paginationHTML += `<li class="page-item"><button class="page-link" onclick="changePage(${totalPages})">${totalPages}</button></li>`;
+            }
+            
+            // Next button
+            paginationHTML += `
+                <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                    <button class="page-link" onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </li>
+            `;
+            
+            paginationHTML += '</ul>';
+            paginationNav.innerHTML = paginationHTML;
+        }
+
+        // Change page
+        function changePage(page) {
+            const totalPages = Math.ceil(filteredRecords.length / itemsPerPage);
+            if (page < 1 || page > totalPages) return;
+            
+            currentPage = page;
+            renderTableAndPagination();
+        }
+
+        // Reset filters
+        function resetFilters() {
+            document.getElementById('dateFilter').value = '';
+            document.getElementById('sortSelect').value = 'date_desc';
+            document.getElementById('itemsPerPageSelect').value = '100';
+            applyFiltersAndSort();
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Prevent multiple listeners
+            const dateFilter = document.getElementById('dateFilter');
+            const sortSelect = document.getElementById('sortSelect');
+            const itemsPerPageSelect = document.getElementById('itemsPerPageSelect');
+            
+            // Remove existing listeners
+            dateFilter.removeEventListener('change', applyFiltersAndSort);
+            sortSelect.removeEventListener('change', applyFiltersAndSort);
+            itemsPerPageSelect.removeEventListener('change', applyFiltersAndSort);
+            
+            // Add new listeners
+            dateFilter.addEventListener('change', applyFiltersAndSort);
+            sortSelect.addEventListener('change', applyFiltersAndSort);
+            itemsPerPageSelect.addEventListener('change', applyFiltersAndSort);
+        }
+
+
+        // Helper functions
+        function getStatusClass(status) {
+            switch (status) {
+                case 'completed': return 'bg-success';
+                case 'in_progress': return 'bg-warning';
+                case 'draft': return 'bg-secondary';
+                default: return 'bg-secondary';
+            }
+        }
+
+        function getStatusText(status) {
+            switch (status) {
+                case 'completed': return 'เสร็จสมบูรณ์';
+                case 'in_progress': return 'กำลังดำเนินการ';
+                case 'draft': return 'แบบร่าง';
+                default: return 'ไม่ทราบสถานะ';
+            }
+        }
+
+        // Navigation functions
+        function editFarmerProfile() {
+            window.location.href = 'profile-setup.html';
+        }
+
+        function viewAllRecords() {
+            window.location.href = 'production-history.html';
+        }
+
+        function viewRecord(productionId) {
+            window.location.href = `production-detail.html?id=${productionId}`;
+        }
+
+        function editRecord(productionId) {
+            window.location.href = `edit-production.html?id=${productionId}`;
+        }
+
+
+        // Create QR Code function
+        async function createQRCode() {
+            try {
+                const currentUser = Auth.getCurrentUser();
+                if (!currentUser || !currentUser.farmerID) {
+                    showAlert('error', 'ไม่พบข้อมูลเกษตรกร');
+                    return;
+                }
+
+                // แสดง loading
+                const createBtn = document.getElementById('createQRBtn');
+                const originalText = createBtn.innerHTML;
+                createBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>กำลังสร้าง...';
+                createBtn.disabled = true;
+
+                // เรียก API สร้าง QR Code
+                const response = await API.call('generateFarmerQRCode', {
+                    farmerID: currentUser.farmerID
+                });
+
+                if (response.success) {
+                    showAlert('success', 'สร้าง QR Code สำเร็จ!');
+                    
+                    // รีโหลดข้อมูล dashboard เพื่อแสดง QR Code ใหม่
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                    
+                } else {
+                    throw new Error(response.message || 'ไม่สามารถสร้าง QR Code ได้');
+                }
+
+            } catch (error) {
+                console.error('Create QR Code error:', error);
+                showAlert('error', 'เกิดข้อผิดพลาด: ' + error.message);
+                
+                // รีเซ็ตปุ่ม
+                const createBtn = document.getElementById('createQRBtn');
+                createBtn.innerHTML = '<i class="fas fa-plus me-1"></i>สร้าง QR Code';
+                createBtn.disabled = false;
+            }
+        }
+
+        // Utility functions
+        function showLoading(show) {
+            const indicator = document.getElementById('loadingIndicator');
+            if (indicator) {
+                indicator.style.display = show ? 'block' : 'none';
+            }
+        }
+
+        function showError(message) {
+            showAlert('error', message);
+        }
+
+        function showAlert(type, message) {
+            // Simple alert implementation - can be enhanced with SweetAlert2
+            const alertClass = type === 'error' ? 'alert-danger' : 
+                               type === 'warning' ? 'alert-warning' : 
+                               type === 'success' ? 'alert-success' : 'alert-info';
+            
+            const alertHtml = `
+                <div class="alert ${alertClass} alert-dismissible fade show position-fixed" 
+                     style="top: 100px; right: 20px; z-index: 9999; min-width: 300px;">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', alertHtml);
+            
+            // Auto dismiss after 5 seconds
+            setTimeout(() => {
+                const alert = document.querySelector('.alert:last-child');
+                if (alert) {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                }
+            }, 5000);
+        }
+
+        // Navbar functions
+        function changePassword() {
+            if (typeof Auth !== 'undefined' && Auth.changePassword) {
+                Auth.changePassword();
+            } else {
+                showAlert('info', 'ฟังก์ชันเปลี่ยนรหัสผ่านกำลังพัฒนา');
+            }
+        }
+
+        function confirmLogout() {
+            if (confirm('คุณต้องการออกจากระบบหรือไม่?')) {
+                if (typeof Auth !== 'undefined' && Auth.logout) {
+                    Auth.logout();
+                } else {
+                    localStorage.clear();
+                    window.location.href = '../login.html';
+                }
+            }
+        }
+
+        // Disable auth.js navigation setup
+        window.DISABLE_AUTH_NAVIGATION = true;
+        
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM Content Loaded - Starting farmer dashboard initialization...');
+            
+            // Wait a bit for auth.js to complete its setup first
+            setTimeout(() => {
+                // Start checking for dependencies
+                waitForAuth();
+                
+                // Also use interval as backup
+                authCheckInterval = setInterval(waitForAuth, 200);
+                
+                // Fallback timeout
+                setTimeout(() => {
+                    if (typeof Auth === 'undefined' || typeof window.FarmerAPI === 'undefined') {
+                        console.error('Dependencies still not loaded after 10 seconds');
+                        clearInterval(authCheckInterval);
+                        showError('ระบบใช้เวลานานในการโหลด กรุณารีเฟรชหน้าใหม่');
+                    }
+                }, 10000);
+            }, 500);
+        });
+    </script>
+</body>
+</html>

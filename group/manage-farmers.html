@@ -1,0 +1,1711 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>จัดการสมาชิก - ระบบสอบย้อนกลับผักอุดร</title>
+    
+    <!-- Noto Sans Thai Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        :root{
+            /* Purple Theme Colors */
+            --bg:#f5f3ff;            /* page bg - light purple */
+            --card:#ffffff;          /* card bg */
+            --muted:#6b46c1;         /* muted text - purple */
+            --text:#2e1065;          /* main text - dark purple */
+            --brand:#7c4dff;         /* primary purple */
+            --brand-2:#651fff;       /* primary darker purple */
+            --accent:#ff8a3d;        /* accent */
+            --ring: rgba(124,77,255,.35);
+            --shadow: 0 10px 30px rgba(101, 31, 255, .12);
+            --radius:18px;
+        }
+        *{box-sizing:border-box}
+        html,body{height:100%}
+        html{scroll-behavior:smooth}
+        body{
+            margin:0;
+            font-family:"Noto Sans Thai", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+            background:
+                radial-gradient(900px 500px at 85% -10%, rgba(155,135,245,.22), transparent),
+                radial-gradient(800px 500px at -10% 10%, rgba(124,77,255,.18), transparent),
+                var(--bg);
+            color:var(--text);
+            line-height:1.6;
+        }
+        a{color:inherit;text-decoration:none}
+        .container{width:min(1120px, 92vw); margin-inline:auto}
+
+        /* NAVBAR */
+        .navbar{
+            position:sticky; top:0; z-index:50;
+            backdrop-filter:saturate(160%) blur(8px);
+            background:rgba(255,255,255,.85) !important;
+            border-bottom:1px solid rgba(46,16,101,.08);
+        }
+        .navbar-brand{display:flex;align-items:center;gap:12px; font-weight:800; letter-spacing:.2px; color:#2e1065 !important}
+        .navbar .nav-link{opacity:.85; transition:.2s; padding:.5rem .75rem; border-radius:10px; color:var(--text) !important}
+        .navbar .nav-link:hover{opacity:1; background:rgba(124,77,255,.08)}
+        .navbar .nav-link.active{background:rgba(124,77,255,.15); color:var(--brand) !important}
+
+        /* BUTTONS */
+        .btn-primary{background:linear-gradient(180deg, var(--brand), var(--brand-2)) !important; border:none; box-shadow:0 10px 18px rgba(124,77,255,.25)}
+        .btn-success{background:linear-gradient(180deg, var(--brand), var(--brand-2)) !important; border:none}
+        .btn-info{background:linear-gradient(180deg, #8b5cf6, #7c3aed) !important; border:none}
+        .btn-warning{background:linear-gradient(180deg, #a855f7, #9333ea) !important; border:none}
+        .btn-outline-primary{border:2px solid var(--brand); color:var(--brand)}
+        .btn-outline-primary:hover{background:rgba(124,77,255,.08)}
+        .btn-outline-success{border:2px solid var(--brand); color:var(--brand)}
+        .btn-outline-success:hover{background:rgba(124,77,255,.08)}
+        .btn-outline-info{border:2px solid #8b5cf6; color:#8b5cf6}
+        .btn-outline-info:hover{background:rgba(139,92,246,.08)}
+        
+        .farmer-card {
+            border-left: 4px solid var(--brand);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background:var(--card);
+            box-shadow:var(--shadow);
+        }
+        
+        .farmer-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        
+        .farmer-card.active {
+            border-left-color: var(--brand);
+            background-color: #f5f3ff;
+        }
+        
+        .farmer-card.inactive {
+            border-left-color: #dc3545;
+            background-color: #fff5f5;
+        }
+        
+        .status-badge {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+        }
+        
+        .data-completion {
+            height: 6px;
+            background-color: #e9ecef;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        
+        .data-completion-bar {
+            height: 100%;
+            transition: width 0.3s ease;
+            background:linear-gradient(90deg, var(--brand), var(--brand-2));
+        }
+        
+        .search-filters {
+            background: #f8f9fa;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .quick-stats {
+            background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .farmer-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--brand) 0%, var(--brand-2) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 1.2rem;
+        }
+        
+        .action-button {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        
+        .action-button:hover {
+            transform: scale(1.1);
+        }
+        
+        .farmer-details {
+            background: #f8f9fa;
+            border-radius: 0.375rem;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .plot-item {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 0.375rem;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        .plot-item:hover {
+            border-color: var(--brand);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .bulk-actions {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 0.375rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            display: none;
+        }
+        
+        .bulk-actions.show {
+            display: block;
+        }
+        
+        .farmer-form .form-control:focus,
+        .farmer-form .form-select:focus {
+            border-color: var(--brand);
+            box-shadow: 0 0 0 0.2rem rgba(124,77,255,.25);
+        }
+        
+        .data-sections-progress {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 0.25rem;
+            margin-top: 0.5rem;
+        }
+        
+        .section-indicator {
+            height: 8px;
+            border-radius: 4px;
+            background-color: #e9ecef;
+        }
+        
+        .section-indicator.completed {
+            background-color: var(--brand);
+        }
+        
+        .section-indicator.partial {
+            background-color: #ffc107;
+        }
+        
+        .farmer-list-header {
+            background: linear-gradient(135deg, var(--brand) 0%, var(--brand-2) 100%);
+            color: white;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        /* Farmer Details Modal Styles */
+        .farmer-details-header {
+            background: linear-gradient(135deg, var(--brand) 0%, var(--brand-2) 100%);
+            color: white;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .detail-section {
+            background: var(--card);
+            border: 1px solid rgba(46,16,101,.08);
+            border-radius: 0.75rem;
+            padding: 1.25rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 8px rgba(101, 31, 255, .08);
+        }
+        
+        .detail-section h6 {
+            color: var(--brand);
+            font-weight: 700;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--brand);
+        }
+        
+        .farmer-details .row {
+            margin-bottom: 0.75rem;
+        }
+        
+        .farmer-details .fw-medium {
+            color: var(--text);
+            font-weight: 600;
+        }
+        
+        .plot-item {
+            background: rgba(124, 77, 255, 0.05);
+            border: 1px solid rgba(124, 77, 255, 0.15);
+            border-radius: 0.5rem;
+            padding: 1rem;
+        }
+        
+        .plot-item:hover {
+            background: rgba(124, 77, 255, 0.08);
+            transform: translateY(-1px);
+            transition: all 0.2s ease;
+        }
+        
+        .progress-section {
+            background: linear-gradient(135deg, rgba(124, 77, 255, 0.1), rgba(255, 255, 255, 0.8));
+            border-radius: 0.75rem;
+            padding: 1.25rem;
+        }
+        
+        .completion-circle {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: conic-gradient(var(--brand) 0deg, var(--brand) calc(var(--progress) * 3.6deg), #e9ecef calc(var(--progress) * 3.6deg));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            margin: 0 auto;
+        }
+        
+        .completion-circle::before {
+            content: '';
+            width: 60px;
+            height: 60px;
+            background: white;
+            border-radius: 50%;
+            position: absolute;
+        }
+        
+        .completion-text {
+            position: relative;
+            z-index: 1;
+            font-weight: 700;
+            color: var(--brand);
+        }
+        
+        /* Responsive Design for Farmer Details Modal */
+        @media (max-width: 768px) {
+            .farmer-details-header .col-md-3,
+            .farmer-details-header .col-md-6 {
+                margin-bottom: 1rem;
+            }
+            
+            .completion-circle {
+                width: 60px;
+                height: 60px;
+            }
+            
+            .completion-circle::before {
+                width: 45px;
+                height: 45px;
+            }
+            
+            .detail-section {
+                padding: 1rem;
+            }
+            
+            .modal-footer .d-flex {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .modal-footer .d-flex > div {
+                text-align: center;
+            }
+        }
+        
+        /* Protected Farmer Styling */
+        .action-button[disabled] {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .action-button[disabled]:hover {
+            transform: none !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="../index.html">
+                <img src="../assets/images/logo.png" width="32" height="32" alt="โลโก้" style="display:block;" class="me-2" />
+                ระบบตรวจสอบย้อนกลับผักอุดร
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="dashboard.html">
+                            <i class="fas fa-home me-1"></i>แดชบอร์ด
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="profile.html">
+                            <i class="fas fa-building me-1"></i>ข้อมูลกลุ่ม
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="manage-farmers.html">
+                            <i class="fas fa-users me-1"></i>จัดการสมาชิก
+                        </a>
+                    </li>
+                </ul>
+                
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user me-1"></i><span id="userName">ผู้จัดการกลุ่ม</span>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="dashboard.html">
+                                <i class="fas fa-home me-2"></i>แดชบอร์ด
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" onclick="logout()">
+                                <i class="fas fa-sign-out-alt me-2"></i>ออกจากระบบ
+                            </a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-fluid py-4">
+        <!-- Page Header -->
+        <div class="farmer-list-header">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="mb-2">
+                        <i class="fas fa-users me-3"></i>
+                        จัดการสมาชิกกลุ่ม
+                    </h1>
+                    <p class="fs-5 mb-0">
+                        กลุ่ม: <span id="groupNameHeader">-</span> |
+                        ผู้จัดการ: <span id="managerNameHeader">-</span>
+                    </p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <button class="btn btn-light btn-lg" onclick="showAddFarmerModal()">
+                        <i class="fas fa-user-plus me-2"></i>เพิ่มสมาชิก
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="quick-stats">
+            <div class="row text-center">
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <div class="fs-2 text-primary mb-2">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h4 class="text-primary mb-1" id="totalFarmers">0</h4>
+                    <small class="text-muted">สมาชิกทั้งหมด</small>
+                </div>
+                
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <div class="fs-2 text-success mb-2">
+                        <i class="fas fa-user-check"></i>
+                    </div>
+                    <h4 class="text-success mb-1" id="activeFarmers">0</h4>
+                    <small class="text-muted">สมาชิกที่ใช้งาน</small>
+                </div>
+                
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <div class="fs-2 text-warning mb-2">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h4 class="text-warning mb-1" id="avgDataCompletion">0%</h4>
+                    <small class="text-muted">ความสมบูรณ์เฉลี่ย</small>
+                </div>
+                
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <div class="fs-2 text-info mb-2">
+                        <i class="fas fa-seedling"></i>
+                    </div>
+                    <h4 class="text-info mb-1" id="totalPlots">0</h4>
+                    <small class="text-muted">แปลงทั้งหมด</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search and Filters -->
+        <div class="search-filters">
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="searchFarmer" class="form-label">ค้นหาสมาชิก</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                        <input type="text" class="form-control" id="searchFarmer" 
+                               placeholder="ชื่อ, เบอร์โทร, รหัสแปลง">
+                    </div>
+                </div>
+                
+                <div class="col-md-3 mb-3">
+                    <label for="filterStatus" class="form-label">สถานะ</label>
+                    <select class="form-select" id="filterStatus">
+                        <option value="">ทั้งหมด</option>
+                        <option value="active">ใช้งาน</option>
+                        <option value="inactive">ไม่ใช้งาน</option>
+                        <option value="pending">รอการยืนยัน</option>
+                    </select>
+                </div>
+                
+                <div class="col-md-3 mb-3">
+                    <label for="filterCompletion" class="form-label">ความสมบูรณ์ข้อมูล</label>
+                    <select class="form-select" id="filterCompletion">
+                        <option value="">ทั้งหมด</option>
+                        <option value="100">เสร็จสิ้น (100%)</option>
+                        <option value="75">มากกว่า 75%</option>
+                        <option value="50">มากกว่า 50%</option>
+                        <option value="25">มากกว่า 25%</option>
+                        <option value="0">ยังไม่เริ่ม</option>
+                    </select>
+                </div>
+                
+                <div class="col-md-2 mb-3">
+                    <label for="sortBy" class="form-label">เรียงตาม</label>
+                    <select class="form-select" id="sortBy">
+                        <option value="name">ชื่อ A-Z</option>
+                        <option value="name_desc">ชื่อ Z-A</option>
+                        <option value="completion_desc">ความสมบูรณ์ (สูง-ต่ำ)</option>
+                        <option value="completion">ความสมบูรณ์ (ต่ำ-สูง)</option>
+                        <option value="date_desc">วันที่เพิ่มล่าสุด</option>
+                        <option value="date">วันที่เพิ่มเก่าสุด</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bulk Actions -->
+        <div class="bulk-actions" id="bulkActions">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <strong>เลือกแล้ว <span id="selectedCount">0</span> รายการ</strong>
+                </div>
+                <div>
+                    <button class="btn btn-warning btn-sm me-2" onclick="bulkAction('deactivate')">
+                        <i class="fas fa-user-times me-1"></i>ปิดการใช้งาน
+                    </button>
+                    <button class="btn btn-success btn-sm me-2" onclick="bulkAction('activate')">
+                        <i class="fas fa-user-check me-1"></i>เปิดการใช้งาน
+                    </button>
+                    <button class="btn btn-info btn-sm me-2" onclick="bulkAction('export')">
+                        <i class="fas fa-download me-1"></i>ส่งออกข้อมูล
+                    </button>
+                    <button class="btn btn-secondary btn-sm" onclick="clearSelection()">
+                        <i class="fas fa-times me-1"></i>ยกเลิกการเลือก
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Farmers List -->
+        <div class="row" id="farmersList">
+            <div class="col-12 text-center py-5">
+                <i class="fas fa-spinner fa-spin fs-1 text-muted mb-3"></i>
+                <p class="text-muted">กำลังโหลดรายการสมาชิก...</p>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="d-flex justify-content-between align-items-center mt-4">
+            <div class="text-muted">
+                แสดง <span id="showingCount">0</span> รายการ จากทั้งหมด <span id="totalCount">0</span> รายการ
+            </div>
+            <nav>
+                <ul class="pagination" id="pagination">
+                    <!-- Pagination will be generated here -->
+                </ul>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Add Farmer Modal -->
+    <div class="modal fade" id="addFarmerModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-user-plus me-2"></i>เพิ่มสมาชิกใหม่
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addFarmerForm" class="farmer-form">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="farmerFullName" class="form-label">ชื่อ-นามสกุล</label>
+                                <input type="text" class="form-control" id="farmerFullName" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="farmerPhone" class="form-label">เบอร์โทรศัพท์</label>
+                                <input type="tel" class="form-control" id="farmerPhone" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="farmerIdCard" class="form-label">เลขบัตรประจำตัวประชาชน</label>
+                                <input type="text" class="form-control" id="farmerIdCard" maxlength="13" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="farmerEmail" class="form-label">อีเมล (ถ้ามี)</label>
+                                <input type="email" class="form-control" id="farmerEmail">
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label for="farmerAddress" class="form-label">ที่อยู่</label>
+                                <textarea class="form-control" id="farmerAddress" rows="3" required></textarea>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="plotCode" class="form-label">รหัสแปลง</label>
+                                <input type="text" class="form-control" id="plotCode" required>
+                                <div class="form-text">รหัสแปลงต้องไม่ซ้ำกับที่มีอยู่</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="plotSize" class="form-label">ขนาดแปลง (ไร่)</label>
+                                <input type="number" class="form-control" id="plotSize" step="0.01" min="0">
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label for="plotLocation" class="form-label">ที่ตั้งแปลง</label>
+                                <input type="text" class="form-control" id="plotLocation">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="farmerUsername" class="form-label">ชื่อผู้ใช้ (Username)</label>
+                                <input type="text" class="form-control" id="farmerUsername" required>
+                                <div class="form-text">ใช้สำหรับเข้าสู่ระบบ</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="farmerPassword" class="form-label">รหัสผ่าน</label>
+                                <input type="password" class="form-control" id="farmerPassword" required>
+                                <div class="form-text">ความยาวอย่างน้อย 6 ตัวอักษร</div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                    <button type="button" class="btn btn-success" onclick="saveFarmer()">
+                        <i class="fas fa-save me-1"></i>บันทึก
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Farmer Modal -->
+    <div class="modal fade" id="editFarmerModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-user-edit me-2"></i>แก้ไขข้อมูลสมาชิก
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editFarmerForm" class="farmer-form">
+                        <input type="hidden" id="editFarmerId">
+                        <!-- Same fields as add form but with edit prefix -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editFarmerFullName" class="form-label">ชื่อ-นามสกุล</label>
+                                <input type="text" class="form-control" id="editFarmerFullName" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editFarmerPhone" class="form-label">เบอร์โทรศัพท์</label>
+                                <input type="tel" class="form-control" id="editFarmerPhone" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editFarmerIdCard" class="form-label">เลขบัตรประจำตัวประชาชน</label>
+                                <input type="text" class="form-control" id="editFarmerIdCard" maxlength="13" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editFarmerEmail" class="form-label">อีเมล (ถ้ามี)</label>
+                                <input type="email" class="form-control" id="editFarmerEmail">
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label for="editFarmerAddress" class="form-label">ที่อยู่</label>
+                                <textarea class="form-control" id="editFarmerAddress" rows="3" required></textarea>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editPlotCode" class="form-label">รหัสแปลง</label>
+                                <input type="text" class="form-control" id="editPlotCode" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editPlotSize" class="form-label">ขนาดแปลง (ไร่)</label>
+                                <input type="number" class="form-control" id="editPlotSize" step="0.01" min="0">
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label for="editPlotLocation" class="form-label">ที่ตั้งแปลง</label>
+                                <input type="text" class="form-control" id="editPlotLocation">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editFarmerStatus" class="form-label">สถานะ</label>
+                                <select class="form-select" id="editFarmerStatus">
+                                    <option value="active">ใช้งาน</option>
+                                    <option value="inactive">ไม่ใช้งาน</option>
+                                    <option value="pending">รอการยืนยัน</option>
+                                </select>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                    <button type="button" class="btn btn-success" onclick="updateFarmer()">
+                        <i class="fas fa-save me-1"></i>บันทึกการแก้ไข
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Farmer Details Modal -->
+    <div class="modal fade" id="farmerDetailsModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header bg-gradient" style="background: linear-gradient(135deg, var(--brand) 0%, var(--brand-2) 100%);">
+                    <h5 class="modal-title text-white">
+                        <i class="fas fa-user-circle me-2"></i>รายละเอียดสมาชิก: <span id="detailFarmerName"></span>
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="farmerDetailsContent">
+                        <!-- Farmer details will be loaded here -->
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <div class="d-flex justify-content-between w-100 align-items-center">
+                        <div>
+                            <small class="text-muted">
+                                <i class="fas fa-clock me-1"></i>
+                                อัปเดตล่าสุด: <span id="lastUpdated">-</span>
+                            </small>
+                        </div>
+                        <div>
+                            <button type="button" class="btn btn-info me-2" onclick="exportFarmerData()">
+                                <i class="fas fa-download me-1"></i>ส่งออกข้อมูล
+                            </button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i class="fas fa-times me-1"></i>ปิด
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div id="loadingSpinner" class="d-none">
+        <div class="spinner-overlay">
+            <div class="spinner-border text-success" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script src="../assets/js/utils.js"></script>
+    <script src="../assets/js/auth.js"></script>
+    <script src="../assets/js/api.js"></script>
+    
+    <script>
+        let farmersData = [];
+        let filteredFarmers = [];
+        let selectedFarmers = [];
+        let currentPage = 1;
+        let itemsPerPage = 12;
+        let currentFarmerDetails = null;
+
+        // Page initialization
+        document.addEventListener('DOMContentLoaded', function() {
+            initializePage();
+        });
+
+        async function initializePage() {
+            try {
+                // Protect group page - only group managers can access
+                if (!PageProtection.protectGroupPage()) {
+                    console.error('Access denied - not group manager or not logged in');
+                    return;
+                }
+
+                const user = AuthAPI.getCurrentUser();
+                if (!user || !user.role || user.role.toString().trim().toLowerCase() !== 'group') {
+                    Utils.showError('ไม่มีสิทธิ์', 'คุณต้องมีสิทธิ์ผู้จัดการกลุ่มเท่านั้น');
+                    setTimeout(() => window.location.href = '../login.html', 2000);
+                    return;
+                }
+
+                // Update user info
+                updateUserInfo(user);
+                
+                // Load farmers data
+                await loadFarmersData();
+                
+                // Initialize event listeners
+                initializeEventListeners();
+                
+                // Check for URL parameter to show farmer details
+                const urlParams = new URLSearchParams(window.location.search);
+                const viewFarmerId = urlParams.get('viewFarmer');
+                if (viewFarmerId) {
+                    // Show details after data is loaded
+                    const farmer = farmersData.find(f => f.id === viewFarmerId);
+                    if (farmer) {
+                        setTimeout(() => showFarmerDetails(viewFarmerId), 500);
+                    } else {
+                        console.warn('Farmer not found for ID:', viewFarmerId);
+                    }
+                }
+
+            } catch (error) {
+                console.error('Initialization error:', error);
+                Utils.showError('ข้อผิดพลาด', 'ไม่สามารถโหลดข้อมูลได้ กรุณาลองใหม่อีกครั้ง');
+            }
+        }
+
+        function updateUserInfo(user) {
+            document.getElementById('userName').textContent = user.fullName || user.username;
+            document.getElementById('groupNameHeader').textContent = user.groupName || '-';
+            document.getElementById('managerNameHeader').textContent = user.fullName || user.username;
+        }
+
+        async function loadFarmersData() {
+            try {
+                Utils.showLoading('กำลังโหลดรายการสมาชิก...');
+                
+                const user = AuthAPI.getCurrentUser();
+                let groupId = user.groupId || user.GroupID || user.group_id;
+                if (!groupId) {
+                    groupId = "01"; // ใช้รหัสกลุ่มเริ่มต้น
+                }
+                const result = await GroupAPI.getGroupFarmers(groupId);
+                
+                Utils.hideLoading();
+                
+                if (result.success) {
+                    farmersData = result.data || [];
+                    filteredFarmers = [...farmersData];
+                    
+                    updateStats();
+                    renderFarmers();
+                    renderPagination();
+                    
+                } else {
+                    Utils.showError('ข้อผิดพลาด', result.message || 'ไม่สามารถโหลดรายการสมาชิกได้');
+                }
+            } catch (error) {
+                Utils.hideLoading();
+                console.error('Load farmers error:', error);
+                handleAPIError(error, 'ไม่สามารถโหลดรายการสมาชิกได้');
+            }
+        }
+
+        function updateStats() {
+            const totalFarmers = farmersData.length;
+            const activeFarmers = farmersData.filter(f => f.status === 'active').length;
+            const totalPlots = farmersData.reduce((sum, f) => sum + (f.plots?.length || 1), 0);
+            
+            let totalCompletion = 0;
+            farmersData.forEach(farmer => {
+                totalCompletion += (farmer.dataCompletion || 0);
+            });
+            const avgCompletion = totalFarmers > 0 ? Math.round(totalCompletion / totalFarmers) : 0;
+            
+            document.getElementById('totalFarmers').textContent = totalFarmers;
+            document.getElementById('activeFarmers').textContent = activeFarmers;
+            document.getElementById('avgDataCompletion').textContent = avgCompletion + '%';
+            document.getElementById('totalPlots').textContent = totalPlots;
+        }
+
+        function initializeEventListeners() {
+            // Search input
+            document.getElementById('searchFarmer').addEventListener('input', debounce(filterFarmers, 300));
+            
+            // Filter selects
+            document.getElementById('filterStatus').addEventListener('change', filterFarmers);
+            document.getElementById('filterCompletion').addEventListener('change', filterFarmers);
+            document.getElementById('sortBy').addEventListener('change', filterFarmers);
+            
+            // ID card input formatting
+            document.getElementById('farmerIdCard').addEventListener('input', formatIdCard);
+            document.getElementById('editFarmerIdCard').addEventListener('input', formatIdCard);
+        }
+
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        function formatIdCard(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 13) value = value.slice(0, 13);
+            e.target.value = value;
+        }
+
+        function filterFarmers() {
+            const searchTerm = document.getElementById('searchFarmer').value.toLowerCase();
+            const statusFilter = document.getElementById('filterStatus').value;
+            const completionFilter = document.getElementById('filterCompletion').value;
+            const sortBy = document.getElementById('sortBy').value;
+            
+            // Filter
+            filteredFarmers = farmersData.filter(farmer => {
+                const matchesSearch = !searchTerm || 
+                    farmer.fullName.toLowerCase().includes(searchTerm) ||
+                    farmer.phone.includes(searchTerm) ||
+                    farmer.plotCode.toLowerCase().includes(searchTerm);
+                
+                const matchesStatus = !statusFilter || farmer.status === statusFilter;
+                
+                let matchesCompletion = true;
+                if (completionFilter) {
+                    const completion = farmer.dataCompletion || 0;
+                    switch (completionFilter) {
+                        case '100':
+                            matchesCompletion = completion === 100;
+                            break;
+                        case '75':
+                            matchesCompletion = completion > 75;
+                            break;
+                        case '50':
+                            matchesCompletion = completion > 50;
+                            break;
+                        case '25':
+                            matchesCompletion = completion > 25;
+                            break;
+                        case '0':
+                            matchesCompletion = completion === 0;
+                            break;
+                    }
+                }
+                
+                return matchesSearch && matchesStatus && matchesCompletion;
+            });
+            
+            // Sort
+            filteredFarmers.sort((a, b) => {
+                switch (sortBy) {
+                    case 'name':
+                        return a.fullName.localeCompare(b.fullName, 'th');
+                    case 'name_desc':
+                        return b.fullName.localeCompare(a.fullName, 'th');
+                    case 'completion_desc':
+                        return (b.dataCompletion || 0) - (a.dataCompletion || 0);
+                    case 'completion':
+                        return (a.dataCompletion || 0) - (b.dataCompletion || 0);
+                    case 'date_desc':
+                        return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+                    case 'date':
+                        return new Date(a.createdAt || 0) - new Date(b.createdAt || 0);
+                    default:
+                        return 0;
+                }
+            });
+            
+            currentPage = 1;
+            renderFarmers();
+            renderPagination();
+        }
+
+        function renderFarmers() {
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const farmersToShow = filteredFarmers.slice(startIndex, endIndex);
+            
+            let html = '';
+            
+            if (farmersToShow.length === 0) {
+                html = `
+                    <div class="col-12 text-center py-5">
+                        <i class="fas fa-users fs-1 text-muted mb-3"></i>
+                        <h5 class="text-muted">ไม่พบสมาชิกที่ตรงกับเงื่อนไขการค้นหา</h5>
+                        <button class="btn btn-primary mt-3" onclick="showAddFarmerModal()">
+                            <i class="fas fa-user-plus me-2"></i>เพิ่มสมาชิกใหม่
+                        </button>
+                    </div>
+                `;
+            } else {
+                farmersToShow.forEach(farmer => {
+                    html += renderFarmerCard(farmer);
+                });
+            }
+            
+            document.getElementById('farmersList').innerHTML = html;
+            
+            // Update counts
+            document.getElementById('showingCount').textContent = farmersToShow.length;
+            document.getElementById('totalCount').textContent = filteredFarmers.length;
+        }
+
+        function renderFarmerCard(farmer) {
+            const statusClass = farmer.status === 'active' ? 'active' : 
+                              farmer.status === 'inactive' ? 'inactive' : '';
+            
+            const statusBadge = farmer.status === 'active' ? 'bg-success' :
+                               farmer.status === 'inactive' ? 'bg-danger' : 'bg-warning';
+            
+            const statusText = farmer.status === 'active' ? 'ใช้งาน' :
+                              farmer.status === 'inactive' ? 'ไม่ใช้งาน' : 'รอยืนยัน';
+            
+            const completion = farmer.dataCompletion || 0;
+            const completionColor = completion >= 75 ? '#28a745' : 
+                                   completion >= 50 ? '#ffc107' : '#dc3545';
+            
+            const initials = farmer.fullName.split(' ').map(n => n[0]).join('').toUpperCase();
+            
+            // Render section progress
+            let sectionsHtml = '';
+            for (let i = 1; i <= 6; i++) {
+                const section = farmer.sections?.[`section${i}`];
+                const sectionClass = section?.completed ? 'completed' : 
+                                   section?.progress > 0 ? 'partial' : '';
+                sectionsHtml += `<div class="section-indicator ${sectionClass}"></div>`;
+            }
+            
+            return `
+                <div class="col-xl-4 col-lg-6 mb-4">
+                    <div class="card farmer-card ${statusClass} border-0 shadow-sm position-relative">
+                        <div class="status-badge">
+                            <span class="badge ${statusBadge}">${statusText}</span>
+                        </div>
+                        
+                        <div class="card-body">
+                            <div class="d-flex align-items-start mb-3">
+                                <div class="farmer-avatar me-3">
+                                    ${initials}
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1">${farmer.fullName}</h6>
+                                    <div class="small text-muted">
+                                        <i class="fas fa-phone me-1"></i>${farmer.phone}
+                                    </div>
+                                    <div class="small text-muted">
+                                        <i class="fas fa-map-marker-alt me-1"></i>แปลง: ${farmer.plotCode}
+                                    </div>
+                                </div>
+                                <div class="flex-shrink-0">
+                                    <input type="checkbox" class="form-check-input farmer-checkbox" 
+                                           value="${farmer.id}" onchange="toggleFarmerSelection(this)">
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <small class="text-muted">ความสมบูรณ์ข้อมูล</small>
+                                    <small class="fw-medium">${completion}%</small>
+                                </div>
+                                <div class="data-completion">
+                                    <div class="data-completion-bar" 
+                                         style="width: ${completion}%; background-color: ${completionColor}"></div>
+                                </div>
+                                <div class="data-sections-progress">
+                                    ${sectionsHtml}
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="small text-muted">
+                                    <i class="fas fa-calendar me-1"></i>
+                                    ${farmer.lastActive ? new Date(farmer.lastActive).toLocaleDateString('th-TH') : 'ยังไม่เคยใช้งาน'}
+                                </div>
+                                <div>
+                                    <button class="action-button btn btn-outline-info me-1" 
+                                            onclick="showFarmerDetails('${farmer.id}')" title="ดูรายละเอียด">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    ${!farmer.plotCode || farmer.plotCode.trim() === '' ? `
+                                    <button class="action-button btn btn-outline-danger" 
+                                            onclick="deleteFarmer('${farmer.id}', '${farmer.fullName}')" title="ลบ">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                    ` : `
+                                    <button class="action-button btn btn-outline-secondary" 
+                                            disabled title="ไม่สามารถลบได้ เนื่องจากมีข้อมูลแปลง ${farmer.plotCode} แล้ว">
+                                        <i class="fas fa-shield-alt"></i>
+                                    </button>
+                                    `}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderPagination() {
+            const totalPages = Math.ceil(filteredFarmers.length / itemsPerPage);
+            let html = '';
+            
+            if (totalPages <= 1) {
+                document.getElementById('pagination').innerHTML = '';
+                return;
+            }
+            
+            // Previous button
+            html += `
+                <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                    <a class="page-link" href="#" onclick="changePage(${currentPage - 1})">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                </li>
+            `;
+            
+            // Page numbers
+            let startPage = Math.max(1, currentPage - 2);
+            let endPage = Math.min(totalPages, currentPage + 2);
+            
+            if (startPage > 1) {
+                html += '<li class="page-item"><a class="page-link" href="#" onclick="changePage(1)">1</a></li>';
+                if (startPage > 2) {
+                    html += '<li class="page-item disabled"><span class="page-link">...</span></li>';
+                }
+            }
+            
+            for (let i = startPage; i <= endPage; i++) {
+                html += `
+                    <li class="page-item ${i === currentPage ? 'active' : ''}">
+                        <a class="page-link" href="#" onclick="changePage(${i})">${i}</a>
+                    </li>
+                `;
+            }
+            
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    html += '<li class="page-item disabled"><span class="page-link">...</span></li>';
+                }
+                html += `<li class="page-item"><a class="page-link" href="#" onclick="changePage(${totalPages})">${totalPages}</a></li>`;
+            }
+            
+            // Next button
+            html += `
+                <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                    <a class="page-link" href="#" onclick="changePage(${currentPage + 1})">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+            `;
+            
+            document.getElementById('pagination').innerHTML = html;
+        }
+
+        function changePage(page) {
+            const totalPages = Math.ceil(filteredFarmers.length / itemsPerPage);
+            if (page < 1 || page > totalPages) return;
+            
+            currentPage = page;
+            renderFarmers();
+            renderPagination();
+            
+            // Scroll to top
+            window.scrollTo(0, 0);
+        }
+
+        function toggleFarmerSelection(checkbox) {
+            const farmerId = checkbox.value;
+            
+            if (checkbox.checked) {
+                if (!selectedFarmers.includes(farmerId)) {
+                    selectedFarmers.push(farmerId);
+                }
+            } else {
+                selectedFarmers = selectedFarmers.filter(id => id !== farmerId);
+            }
+            
+            updateBulkActions();
+        }
+
+        function updateBulkActions() {
+            const bulkActions = document.getElementById('bulkActions');
+            const selectedCount = document.getElementById('selectedCount');
+            
+            selectedCount.textContent = selectedFarmers.length;
+            
+            if (selectedFarmers.length > 0) {
+                bulkActions.classList.add('show');
+            } else {
+                bulkActions.classList.remove('show');
+            }
+        }
+
+        function clearSelection() {
+            selectedFarmers = [];
+            document.querySelectorAll('.farmer-checkbox').forEach(cb => cb.checked = false);
+            updateBulkActions();
+        }
+
+        function showAddFarmerModal() {
+            document.getElementById('addFarmerForm').reset();
+            const modal = new bootstrap.Modal(document.getElementById('addFarmerModal'));
+            modal.show();
+        }
+
+        async function saveFarmer() {
+            try {
+                const form = document.getElementById('addFarmerForm');
+                
+                // Validate form
+                if (!form.checkValidity()) {
+                    form.reportValidity();
+                    return;
+                }
+                
+                Utils.showLoading('กำลังบันทึกข้อมูลสมาชิก...');
+                
+                const user = AuthAPI.getCurrentUser();
+                let groupId = user.groupId || user.GroupID || user.group_id;
+                if (!groupId) {
+                    groupId = "01"; // ใช้รหัสกลุ่มเริ่มต้น
+                }
+                
+                const farmerData = {
+                    groupId: groupId,
+                    fullName: document.getElementById('farmerFullName').value.trim(),
+                    phone: document.getElementById('farmerPhone').value.trim(),
+                    idCard: document.getElementById('farmerIdCard').value.trim(),
+                    email: document.getElementById('farmerEmail').value.trim(),
+                    address: document.getElementById('farmerAddress').value.trim(),
+                    plotCode: document.getElementById('plotCode').value.trim(),
+                    plotSize: document.getElementById('plotSize').value,
+                    plotLocation: document.getElementById('plotLocation').value.trim(),
+                    username: document.getElementById('farmerUsername').value.trim(),
+                    password: document.getElementById('farmerPassword').value
+                };
+                
+                const result = await GroupAPI.addFarmer(farmerData);
+                
+                Utils.hideLoading();
+                
+                if (result.success) {
+                    Utils.showSuccess('สำเร็จ', 'เพิ่มสมาชิกใหม่เรียบร้อยแล้ว');
+                    
+                    // Close modal
+                    bootstrap.Modal.getInstance(document.getElementById('addFarmerModal')).hide();
+                    
+                    // Reload farmers list
+                    await loadFarmersData();
+                    
+                } else {
+                    Utils.showError('ข้อผิดพลาด', result.message || 'ไม่สามารถเพิ่มสมาชิกได้');
+                }
+                
+            } catch (error) {
+                Utils.hideLoading();
+                handleAPIError(error, 'ไม่สามารถเพิ่มสมาชิกได้');
+            }
+        }
+
+        function editFarmer(farmerId) {
+            const farmer = farmersData.find(f => f.id === farmerId);
+            if (!farmer) return;
+            
+            // Fill edit form
+            document.getElementById('editFarmerId').value = farmerId;
+            document.getElementById('editFarmerFullName').value = farmer.fullName;
+            document.getElementById('editFarmerPhone').value = farmer.phone;
+            document.getElementById('editFarmerIdCard').value = farmer.idCard;
+            document.getElementById('editFarmerEmail').value = farmer.email || '';
+            document.getElementById('editFarmerAddress').value = farmer.address;
+            document.getElementById('editPlotCode').value = farmer.plotCode;
+            document.getElementById('editPlotSize').value = farmer.plotSize || '';
+            document.getElementById('editPlotLocation').value = farmer.plotLocation || '';
+            document.getElementById('editFarmerStatus').value = farmer.status;
+            
+            const modal = new bootstrap.Modal(document.getElementById('editFarmerModal'));
+            modal.show();
+        }
+
+        async function updateFarmer() {
+            try {
+                const form = document.getElementById('editFarmerForm');
+                
+                if (!form.checkValidity()) {
+                    form.reportValidity();
+                    return;
+                }
+                
+                Utils.showLoading('กำลังบันทึกการแก้ไข...');
+                
+                const farmerId = document.getElementById('editFarmerId').value;
+                const farmerData = {
+                    fullName: document.getElementById('editFarmerFullName').value.trim(),
+                    phone: document.getElementById('editFarmerPhone').value.trim(),
+                    idCard: document.getElementById('editFarmerIdCard').value.trim(),
+                    email: document.getElementById('editFarmerEmail').value.trim(),
+                    address: document.getElementById('editFarmerAddress').value.trim(),
+                    plotCode: document.getElementById('editPlotCode').value.trim(),
+                    plotSize: document.getElementById('editPlotSize').value,
+                    plotLocation: document.getElementById('editPlotLocation').value.trim(),
+                    status: document.getElementById('editFarmerStatus').value
+                };
+                
+                const result = await GroupAPI.updateFarmer(farmerId, farmerData);
+                
+                Utils.hideLoading();
+                
+                if (result.success) {
+                    Utils.showSuccess('สำเร็จ', 'แก้ไขข้อมูลสมาชิกเรียบร้อยแล้ว');
+                    
+                    // Close modal
+                    bootstrap.Modal.getInstance(document.getElementById('editFarmerModal')).hide();
+                    
+                    // Reload farmers list
+                    await loadFarmersData();
+                    
+                } else {
+                    Utils.showError('ข้อผิดพลาด', result.message || 'ไม่สามารถแก้ไขข้อมูลได้');
+                }
+                
+            } catch (error) {
+                Utils.hideLoading();
+                handleAPIError(error, 'ไม่สามารถแก้ไขข้อมูลได้');
+            }
+        }
+
+        async function deleteFarmer(farmerId, farmerName) {
+            // ตรวจสอบว่าเกษตรกรมีข้อมูลแปลงหรือไม่
+            const farmer = farmersData.find(f => f.id === farmerId);
+            if (farmer && farmer.plotCode && farmer.plotCode.trim() !== '') {
+                Utils.showWarning(
+                    'ไม่สามารถลบได้',
+                    `ไม่สามารถลบสมาชิก "${farmerName}" ได้ เนื่องจากมีข้อมูลแปลง "${farmer.plotCode}" แล้ว\n\nเพื่อความปลอดภัยของข้อมูล เกษตรกรที่มีข้อมูลแปลงแล้วจะไม่สามารถลบได้`
+                );
+                return;
+            }
+            
+            const confirmed = await Utils.showConfirm(
+                'ยืนยันการลบ',
+                `คุณต้องการลบสมาชิก "${farmerName}" หรือไม่?\n\nสมาชิกนี้ยังไม่มีข้อมูลแปลง จึงสามารถลบได้\n\nการลบจะทำให้ข้อมูลทั้งหมดหายไป และไม่สามารถกู้คืนได้`
+            );
+            
+            if (!confirmed) return;
+            
+            try {
+                Utils.showLoading('กำลังลบสมาชิก...');
+                
+                const result = await GroupAPI.deleteFarmer(farmerId);
+                
+                Utils.hideLoading();
+                
+                if (result.success) {
+                    Utils.showSuccess('สำเร็จ', 'ลบสมาชิกเรียบร้อยแล้ว');
+                    
+                    // Remove from selected if exists
+                    selectedFarmers = selectedFarmers.filter(id => id !== farmerId);
+                    updateBulkActions();
+                    
+                    // Reload farmers list
+                    await loadFarmersData();
+                    
+                } else {
+                    Utils.showError('ข้อผิดพลาด', result.message || 'ไม่สามารถลบสมาชิกได้');
+                }
+                
+            } catch (error) {
+                Utils.hideLoading();
+                handleAPIError(error, 'ไม่สามารถลบสมาชิกได้');
+            }
+        }
+
+        async function showFarmerDetails(farmerId) {
+            try {
+                Utils.showLoading('กำลังโหลดรายละเอียด...');
+                
+                // ค้นหาข้อมูลเกษตรกรจาก local data ก่อน
+                const farmer = farmersData.find(f => f.id === farmerId);
+                if (!farmer) {
+                    Utils.hideLoading();
+                    Utils.showError('ข้อผิดพลาด', 'ไม่พบข้อมูลเกษตรกร');
+                    return;
+                }
+                
+                // พยายามดึงข้อมูลรายละเอียดจาก API
+                let farmerDetails = { sections: {} };
+                try {
+                    const result = await FarmerAPI.getFarmerData(farmerId);
+                    if (result.success && result.data) {
+                        farmerDetails = result.data;
+                        currentFarmerDetails = { ...result.data, farmerId: farmerId };
+                    } else {
+                        // ใช้ข้อมูลพื้นฐานถ้าไม่มี API data
+                        currentFarmerDetails = { ...farmer, farmerId: farmerId };
+                    }
+                } catch (apiError) {
+                    console.warn('Failed to load detailed farmer data, using basic info:', apiError);
+                    // ใช้ข้อมูลพื้นฐานที่มีอยู่แล้ว
+                    currentFarmerDetails = { ...farmer, farmerId: farmerId };
+                }
+                
+                Utils.hideLoading();
+                
+                // อัปเดต modal title
+                document.getElementById('detailFarmerName').textContent = farmer.fullName;
+                
+                // สร้าง HTML สำหรับแสดงรายละเอียด
+                let detailsHtml = generateFarmerDetailsHTML(farmer, farmerDetails);
+                document.getElementById('farmerDetailsContent').innerHTML = detailsHtml;
+                
+                // อัปเดต last updated time
+                const lastUpdatedElement = document.getElementById('lastUpdated');
+                if (lastUpdatedElement) {
+                    const updateTime = farmer.updatedAt || farmer.createdAt || new Date().toISOString();
+                    lastUpdatedElement.textContent = new Date(updateTime).toLocaleDateString('th-TH', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                }
+                
+                // แสดง modal
+                const modal = new bootstrap.Modal(document.getElementById('farmerDetailsModal'));
+                modal.show();
+                
+            } catch (error) {
+                Utils.hideLoading();
+                console.error('Error showing farmer details:', error);
+                Utils.showError('ข้อผิดพลาด', 'ไม่สามารถแสดงรายละเอียดเกษตรกรได้');
+            }
+        }
+
+        function generateFarmerDetailsHTML(farmer, data) {
+            const completion = farmer.dataCompletion || 0;
+            const completionColor = completion >= 75 ? '#28a745' : completion >= 50 ? '#ffc107' : '#dc3545';
+            const statusColor = farmer.status === 'active' ? 'success' : farmer.status === 'inactive' ? 'danger' : 'warning';
+            const statusText = farmer.status === 'active' ? 'ใช้งาน' : farmer.status === 'inactive' ? 'ไม่ใช้งาน' : 'รอยืนยัน';
+            
+            return `
+                <!-- Header Section -->
+                <div class="farmer-details-header text-center">
+                    <div class="row align-items-center">
+                        <div class="col-md-3">
+                            <div class="completion-circle" style="--progress: ${completion}">
+                                <div class="completion-text">${completion}%</div>
+                            </div>
+                            <div class="mt-2 small">ความสมบูรณ์ข้อมูล</div>
+                        </div>
+                        <div class="col-md-6">
+                            <h4 class="mb-1">${farmer.fullName}</h4>
+                            <p class="mb-2">
+                                <i class="fas fa-map-marker-alt me-1"></i>แปลง: ${farmer.plotCode}
+                                ${farmer.plotSize ? ` | ขนาด: ${farmer.plotSize} ไร่` : ''}
+                            </p>
+                            <span class="badge bg-${statusColor} fs-6">${statusText}</span>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-start">
+                                <div class="small mb-1">เข้าใช้ล่าสุด:</div>
+                                <div class="fw-medium">
+                                    ${farmer.lastActive ? new Date(farmer.lastActive).toLocaleDateString('th-TH') : 'ยังไม่เคยใช้งาน'}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- Personal Information -->
+                    <div class="col-md-6 mb-4">
+                        <div class="detail-section">
+                            <h6><i class="fas fa-user me-2"></i>ข้อมูลส่วนตัว</h6>
+                            <div class="farmer-details">
+                                <div class="row">
+                                    <div class="col-sm-4 fw-medium">ชื่อ-นามสกุล:</div>
+                                    <div class="col-sm-8">${farmer.fullName}</div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-4 fw-medium">เบอร์โทร:</div>
+                                    <div class="col-sm-8">
+                                        <i class="fas fa-phone me-2 text-muted"></i>${farmer.phone}
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-4 fw-medium">บัตรประชาชน:</div>
+                                    <div class="col-sm-8">
+                                        <i class="fas fa-id-card me-2 text-muted"></i>${farmer.idCard}
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-4 fw-medium">อีเมล:</div>
+                                    <div class="col-sm-8">
+                                        <i class="fas fa-envelope me-2 text-muted"></i>${farmer.email || '-'}
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-4 fw-medium">ที่อยู่:</div>
+                                    <div class="col-sm-8">
+                                        <i class="fas fa-map-marker-alt me-2 text-muted"></i>${farmer.address}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Plot Information -->
+                    <div class="col-md-6 mb-4">
+                        <div class="detail-section">
+                            <h6><i class="fas fa-seedling me-2"></i>ข้อมูลแปลง</h6>
+                            <div class="farmer-details">
+                                <div class="row">
+                                    <div class="col-sm-4 fw-medium">รหัสแปลง:</div>
+                                    <div class="col-sm-8">
+                                        <span class="badge bg-outline-primary">${farmer.plotCode}</span>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-4 fw-medium">ขนาดแปลง:</div>
+                                    <div class="col-sm-8">
+                                        <i class="fas fa-expand-arrows-alt me-2 text-muted"></i>
+                                        ${farmer.plotSize || '-'} ไร่
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-4 fw-medium">ที่ตั้งแปลง:</div>
+                                    <div class="col-sm-8">
+                                        <i class="fas fa-map-pin me-2 text-muted"></i>
+                                        ${farmer.plotLocation || '-'}
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-4 fw-medium">วันที่สมัคร:</div>
+                                    <div class="col-sm-8">
+                                        <i class="fas fa-calendar me-2 text-muted"></i>
+                                        ${farmer.createdAt ? new Date(farmer.createdAt).toLocaleDateString('th-TH') : '-'}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Progress Section -->
+                    <div class="col-12">
+                        <div class="detail-section">
+                            <h6><i class="fas fa-tasks me-2"></i>ความคืบหน้าข้อมูล 6 ส่วน</h6>
+                            <div class="progress-section">
+                                <div class="row">
+                                    ${generateSectionsProgress(data.sections || {})}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function generateSectionsProgress(sections) {
+            const sectionNames = [
+                'ข้อมูลพื้นฐานแปลง',
+                'การเตรียมดิน',
+                'การปลูก', 
+                'การดูแลรักษา',
+                'การเก็บเกี่ยว',
+                'หลังการเก็บเกี่ยว'
+            ];
+            
+            const sectionIcons = [
+                'fas fa-info-circle',
+                'fas fa-shovel',
+                'fas fa-seedling',
+                'fas fa-water',
+                'fas fa-cut',
+                'fas fa-truck'
+            ];
+            
+            let html = '';
+            
+            for (let i = 1; i <= 6; i++) {
+                const section = sections[`section${i}`];
+                const completed = section?.completed || false;
+                const progress = section?.progress || 0;
+                
+                let statusClass = '';
+                let statusIcon = '';
+                let statusText = '';
+                let progressColor = '';
+                
+                if (completed) {
+                    statusClass = 'border-success';
+                    statusIcon = 'fas fa-check-circle text-success';
+                    statusText = 'เสร็จสิ้นแล้ว';
+                    progressColor = '#28a745';
+                } else if (progress > 0) {
+                    statusClass = 'border-warning';
+                    statusIcon = 'fas fa-clock text-warning';
+                    statusText = `ความคืบหน้า ${progress}%`;
+                    progressColor = '#ffc107';
+                } else {
+                    statusClass = 'border-secondary';
+                    statusIcon = 'fas fa-minus-circle text-secondary';
+                    statusText = 'ยังไม่เริ่ม';
+                    progressColor = '#e9ecef';
+                }
+                
+                html += `
+                    <div class="col-lg-4 col-md-6 mb-3">
+                        <div class="plot-item ${statusClass}">
+                            <div class="d-flex align-items-center mb-2">
+                                <div class="me-3">
+                                    <i class="${sectionIcons[i-1]} fs-4 text-primary"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="fw-medium mb-1">ส่วนที่ ${i}</div>
+                                    <div class="small text-muted">${sectionNames[i-1]}</div>
+                                </div>
+                                <div class="text-end">
+                                    <i class="${statusIcon} fs-5"></i>
+                                </div>
+                            </div>
+                            <div class="progress mb-2" style="height: 6px;">
+                                <div class="progress-bar" 
+                                     style="width: ${completed ? 100 : progress}%; background-color: ${progressColor}"></div>
+                            </div>
+                            <div class="small text-center">
+                                <span class="fw-medium">${statusText}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            return html;
+        }
+
+        async function bulkAction(action) {
+            if (selectedFarmers.length === 0) {
+                Utils.showWarning('แจ้งเตือน', 'กรุณาเลือกสมาชิกที่ต้องการดำเนินการ');
+                return;
+            }
+            
+            let message = '';
+            switch (action) {
+                case 'activate':
+                    message = `เปิดการใช้งานสมาชิก ${selectedFarmers.length} คน`;
+                    break;
+                case 'deactivate':
+                    message = `ปิดการใช้งานสมาชิก ${selectedFarmers.length} คน`;
+                    break;
+                case 'export':
+                    await exportSelectedFarmers();
+                    return;
+            }
+            
+            const confirmed = await Utils.showConfirm('ยืนยันการดำเนินการ', `คุณต้องการ${message} หรือไม่?`);
+            if (!confirmed) return;
+            
+            try {
+                Utils.showLoading('กำลังดำเนินการ...');
+                
+                // Simulate bulk action
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                Utils.hideLoading();
+                Utils.showSuccess('สำเร็จ', `${message}เรียบร้อยแล้ว`);
+                
+                clearSelection();
+                await loadFarmersData();
+                
+            } catch (error) {
+                Utils.hideLoading();
+                handleAPIError(error, 'ไม่สามารถดำเนินการได้');
+            }
+        }
+
+        async function exportSelectedFarmers() {
+            try {
+                Utils.showLoading('กำลังส่งออกข้อมูล...');
+                
+                const result = await ReportAPI.exportToExcel('farmers', {
+                    farmerIds: selectedFarmers
+                });
+                
+                Utils.hideLoading();
+                
+                if (result.success) {
+                    const link = document.createElement('a');
+                    link.href = result.fileUrl;
+                    link.download = `รายการสมาชิก_${new Date().toISOString().split('T')[0]}.xlsx`;
+                    link.click();
+                    
+                    Utils.showSuccess('สำเร็จ', 'ส่งออกข้อมูลเรียบร้อยแล้ว');
+                } else {
+                    Utils.showError('ข้อผิดพลาด', result.message || 'ไม่สามารถส่งออกข้อมูลได้');
+                }
+                
+            } catch (error) {
+                Utils.hideLoading();
+                handleAPIError(error, 'ไม่สามารถส่งออกข้อมูลได้');
+            }
+        }
+
+        async function exportFarmerData() {
+            if (!currentFarmerDetails) return;
+            
+            try {
+                Utils.showLoading('กำลังส่งออกข้อมูล...');
+                
+                const result = await ReportAPI.generateFarmerReport(currentFarmerDetails.farmerId);
+                
+                Utils.hideLoading();
+                
+                if (result.success) {
+                    const link = document.createElement('a');
+                    link.href = result.reportUrl;
+                    link.download = `รายงานเกษตรกร_${currentFarmerDetails.plotCode}_${new Date().toISOString().split('T')[0]}.pdf`;
+                    link.click();
+                } else {
+                    Utils.showError('ข้อผิดพลาด', result.message || 'ไม่สามารถส่งออกข้อมูลได้');
+                }
+                
+            } catch (error) {
+                Utils.hideLoading();
+                handleAPIError(error, 'ไม่สามารถส่งออกข้อมูลได้');
+            }
+        }
+
+
+        function logout() {
+            AuthAPI.logout();
+        }
+    </script>
+</body>
+</html>
