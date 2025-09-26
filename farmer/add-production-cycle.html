@@ -525,11 +525,11 @@
                 const checkInterval = setInterval(() => {
                     attempts++;
                     console.log(`Waiting for dependencies... attempt ${attempts}`);
-                    console.log('Auth:', typeof Auth, 'FarmerAPI:', typeof FarmerAPI);
+                    console.log('Auth:', typeof Auth, 'window.FarmerAPI:', typeof window.FarmerAPI);
                     console.log('Document ready state:', document.readyState);
                     
                     if (typeof Auth !== 'undefined' && 
-                        typeof FarmerAPI !== 'undefined' && 
+                        typeof window.FarmerAPI !== 'undefined' && 
                         document.readyState === 'complete') {
                         clearInterval(checkInterval);
                         console.log('All dependencies loaded, initializing page...');
@@ -688,6 +688,27 @@
                 }
             }
             
+            // Validate file sizes (max 10MB per file)
+            const fileInputs = [
+                'plotImages', 'productImages', 'plantingImages', 
+                'certificationDocs', 'plantingMethodImages'
+            ];
+            
+            const maxFileSize = 10 * 1024 * 1024; // 10MB in bytes
+            
+            for (const inputId of fileInputs) {
+                const fileInput = document.getElementById(inputId);
+                if (fileInput && fileInput.files) {
+                    for (let i = 0; i < fileInput.files.length; i++) {
+                        const file = fileInput.files[i];
+                        if (file.size > maxFileSize) {
+                            showError(`ไฟล์ "${file.name}" มีขนาดใหญ่เกินไป (สูงสุด 10MB)`);
+                            return false;
+                        }
+                    }
+                }
+            }
+            
             // Validate dates
             const plantDateElement = document.getElementById('plantDate');
             const harvestDateElement = document.getElementById('harvestDate');
@@ -737,8 +758,13 @@
                 document.getElementById('loadingTitle').textContent = 'กำลังส่งข้อมูลและไฟล์...';
                 document.getElementById('loadingMessage').textContent = 'การอัปโหลดไฟล์อาจใช้เวลา 30-60 วินาที';
                 
-                // Submit to API
-                const response = await FarmerAPI.createProductionCycle(formData);
+                // Submit to API with timeout
+                const response = await Promise.race([
+                    window.FarmerAPI.createProductionCycle(formData),
+                    new Promise((_, reject) => 
+                        setTimeout(() => reject(new Error('การส่งข้อมูลใช้เวลานานเกินไป (90 วินาที)')), 90000)
+                    )
+                ]);
                 console.log('API Response:', response);
                 
                 if (response.success) {
@@ -764,52 +790,62 @@
 
         // Collect form data
         function collectFormData() {
+            function getElementValue(id) {
+                const element = document.getElementById(id);
+                return element ? element.value : '';
+            }
+            
+            function getElementFiles(id) {
+                const element = document.getElementById(id);
+                return element ? element.files : [];
+            }
+            
             return {
                 production: {
-                    seasonID: document.getElementById('seasonID')?.value || '',
-                    cropType: document.getElementById('cropType')?.value || '',
-                    cropVariety: document.getElementById('cropVariety')?.value || '',
-                    plantingMethod: document.getElementById('plantingMethod')?.value || '',
-                    plantingMethodOther: document.getElementById('plantingMethodOther')?.value || '',
-                    fertilizer: document.getElementById('fertilizer')?.value || '',
-                    pesticide: document.getElementById('pesticide')?.value || '',
-                    plantDate: document.getElementById('plantDate')?.value || '',
-                    harvestDate: document.getElementById('harvestDate')?.value || '',
-                    waterSourceType: document.getElementById('waterSourceType')?.value || '',
-                    waterManagement: document.getElementById('waterManagement')?.value || '',
-                    recordMethod: document.getElementById('recordMethod')?.value || '',
-                    pestControl: document.getElementById('pestControl')?.value || '',
-                    maintenanceRecord: document.getElementById('maintenanceRecord')?.value || ''
+                    seasonID: getElementValue('seasonID'),
+                    cropType: getElementValue('cropType'),
+                    cropVariety: getElementValue('cropVariety'),
+                    plantingMethod: getElementValue('plantingMethod'),
+                    plantingMethodOther: getElementValue('plantingMethodOther'),
+                    fertilizer: getElementValue('fertilizer'),
+                    pesticide: getElementValue('pesticide'),
+                    plantDate: getElementValue('plantDate'),
+                    harvestDate: getElementValue('harvestDate'),
+                    waterSourceType: getElementValue('waterSourceType'),
+                    waterManagement: getElementValue('waterManagement'),
+                    recordMethod: getElementValue('recordMethod'),
+                    pestControl: getElementValue('pestControl'),
+                    maintenanceRecord: getElementValue('maintenanceRecord')
                 },
                 harvest: {
-                    shipDate: document.getElementById('shipDate')?.value || '',
-                    harvestMethod: document.getElementById('harvestMethod')?.value || '',
-                    packagingCompany: document.getElementById('packagingCompany')?.value || '',
-                    packagingLocation: document.getElementById('packagingLocation')?.value || '',
-                    packagingProvince: document.getElementById('packagingProvince')?.value || '',
-                    responsiblePerson: document.getElementById('responsiblePerson')?.value || '',
+                    shipDate: getElementValue('shipDate'),
+                    harvestMethod: getElementValue('harvestMethod'),
+                    packagingCompany: getElementValue('packagingCompany'),
+                    packagingLocation: getElementValue('packagingLocation'),
+                    packagingProvince: getElementValue('packagingProvince'),
+                    responsiblePerson: getElementValue('responsiblePerson'),
                     // lotCode: เอาออก - backend จะสร้างอัตโนมัติ
-                    quantity: document.getElementById('quantity')?.value || '',
-                    unit: document.getElementById('unit')?.value || '',
-                    unitOther: document.getElementById('unitOther')?.value || ''
+                    quantity: getElementValue('quantity'),
+                    unit: getElementValue('unit'),
+                    unitOther: getElementValue('unitOther')
                 },
                 transport: {
-                    farmShipDate: document.getElementById('farmShipDate')?.value || document.getElementById('shipDate')?.value || '',
-                    transportChannel: document.getElementById('transportChannel')?.value || '',
-                    transportMethod: document.getElementById('transportMethod')?.value || '',
-                    transportMethodOther: document.getElementById('transportMethodOther')?.value || '',
-                    transportCompany: document.getElementById('transportCompany')?.value || '',
-                    distributorCode: document.getElementById('distributorCode')?.value || ''
+                    farmShipDate: getElementValue('farmShipDate') || getElementValue('shipDate'),
+                    transportChannel: getElementValue('transportChannel'),
+                    transportMethod: getElementValue('transportMethod'),
+                    transportMethodOther: getElementValue('transportMethodOther'),
+                    transportCompany: getElementValue('transportCompany'),
+                    distributorCode: getElementValue('distributorCode')
                 },
                 documents: {
-                    plotImages: document.getElementById('plotImages')?.files || [],
-                    productImages: document.getElementById('productImages')?.files || [],
-                    plantingImages: document.getElementById('plantingImages')?.files || [],
-                    certificationDocs: document.getElementById('certificationDocs')?.files || [],
-                    plantingMethodImages: document.getElementById('plantingMethodImages')?.files || []
+                    plotImages: getElementFiles('plotImages'),
+                    productImages: getElementFiles('productImages'),
+                    plantingImages: getElementFiles('plantingImages'),
+                    certificationDocs: getElementFiles('certificationDocs'),
+                    plantingMethodImages: getElementFiles('plantingMethodImages')
                 },
                 additionalInfo: {
-                    story: document.getElementById('story')?.value || ''
+                    story: getElementValue('story')
                 }
             };
         }
