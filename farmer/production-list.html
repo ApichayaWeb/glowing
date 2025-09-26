@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>รายการการผลิตทั้งหมด - ระบบสอบย้อนกลับผักอุดร</title>
+    
+    <!-- Noto Sans Thai Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root{
+            /* Brown nature theme colors */
+            --bg:#f9f7f4;            /* page bg - warm cream */
+            --card:#ffffff;          /* card bg */
+            --muted:#8d6e63;         /* muted text - brown */
+            --text:#3e2723;          /* main text - dark brown */
+            --brand:#8d6e63;         /* primary - brown */
+            --brand-2:#6d4c41;       /* primary darker - darker brown */
+            --accent:#d4a574;        /* accent - warm brown */
+            --ring: rgba(141,110,99,.35);
+            --shadow: 0 10px 30px rgba(109, 76, 65, .12);
+            --radius:18px;
+        }
+        *{box-sizing:border-box}
+        html,body{height:100%}
+        html{scroll-behavior:smooth}
+        
+        /* Modern UX Enhancements */
+        body {
+            margin:0;
+            font-family:"Noto Sans Thai", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+            background:
+                radial-gradient(900px 500px at 85% -10%, rgba(212,165,116,.22), transparent),
+                radial-gradient(800px 500px at -10% 10%, rgba(141,110,99,.18), transparent),
+                var(--bg);
+            color:var(--text);
+            line-height:1.6;
+        }
+        a{color:inherit;text-decoration:none}
+        .container{width:min(1120px, 92vw); margin-inline:auto}
+
+        /* NAVBAR */
+        .nav{
+            position:sticky; top:0; z-index:50;
+            backdrop-filter:saturate(160%) blur(8px);
+            background:rgba(255,255,255,.85);
+            border-bottom:1px solid rgba(62,39,35,.08);
+        }
+        .nav-inner{display:flex;align-items:center;gap:16px; padding:14px 0}
+        .brand{display:flex;align-items:center;gap:12px; font-weight:800; letter-spacing:.2px; color:#3e2723}
+        .brand .logo{width:36px;height:36px;display:grid;place-items:center;border-radius:10px;
+            background:conic-gradient(from 210deg at 50% 50%, #8d6e63 0 40%, #6d4c41 40% 70%, #d4a574 70% 100%);
+            box-shadow:inset 0 0 0 4px rgba(0,0,0,.03), 0 6px 18px rgba(141,110,99,.25);
+        }
+        .spacer{flex:1}
+        .nav a.link{opacity:.85; transition:.2s; padding:.5rem .75rem; border-radius:10px}
+        .nav a.link:hover{opacity:1; background:rgba(141,110,99,.08)}
+        .nav a.link.active{
+            opacity:1; 
+            background:rgba(141,110,99,.15); 
+            color:var(--brand); 
+            font-weight:600;
+        }
+
+        /* BUTTONS */
+        .btn{display:inline-flex; align-items:center; gap:8px; padding:.65rem 1rem; border-radius:12px;
+            background:linear-gradient(180deg, var(--brand), var(--brand-2)); box-shadow:0 10px 18px rgba(141,110,99,.25);
+            color:#fff; font-weight:800}
+        .btn:hover{filter:brightness(1.03)}
+        .btn-outline{display:inline-flex; align-items:center; gap:8px; padding:.55rem .95rem; border-radius:12px;
+            border:2px solid var(--brand); color:var(--brand); font-weight:800; background:transparent}
+        .btn-outline:hover{background:rgba(141,110,99,.08)}
+        
+        .card {
+            transition: all 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .table tbody tr {
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            transition: all 0.2s ease;
+        }
+        
+        .table tbody tr:hover {
+            background: linear-gradient(135deg, rgba(13, 110, 253, 0.05), rgba(102, 16, 242, 0.03));
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .btn {
+            transition: all 0.3s ease;
+        }
+        
+        .btn:hover {
+            transform: translateY(-1px);
+        }
+        
+        /* Glassmorphism effect */
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+        
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, var(--brand), var(--brand-2));
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, var(--brand-2), var(--brand));
+        }
+        
+        /* Animation for cards */
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .card {
+            animation: slideInUp 0.5s ease-out;
+        }
+
+        /* NAVBAR ENHANCEMENTS */
+        .navbar .nav-link {
+            color: var(--text) !important;
+            opacity: .85;
+            transition: all 0.2s ease;
+            padding: .5rem .75rem;
+            border-radius: 10px;
+        }
+
+        .navbar .nav-link:hover {
+            opacity: 1;
+            background: rgba(141,110,99,.08);
+            transform: translateY(-1px);
+        }
+
+        .navbar .nav-link.active {
+            background: rgba(141,110,99,.15);
+            color: var(--brand) !important;
+            font-weight: 600;
+        }
+
+        /* USER DROPDOWN */
+        .user-dropdown {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(141,110,99,0.15);
+            padding: 0.75rem 0;
+            margin-top: 0.5rem;
+            min-width: 260px;
+            background: #ffffff;
+        }
+
+        .dropdown-header {
+            padding: 1rem 1.25rem;
+            background: linear-gradient(135deg, rgba(141,110,99,0.08) 0%, rgba(109,76,65,0.05) 100%);
+            border-radius: 8px;
+            margin: 0 0.5rem 0.5rem;
+            border: 1px solid rgba(141,110,99,0.12);
+        }
+
+        .dropdown-item-custom {
+            padding: 0.75rem 1.25rem;
+            transition: all 0.2s ease;
+            border-radius: 8px;
+            margin: 0.15rem 0.5rem;
+            color: var(--text);
+            text-decoration: none;
+        }
+
+        .dropdown-item-custom:hover {
+            background: rgba(141,110,99,0.08);
+            color: var(--brand);
+            transform: translateX(3px);
+        }
+
+        .user-dropdown-toggle {
+            border: none;
+            background: transparent;
+            color: var(--text);
+            border-radius: 10px;
+            padding: 0.5rem 0.75rem;
+            transition: all 0.2s ease;
+        }
+
+        .user-dropdown-toggle:hover {
+            background: rgba(141,110,99,0.08);
+        }
+
+        .navbar-toggler {
+            padding: 0.5rem;
+            border-radius: 8px;
+        }
+
+        .navbar-toggler:focus {
+            box-shadow: 0 0 0 0.2rem rgba(255,255,255,0.25);
+        }
+        
+        /* RESPONSIVE NAVIGATION */
+        @media (max-width: 768px) {
+            .nav-inner {
+                flex-wrap: wrap;
+            }
+            
+            .nav .link {
+                font-size: 14px;
+                padding: .4rem .6rem;
+            }
+            
+            .brand span {
+                font-size: 14px;
+            }
+            
+            .spacer {
+                display: none;
+            }
+            
+            .nav .link:not(.active) span {
+                display: none !important;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .nav-inner {
+                gap: 8px;
+                padding: 10px 0;
+            }
+            
+            .nav .link {
+                font-size: 12px;
+                padding: .3rem .5rem;
+            }
+            
+            .brand {
+                gap: 8px;
+            }
+            
+            .brand img {
+                width: 28px;
+                height: 28px;
+            }
+        }
+
+        /* Loading spinner */
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Custom badge styles */
+        .badge-custom {
+            font-size: 0.75em;
+            padding: 0.4em 0.6em;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="container nav-inner">
+            <!-- Brand with Logo -->
+            <a href="../index.html" class="brand" aria-label="กลับไปหน้าแรก">
+                <img src="../assets/images/logo.png" width="32" height="32" alt="โลโก้" style="display:block;" />
+                <span class="d-none d-sm-inline">รายการการผลิตทั้งหมด</span>
+            </a>
+
+            <!-- Navigation Links -->
+            <a class="link" href="dashboard.html">
+                <i class="fas fa-home me-1"></i>
+                <span class="d-none d-md-inline">หน้าหลัก</span>
+            </a>
+            <a class="link active" href="production-list.html">
+                <i class="fas fa-list me-1"></i>
+                <span class="d-none d-md-inline">รายการการผลิต</span>
+            </a>
+            <a class="link" href="add-production-cycle.html">
+                <i class="fas fa-plus-circle me-1"></i>
+                <span class="d-none d-md-inline">บันทึกการผลิต</span>
+            </a>
+
+            <div class="spacer"></div>
+
+            <!-- User Menu -->
+            <div class="dropdown">
+                <button class="btn-outline d-flex align-items-center" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-user me-1"></i>
+                    <span class="d-none d-sm-inline" id="currentUserName">เกษตรกร</span>
+                    <i class="fas fa-chevron-down ms-1" style="font-size: 12px;"></i>
+                </button>
+                <div class="dropdown-menu dropdown-menu-end user-dropdown">
+                    <div class="dropdown-header">
+                        <div class="d-flex align-items-center">
+                            <div class="user-avatar text-white rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background: linear-gradient(135deg, var(--brand), var(--brand-2));">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <div>
+                                <div class="fw-bold" id="userDisplayName">เกษตรกร</div>
+                                <small class="text-muted" id="userRole">เกษตรกรในระบบ</small>
+                            </div>
+                        </div>
+                    </div>
+                    <a class="dropdown-item dropdown-item-custom" href="profile-setup.html">
+                        <i class="fas fa-user-edit me-2" style="color: var(--brand);"></i>ข้อมูลส่วนตัว
+                    </a>
+                    <a class="dropdown-item dropdown-item-custom" href="#" onclick="changePassword()">
+                        <i class="fas fa-key me-2" style="color: #f59e0b;"></i>เปลี่ยนรหัสผ่าน
+                    </a>
+                    <div class="dropdown-divider mx-3"></div>
+                    <a class="dropdown-item dropdown-item-custom text-danger" href="#" onclick="logout()">
+                        <i class="fas fa-sign-out-alt me-2"></i>ออกจากระบบ
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main style="margin-top: 90px; background: var(--bg); min-height: 100vh;">
+        <div class="container-fluid px-4 py-5">
+            
+            <!-- Loading Indicator -->
+            <div id="loadingIndicator" class="text-center py-5" style="display: none;">
+                <div class="spinner-border text-success" role="status">
+                    <span class="visually-hidden">กำลังโหลด...</span>
+                </div>
+                <p class="mt-3 text-muted">กำลังโหลดข้อมูลการผลิต...</p>
+            </div>
+
+            <!-- Header Section -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card border-0 shadow" style="border-radius: 15px; background: linear-gradient(135deg, #0d6efd, #6610f2);">
+                        <div class="card-body p-4">
+                            <div class="row align-items-center">
+                                <div class="col-lg-8">
+                                    <div class="text-white">
+                                        <h2 class="fw-bold mb-2">
+                                            <i class="fas fa-list me-3"></i>รายการการผลิตทั้งหมด
+                                        </h2>
+                                        <p class="mb-0 opacity-75">ดูและจัดการรอบการผลิตของคุณ</p>
+                                    </div>
+                                </div>
+                                <div class="col-lg-4 text-lg-end">
+                                    <a href="add-production-cycle.html" class="btn btn-light fw-bold" style="border-radius: 10px; padding: 0.75rem 1.5rem;">
+                                        <i class="fas fa-plus me-2"></i>บันทึกการผลิตใหม่
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Production Records Table -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card border-0 shadow" style="border-radius: 15px; background: #ffffff;">
+                        <div class="card-body p-4">
+                            
+                            <!-- No Records Message -->
+                            <div id="noRecordsMessage" class="text-center py-5" style="display: none;">
+                                <div class="mb-4">
+                                    <div class="d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px; background: #e3f2fd; border-radius: 50%;">
+                                        <i class="fas fa-seedling fa-3x text-primary"></i>
+                                    </div>
+                                </div>
+                                <h4 class="fw-bold text-primary mb-2">ยังไม่มีข้อมูลการผลิต</h4>
+                                <p class="text-muted mb-4">เริ่มต้นการใช้งานด้วยการบันทึกข้อมูลการผลิตแรกของคุณ</p>
+                                <a href="add-production-cycle.html" class="btn btn-primary btn-lg" style="padding: 0.8rem 2rem; border-radius: 10px; font-weight: 600;">
+                                    <i class="fas fa-plus me-2"></i>เริ่มบันทึกการผลิต
+                                </a>
+                            </div>
+
+                            <!-- Production Table -->
+                            <div id="productionTable" style="display: none;">
+                                <div class="table-responsive">
+                                    <table class="table table-hover mb-0">
+                                        <thead>
+                                            <tr style="background: #f8f9fa;">
+                                                <th class="border-0 py-3 fw-bold text-dark">วันที่เพาะปลูก</th>
+                                                <th class="border-0 py-3 fw-bold text-dark">พืชที่ปลูก (สายพันธุ์)</th>
+                                                <th class="border-0 py-3 fw-bold text-dark">รหัสค้นหา</th>
+                                                <th class="border-0 py-3 fw-bold text-dark">วันที่จัดส่ง</th>
+                                                <th class="border-0 py-3 fw-bold text-dark">วันที่ส่งจากฟาร์ม</th>
+                                                <th class="border-0 py-3 fw-bold text-dark text-center">จัดการ</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="productionTableBody">
+                                            <!-- Dynamic content will be inserted here -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                                <!-- Summary and Pagination -->
+                                <div class="d-flex justify-content-between align-items-center mt-4" id="paginationContainer">
+                                    <div id="summaryInfo" class="text-muted">
+                                        <!-- Summary will be inserted here -->
+                                    </div>
+                                    <nav id="paginationNav">
+                                        <!-- Pagination will be inserted here -->
+                                    </nav>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Confirmation Modal -->
+    <div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 15px;">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-bold" id="confirmationModalLabel">
+                        <i class="fas fa-exclamation-triangle text-warning me-2"></i>ยืนยันการลบข้อมูล
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="confirmationMessage">คุณแน่ใจหรือไม่ที่จะลบข้อมูลการผลิตนี้? การดำเนินการนี้ไม่สามารถยกเลิกได้</p>
+                    <div class="alert alert-warning" role="alert">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <small>การลบจะรวมถึงไฟล์ที่เกี่ยวข้องทั้งหมด</small>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="border-radius: 8px;">ยกเลิก</button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn" style="border-radius: 8px;">
+                        <i class="fas fa-trash me-1"></i>ลบข้อมูล
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Core Dependencies -->
+    <script src="../assets/js/utils.js"></script>
+    <script src="../assets/js/api.js"></script>
+    <script src="../assets/js/farmer-api.js"></script>
+    <script src="../assets/js/auth.js"></script>
+
+    <script>
+        // Global variables
+        let allProductionRecords = [];
+        let filteredRecords = [];
+        let currentPage = 1;
+        let itemsPerPage = 20; // เริ่มต้นที่ 20 รายการต่อหน้า
+        let waitCount = 0;
+        let authCheckInterval;
+
+        // Wait for dependencies to load
+        function waitForAuth() {
+            waitCount++;
+            
+            const hasAuth = typeof Auth !== 'undefined' && Auth.isAuthenticated;
+            const hasAPI = typeof API !== 'undefined' && API.call;
+            const hasFarmerAPI = typeof window.FarmerAPI !== 'undefined';
+            
+            if (hasAuth && hasAPI && hasFarmerAPI) {
+                console.log(`⚡ Dependencies loaded in ${waitCount} attempts`);
+                clearInterval(authCheckInterval);
+                initializeProductionList();
+            } else if (waitCount > 50) {
+                console.error(`❌ Timeout after ${waitCount} attempts`);
+                clearInterval(authCheckInterval);
+                showError('เกิดข้อผิดพลาดในการโหลดระบบ กรุณาลองรีเฟรชหน้าใหม่อีกครั้ง');
+            }
+        }
+
+        // Initialize production list page
+        async function initializeProductionList() {
+            try {
+                console.log('🚀 Initializing production list page...');
+                
+                // Check authentication
+                if (!Auth || !Auth.isAuthenticated()) {
+                    console.log('Not authenticated, redirecting to login...');
+                    window.location.href = '../login.html';
+                    return;
+                }
+
+                const currentUser = Auth.getCurrentUser();
+                console.log('Current user:', currentUser);
+                
+                if (!currentUser || currentUser.role !== 'farmer') {
+                    console.log('User not farmer or missing, redirecting...');
+                    window.location.href = '../login.html';
+                    return;
+                }
+
+                // Update navbar display
+                updateNavbarUserDisplay(currentUser);
+                
+                showLoading(true);
+                
+                // Load production data
+                await loadProductionData();
+                
+            } catch (error) {
+                console.error('Production list initialization error:', error);
+                showError('เกิดข้อผิดพลาดในการโหลดข้อมูล: ' + error.message);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Load production data
+        async function loadProductionData() {
+            try {
+                const currentUser = Auth.getCurrentUser();
+                const currentFarmerID = currentUser?.farmerID;
+                
+                if (!currentFarmerID) {
+                    throw new Error('ไม่พบข้อมูล Farmer ID');
+                }
+                
+                console.log('🔍 Loading production data for farmer:', currentFarmerID);
+                
+                // Parallel loading of all required data
+                const [productionResult, harvestResult, transportResult, searchCodesResult] = await Promise.allSettled([
+                    API.call('getProductionData', { farmerID: currentFarmerID }),
+                    API.call('getHarvestData', { farmerID: currentFarmerID }),
+                    API.call('getTransportData', { farmerID: currentFarmerID }),
+                    API.call('getSearchCodes', { farmerID: currentFarmerID })
+                ]);
+                
+                // Extract data from results
+                const productionData = productionResult.status === 'fulfilled' ? productionResult.value?.data || [] : [];
+                const harvestData = harvestResult.status === 'fulfilled' ? harvestResult.value?.data || [] : [];
+                const transportData = transportResult.status === 'fulfilled' ? transportResult.value?.data || [] : [];
+                const searchCodesData = searchCodesResult.status === 'fulfilled' ? searchCodesResult.value?.data || [] : [];
+                
+                console.log('📊 Data loaded:', {
+                    production: productionData.length,
+                    harvest: harvestData.length,
+                    transport: transportData.length,
+                    searchCodes: searchCodesData.length
+                });
+                
+                // Join the data
+                const joinedData = joinProductionData(productionData, harvestData, transportData, searchCodesData);
+                
+                // Filter by current farmer
+                allProductionRecords = joinedData.filter(record => {
+                    const recordFarmerID = record.FarmerID || record.farmerID;
+                    return recordFarmerID === currentFarmerID;
+                });
+                
+                console.log(`🔐 Filtered to ${allProductionRecords.length} records for farmer ${currentFarmerID}`);
+                
+                // Sort by plant date (newest first)
+                allProductionRecords.sort((a, b) => {
+                    const dateA = new Date(a.PlantDate || 0);
+                    const dateB = new Date(b.PlantDate || 0);
+                    return dateB - dateA;
+                });
+                
+                // Display data
+                displayProductionRecords();
+                
+            } catch (error) {
+                console.error('Error loading production data:', error);
+                showError('ไม่สามารถโหลดข้อมูลการผลิตได้: ' + error.message);
+            }
+        }
+
+        // Join production data from multiple tables
+        function joinProductionData(productionData, harvestData, transportData, searchCodesData) {
+            return productionData.map(production => {
+                const productionID = production.ProductionID;
+                
+                // Find related harvest data
+                const harvest = harvestData.find(h => h.ProductionID === productionID) || {};
+                
+                // Find related transport data
+                const transport = transportData.find(t => t.ProductionID === productionID) || {};
+                
+                // Find related search code
+                const searchCode = searchCodesData.find(s => s.ProductionID === productionID) || {};
+                
+                // Combine all data
+                return {
+                    ...production,
+                    // Harvest data
+                    ShipDate: harvest.ShipDate,
+                    HarvestMethod: harvest.HarvestMethod,
+                    PackagingCompany: harvest.PackagingCompany,
+                    LotCode: harvest.LotCode,
+                    Quantity: harvest.Quantity,
+                    Unit: harvest.Unit,
+                    // Transport data
+                    FarmShipDate: transport.farmShipDate || transport.FarmShipDate,
+                    TransportChannel: transport.TransportChannel,
+                    TransportMethod: transport.TransportMethod,
+                    TransportCompany: transport.TransportCompany,
+                    DistributorCode: transport.DistributorCode,
+                    // Search code data
+                    SearchCode: searchCode.SearchCode,
+                    QRCode: searchCode.QRCode
+                };
+            });
+        }
+
+        // Display production records
+        function displayProductionRecords() {
+            filteredRecords = [...allProductionRecords];
+            currentPage = 1;
+            
+            const noRecordsMessage = document.getElementById('noRecordsMessage');
+            const productionTable = document.getElementById('productionTable');
+            
+            if (!allProductionRecords || allProductionRecords.length === 0) {
+                console.log('No production records found, showing no records message');
+                noRecordsMessage.style.display = 'block';
+                productionTable.style.display = 'none';
+                return;
+            }
+            
+            // Show table and hide no records message
+            noRecordsMessage.style.display = 'none';
+            productionTable.style.display = 'block';
+            
+            // Render table with pagination
+            renderTableAndPagination();
+        }
+
+        // Render table and pagination
+        function renderTableAndPagination() {
+            const tableBody = document.getElementById('productionTableBody');
+            const summaryInfo = document.getElementById('summaryInfo');
+            const paginationNav = document.getElementById('paginationNav');
+            
+            // Calculate pagination
+            const totalRecords = filteredRecords.length;
+            const totalPages = Math.ceil(totalRecords / itemsPerPage);
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const currentRecords = filteredRecords.slice(startIndex, endIndex);
+            
+            // Render table rows
+            tableBody.innerHTML = currentRecords.map(record => `
+                <tr>
+                    <td class="py-3">${formatDateThai(record.PlantDate) || '-'}</td>
+                    <td class="py-3">
+                        ${record.CropType || '-'}
+                        ${record.CropVariety ? `<small class="text-muted d-block">(${record.CropVariety})</small>` : ''}
+                    </td>
+                    <td class="py-3">
+                        ${record.SearchCode ? `
+                            <span class="badge bg-success badge-custom">${record.SearchCode}</span>
+                        ` : '<span class="text-muted">-</span>'}
+                    </td>
+                    <td class="py-3">${formatDateThai(record.ShipDate) || '-'}</td>
+                    <td class="py-3">${formatDateThai(record.FarmShipDate) || '-'}</td>
+                    <td class="py-3 text-center">
+                        <div class="btn-group" role="group" aria-label="การจัดการ">
+                            <button class="btn btn-sm btn-outline-primary" onclick="viewRecord('${record.ProductionID}')" title="ดูรายละเอียด">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-warning" onclick="editRecord('${record.ProductionID}')" title="แก้ไข">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="confirmDeleteRecord('${record.ProductionID}', '${record.CropType || 'รายการนี้'}')" title="ลบ">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+            
+            // Render summary
+            const startRecord = totalRecords > 0 ? startIndex + 1 : 0;
+            const endRecord = Math.min(endIndex, totalRecords);
+            summaryInfo.innerHTML = `แสดง ${startRecord}-${endRecord} จาก ${totalRecords} รายการ`;
+            
+            // Render pagination
+            renderPagination(totalPages);
+        }
+
+        // Render pagination
+        function renderPagination(totalPages) {
+            const paginationNav = document.getElementById('paginationNav');
+            
+            if (totalPages <= 1) {
+                paginationNav.innerHTML = '';
+                return;
+            }
+            
+            let paginationHTML = '<ul class="pagination pagination-sm mb-0">';
+            
+            // Previous button
+            paginationHTML += `
+                <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                    <button class="page-link" onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                </li>
+            `;
+            
+            // Page numbers
+            const startPage = Math.max(1, currentPage - 2);
+            const endPage = Math.min(totalPages, currentPage + 2);
+            
+            if (startPage > 1) {
+                paginationHTML += `<li class="page-item"><button class="page-link" onclick="changePage(1)">1</button></li>`;
+                if (startPage > 2) {
+                    paginationHTML += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+                }
+            }
+            
+            for (let i = startPage; i <= endPage; i++) {
+                paginationHTML += `
+                    <li class="page-item ${i === currentPage ? 'active' : ''}">
+                        <button class="page-link" onclick="changePage(${i})">${i}</button>
+                    </li>
+                `;
+            }
+            
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    paginationHTML += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+                }
+                paginationHTML += `<li class="page-item"><button class="page-link" onclick="changePage(${totalPages})">${totalPages}</button></li>`;
+            }
+            
+            // Next button
+            paginationHTML += `
+                <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                    <button class="page-link" onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </li>
+            `;
+            
+            paginationHTML += '</ul>';
+            paginationNav.innerHTML = paginationHTML;
+        }
+
+        // Change page
+        function changePage(page) {
+            const totalPages = Math.ceil(filteredRecords.length / itemsPerPage);
+            if (page < 1 || page > totalPages) return;
+            
+            currentPage = page;
+            renderTableAndPagination();
+            
+            // Scroll to top of table
+            document.getElementById('productionTable').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Format Thai date
+        function formatDateThai(dateString) {
+            if (!dateString) return '';
+            try {
+                const date = new Date(dateString);
+                return date.toLocaleDateString('th-TH', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit'
+                });
+            } catch (error) {
+                return dateString;
+            }
+        }
+
+        // Update navbar user display
+        function updateNavbarUserDisplay(currentUser) {
+            let displayName = 'เกษตรกร';
+            
+            if (currentUser?.fullName || currentUser?.FullName) {
+                displayName = currentUser.fullName || currentUser.FullName;
+            } else if (currentUser?.username) {
+                displayName = currentUser.username;
+            }
+            
+            // Update elements
+            const elements = ['currentUserName', 'userDisplayName'];
+            elements.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) element.textContent = displayName;
+            });
+        }
+
+        // Record management functions
+        function viewRecord(productionId) {
+            console.log('View record:', productionId);
+            window.location.href = `production-detail.html?id=${productionId}`;
+        }
+        
+        function editRecord(productionId) {
+            console.log('Edit record:', productionId);
+            window.location.href = `add-production-cycle.html?edit=${productionId}`;
+        }
+        
+        function confirmDeleteRecord(productionId, cropName) {
+            console.log('Confirm delete record:', productionId);
+            
+            // Set confirmation message
+            const messageElement = document.getElementById('confirmationMessage');
+            messageElement.innerHTML = `คุณแน่ใจหรือไม่ที่จะลบข้อมูลการผลิต <strong>"${cropName}"</strong>?<br>การดำเนินการนี้ไม่สามารถยกเลิกได้`;
+            
+            // Set delete handler
+            const confirmBtn = document.getElementById('confirmDeleteBtn');
+            confirmBtn.onclick = () => deleteRecord(productionId);
+            
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('confirmationModal'));
+            modal.show();
+        }
+        
+        async function deleteRecord(productionId) {
+            try {
+                console.log('Deleting record:', productionId);
+                
+                // Show loading in button
+                const confirmBtn = document.getElementById('confirmDeleteBtn');
+                const originalHTML = confirmBtn.innerHTML;
+                confirmBtn.innerHTML = '<span class="loading-spinner me-1"></span>กำลังลบ...';
+                confirmBtn.disabled = true;
+                
+                // Call delete API
+                const response = await API.call('deleteProductionRecord', { 
+                    productionID: productionId,
+                    deleteFiles: true // ลบไฟล์ที่เกี่ยวข้องด้วย
+                });
+                
+                if (response.success) {
+                    showAlert('success', 'ลบข้อมูลการผลิตเรียบร้อยแล้ว');
+                    
+                    // Close modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('confirmationModal'));
+                    modal.hide();
+                    
+                    // Reload data
+                    setTimeout(() => {
+                        loadProductionData();
+                    }, 1000);
+                    
+                } else {
+                    throw new Error(response.message || 'ไม่สามารถลบข้อมูลได้');
+                }
+                
+            } catch (error) {
+                console.error('Delete error:', error);
+                showAlert('error', 'เกิดข้อผิดพลาด: ' + error.message);
+                
+                // Reset button
+                const confirmBtn = document.getElementById('confirmDeleteBtn');
+                confirmBtn.innerHTML = '<i class="fas fa-trash me-1"></i>ลบข้อมูล';
+                confirmBtn.disabled = false;
+            }
+        }
+
+        // Utility functions
+        function showLoading(show) {
+            const indicator = document.getElementById('loadingIndicator');
+            if (indicator) {
+                indicator.style.display = show ? 'block' : 'none';
+            }
+        }
+
+        function showError(message) {
+            showAlert('error', message);
+        }
+
+        function showAlert(type, message) {
+            const alertClass = type === 'error' ? 'alert-danger' : 
+                               type === 'warning' ? 'alert-warning' : 
+                               type === 'success' ? 'alert-success' : 'alert-info';
+            
+            const alertHtml = `
+                <div class="alert ${alertClass} alert-dismissible fade show position-fixed" 
+                     style="top: 100px; right: 20px; z-index: 9999; min-width: 300px;">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', alertHtml);
+            
+            // Auto dismiss after 5 seconds
+            setTimeout(() => {
+                const alert = document.querySelector('.alert:last-child');
+                if (alert) {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                }
+            }, 5000);
+        }
+
+        // Navigation functions
+        function changePassword() {
+            window.location.href = 'change-password.html';
+        }
+
+        function logout() {
+            if (typeof Auth !== 'undefined') {
+                Auth.logout();
+            } else {
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('currentUser');
+                window.location.href = '../login.html';
+            }
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM Content Loaded - Starting production list initialization...');
+            
+            setTimeout(() => {
+                waitForAuth();
+                authCheckInterval = setInterval(waitForAuth, 200);
+                
+                setTimeout(() => {
+                    if (typeof Auth === 'undefined' || typeof window.FarmerAPI === 'undefined') {
+                        console.error('Dependencies still not loaded after 10 seconds');
+                        clearInterval(authCheckInterval);
+                        showError('ระบบใช้เวลานานในการโหลด กรุณารีเฟรชหน้าใหม่');
+                    }
+                }, 10000);
+            }, 500);
+        });
+
+    </script>
+</body>
+</html>

@@ -432,6 +432,20 @@
                             </div>
                         </div>
                     </div>
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="card border-0 shadow-sm h-100" style="border-radius: 15px; background: #0d6efd; transition: all 0.3s;" onmouseover="this.style.transform='translateY(-3px)';" onmouseout="this.style.transform='translateY(0)';">
+                            <div class="card-body text-center text-white p-4">
+                                <div class="mb-3">
+                                    <i class="fas fa-list fa-3x"></i>
+                                </div>
+                                <h6 class="fw-bold mb-2">รายการการผลิตทั้งหมด</h6>
+                                <p class="small mb-3 opacity-75">ดูรอบการผลิตทั้งหมด</p>
+                                <a href="production-list.html" class="btn btn-light btn-sm fw-bold" style="border-radius: 8px;">
+                                    <i class="fas fa-arrow-right me-1"></i>ดูรายการ
+                                </a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Section 1: Farmer Profile Card -->
@@ -561,106 +575,6 @@
                 </div>
 
 
-                <!-- Production Records Table -->
-                <div class="row" id="productionSection" style="display: none;">
-                    <div class="col-12">
-                        <div class="card border-0 shadow" style="border-radius: 15px; background: #ffffff;">
-                            <div class="card-header border-0 py-4" style="background: #0d6efd; border-radius: 15px 15px 0 0;">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <h4 class="mb-0 text-white fw-bold">
-                                        <i class="fas fa-list me-3"></i>รายการการผลิตทั้งหมด
-                                    </h4>
-                                    <a href="add-production-cycle.html" class="btn btn-light btn-sm fw-bold" style="border-radius: 8px;">
-                                        <i class="fas fa-plus me-1"></i>
-                                        <span class="d-none d-md-inline">บันทึกการผลิต</span>
-                                        <span class="d-md-none">บันทึก</span>
-                                    </a>
-                                </div>
-                            </div>
-                            <div class="card-body p-4">
-                                <!-- Search and Controls -->
-                                <div class="row mb-4" id="productionControls" style="display: none;">
-                                    <div class="col-md-4 mb-3">
-                                        <label class="form-label fw-bold">🔍 ค้นหาตามวันที่:</label>
-                                        <input type="date" class="form-control" id="dateFilter" placeholder="เลือกวันที่...">
-                                    </div>
-                                    <div class="col-md-3 mb-3">
-                                        <label class="form-label fw-bold">📊 เรียงตาม:</label>
-                                        <select class="form-select" id="sortSelect">
-                                            <option value="date_desc">วันที่ (ใหม่→เก่า)</option>
-                                            <option value="date_asc">วันที่ (เก่า→ใหม่)</option>
-                                            <option value="name_asc">ชื่อผลิตภัณฑ์ (A-Z)</option>
-                                            <option value="name_desc">ชื่อผลิตภัณฑ์ (Z-A)</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-3 mb-3">
-                                        <label class="form-label fw-bold">📄 แสดงต่อหน้า:</label>
-                                        <select class="form-select" id="itemsPerPageSelect">
-                                            <option value="10">10 รายการ</option>
-                                            <option value="25">25 รายการ</option>
-                                            <option value="50">50 รายการ</option>
-                                            <option value="100" selected>100 รายการ</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-2 mb-3 d-flex align-items-end">
-                                        <button class="btn btn-outline-secondary w-100" id="resetFiltersBtn" onclick="resetFilters()">
-                                            <i class="fas fa-undo me-1"></i>รีเซ็ต
-                                        </button>
-                                    </div>
-                                </div>
-                                
-                                <!-- Loading Indicator -->
-                                <div id="productionLoading" class="text-center py-4" style="display: none;">
-                                    <div class="spinner-border text-success" role="status">
-                                        <span class="visually-hidden">กำลังโหลดข้อมูล...</span>
-                                    </div>
-                                    <p class="mt-2 text-muted">กำลังโหลดข้อมูลการผลิต...</p>
-                                </div>
-                                
-                                <div id="noRecordsMessage" class="text-center py-5" style="display: none;">
-                                    <div class="mb-4">
-                                        <div class="d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px; background: #e3f2fd; border-radius: 50%;">
-                                            <i class="fas fa-seedling fa-3x text-primary"></i>
-                                        </div>
-                                    </div>
-                                    <h4 class="fw-bold text-primary mb-2">ยินดีต้อนรับสู่ระบบสอบย้อนกลับผักอุดร!</h4>
-                                    <p class="text-muted mb-4">เริ่มต้นการใช้งานด้วยการกรอกข้อมูลเกษตรกรและแปลงปลูกของคุณ จากนั้นบันทึกข้อมูลการผลิตแรก</p>
-                                    <a href="add-production-cycle.html" class="btn btn-primary btn-lg" style="padding: 0.8rem 2rem; border-radius: 10px; font-weight: 600;">
-                                        <i class="fas fa-plus me-2"></i>เริ่มบันทึกการผลิต
-                                    </a>
-                                </div>
-                                <div id="productionTable" style="display: none;">
-                                    <div class="table-responsive">
-                                        <table class="table table-hover mb-0">
-                                            <thead>
-                                                <tr style="background: #f8f9fa;">
-                                                    <th class="border-0 py-3 fw-bold text-dark">วันที่เพาะปลูก</th>
-                                                    <th class="border-0 py-3 fw-bold text-dark">พืชที่ปลูก (สายพันธุ์)</th>
-                                                    <th class="border-0 py-3 fw-bold text-dark">รหัสค้นหา</th>
-                                                    <th class="border-0 py-3 fw-bold text-dark">วันที่จัดส่ง</th>
-                                                    <th class="border-0 py-3 fw-bold text-dark">วันที่ส่งจากฟาร์ม</th>
-                                                    <th class="border-0 py-3 fw-bold text-dark text-center">จัดการ</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="productionTableBody">
-                                                <!-- Dynamic content -->
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                    <!-- Summary and Pagination -->
-                                    <div class="d-flex justify-content-between align-items-center mt-4" id="paginationContainer">
-                                        <div id="summaryInfo" class="text-muted">
-                                            <!-- Summary will be inserted here -->
-                                        </div>
-                                        <nav id="paginationNav">
-                                            <!-- Pagination will be inserted here -->
-                                        </nav>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
             </div>
         </div>
@@ -798,6 +712,7 @@
                         updateQRCodeSection(qrResult.value);
                     }
                     
+                    // Just log production records count for dashboard
                     if (historyResult.status === 'fulfilled' && historyResult.value?.success) {
                         updateProductionRecords(historyResult.value.records || historyResult.value.data || []);
                     }
@@ -825,19 +740,17 @@
             console.log('Rendering basic farmer info...');
             
             if (response.part1Complete && response.farmer) {
-                // แสดง dashboard หลัก
+                // แสดง dashboard หลัก (ไม่มี production section แล้ว)
                 document.getElementById('welcomeSection').style.display = 'none';
                 document.getElementById('dashboardContent').style.display = 'block';
-                document.getElementById('productionSection').style.display = 'block';
                 
                 // อัปเดตข้อมูลเกษตรกรพื้นฐาน
                 updateFarmerProfileBasic(response.farmer);
                 updateNavbarUserDisplay(Auth.getCurrentUser(), response.farmer);
             } else {
-                // แสดง welcome section และซ่อนส่วนการผลิต
+                // แสดง welcome section
                 document.getElementById('welcomeSection').style.display = 'block';
                 document.getElementById('dashboardContent').style.display = 'none';
-                document.getElementById('productionSection').style.display = 'none';
             }
             
             // ซ่อน loading indicator หลัก
@@ -1459,264 +1372,11 @@
 </html>`;
         }
 
-        // Global variables for pagination and filtering
-        let allProductionRecords = [];
-        let filteredRecords = [];
-        let currentPage = 1;
-        let itemsPerPage = 100;
-
-        // Update production records table - เฉพาะข้อมูลของเกษตรกรคนนี้
+        // Simplified production records function for dashboard (removed pagination/filtering)
         function updateProductionRecords(records) {
-            console.log('updateProductionRecords called with:', records);
-            
-            const currentUser = Auth.getCurrentUser();
-            const currentFarmerID = currentUser?.farmerID;
-            
-            if (!currentFarmerID) {
-                console.error('❌ No farmerID for filtering records');
-                return;
-            }
-            
-            // 🔒 Security: กรองเฉพาะข้อมูลของเกษตรกรคนนี้
-            const filteredRecords = (records || []).filter(record => {
-                const recordFarmerID = record.FarmerID || record.farmerID;
-                const isOwner = recordFarmerID === currentFarmerID;
-                
-                if (!isOwner) {
-                    console.warn('🚫 Filtered out record not belonging to current farmer:', {
-                        recordID: record.ProductionID,
-                        recordFarmerID: recordFarmerID,
-                        currentFarmerID: currentFarmerID
-                    });
-                }
-                
-                return isOwner;
-            });
-            
-            console.log(`🔐 Filtered ${records?.length || 0} records → ${filteredRecords.length} for farmer ${currentFarmerID}`);
-            
-            // Debug: ตรวจสอบ field names ที่ส่งมาจาก API
-            if (filteredRecords && filteredRecords.length > 0) {
-                console.log('=== DEBUG: Production record field names ===');
-                console.log('First record:', filteredRecords[0]);
-                console.log('FarmShipDate field:', filteredRecords[0].FarmShipDate);
-                console.log('farmShipDate field:', filteredRecords[0].farmShipDate);
-                console.log('Available fields:', Object.keys(filteredRecords[0]));
-                console.log('==========================================');
-            }
-            
-            allProductionRecords = filteredRecords;
-            
-            const noRecordsMessage = document.getElementById('noRecordsMessage');
-            const productionTable = document.getElementById('productionTable');
-            const productionControls = document.getElementById('productionControls');
-            
-            if (!records || records.length === 0) {
-                console.log('No production records found, showing no records message');
-                noRecordsMessage.style.display = 'block';
-                productionTable.style.display = 'none';
-                productionControls.style.display = 'none';
-                return;
-            }
-            
-            // Show controls and table
-            noRecordsMessage.style.display = 'none';
-            productionTable.style.display = 'block';
-            productionControls.style.display = 'block';
-            
-            // Initialize filtering and sorting
-            applyFiltersAndSort();
-            
-            // Set up event listeners
-            setupEventListeners();
-        }
-
-        // Apply filters and sorting
-        function applyFiltersAndSort() {
-            let records = [...allProductionRecords];
-            
-            // Apply date filter
-            const dateFilter = document.getElementById('dateFilter').value;
-            if (dateFilter) {
-                records = records.filter(record => {
-                    const plantDate = record.PlantDate ? new Date(record.PlantDate).toISOString().split('T')[0] : '';
-                    const harvestDate = record.HarvestDate ? new Date(record.HarvestDate).toISOString().split('T')[0] : '';
-                    const shipDate = record.ShipDate ? new Date(record.ShipDate).toISOString().split('T')[0] : '';
-                    const farmShipDate = record.FarmShipDate ? new Date(record.FarmShipDate).toISOString().split('T')[0] : '';
-                    
-                    return plantDate === dateFilter || harvestDate === dateFilter || 
-                           shipDate === dateFilter || farmShipDate === dateFilter;
-                });
-            }
-            
-            // Apply sorting
-            const sortValue = document.getElementById('sortSelect').value;
-            records = sortRecords(records, sortValue);
-            
-            filteredRecords = records;
-            currentPage = 1; // Reset to first page
-            
-            // Update items per page
-            itemsPerPage = parseInt(document.getElementById('itemsPerPageSelect').value);
-            
-            renderTableAndPagination();
-        }
-
-        // Sort records
-        function sortRecords(records, sortValue) {
-            return records.sort((a, b) => {
-                switch (sortValue) {
-                    case 'date_desc':
-                        return new Date(b.PlantDate || 0) - new Date(a.PlantDate || 0);
-                    case 'date_asc':
-                        return new Date(a.PlantDate || 0) - new Date(b.PlantDate || 0);
-                    case 'name_asc':
-                        return (a.CropType || '').localeCompare(b.CropType || '');
-                    case 'name_desc':
-                        return (b.CropType || '').localeCompare(a.CropType || '');
-                    default:
-                        return 0;
-                }
-            });
-        }
-
-        // Render table and pagination
-        function renderTableAndPagination() {
-            const tableBody = document.getElementById('productionTableBody');
-            const summaryInfo = document.getElementById('summaryInfo');
-            const paginationNav = document.getElementById('paginationNav');
-            
-            // Calculate pagination
-            const totalRecords = filteredRecords.length;
-            const totalPages = Math.ceil(totalRecords / itemsPerPage);
-            const startIndex = (currentPage - 1) * itemsPerPage;
-            const endIndex = startIndex + itemsPerPage;
-            const currentRecords = filteredRecords.slice(startIndex, endIndex);
-            
-            // Render table rows - ตรงกับหัวข้อใหม่: วันที่เพาะปลูก | พืชที่ปลูก (สายพันธุ์) | รหัสค้นหา | วันที่จัดส่ง | วันที่ส่งจากฟาร์ม | จัดการ
-            tableBody.innerHTML = currentRecords.map(record => `
-                <tr>
-                    <td class="py-3">${Utils.formatDateThai(record.PlantDate) || '-'}</td>
-                    <td class="py-3">
-                        ${record.CropType || '-'}
-                        ${record.CropVariety ? `<small class="text-muted d-block">(${record.CropVariety})</small>` : ''}
-                    </td>
-                    <td class="py-3">
-                        ${record.SearchCode ? `
-                            <span class="badge bg-success">${record.SearchCode}</span>
-                        ` : '-'}
-                    </td>
-                    <td class="py-3">${Utils.formatDateThai(record.ShipDate) || '-'}</td>
-                    <td class="py-3">${Utils.formatDateThai(record.FarmShipDate || record.farmShipDate) || '-'}</td>
-                    <td class="py-3 text-center">
-                        <button class="btn btn-sm btn-success" onclick="window.location.href='add-production-cycle.html'" title="บันทึกการผลิต">
-                            <i class="fas fa-plus"></i> บันทึกการผลิต
-                        </button>
-                    </td>
-                </tr>
-            `).join('');
-            
-            // Render summary
-            const startRecord = totalRecords > 0 ? startIndex + 1 : 0;
-            const endRecord = Math.min(endIndex, totalRecords);
-            summaryInfo.innerHTML = `แสดง ${startRecord}-${endRecord} จาก ${totalRecords} รายการ`;
-            
-            // Render pagination
-            renderPagination(totalPages);
-        }
-
-        // Render pagination
-        function renderPagination(totalPages) {
-            const paginationNav = document.getElementById('paginationNav');
-            
-            if (totalPages <= 1) {
-                paginationNav.innerHTML = '';
-                return;
-            }
-            
-            let paginationHTML = '<ul class="pagination pagination-sm mb-0">';
-            
-            // Previous button
-            paginationHTML += `
-                <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
-                    <button class="page-link" onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>
-                        <i class="fas fa-chevron-left"></i>
-                    </button>
-                </li>
-            `;
-            
-            // Page numbers
-            const startPage = Math.max(1, currentPage - 2);
-            const endPage = Math.min(totalPages, currentPage + 2);
-            
-            if (startPage > 1) {
-                paginationHTML += `<li class="page-item"><button class="page-link" onclick="changePage(1)">1</button></li>`;
-                if (startPage > 2) {
-                    paginationHTML += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
-                }
-            }
-            
-            for (let i = startPage; i <= endPage; i++) {
-                paginationHTML += `
-                    <li class="page-item ${i === currentPage ? 'active' : ''}">
-                        <button class="page-link" onclick="changePage(${i})">${i}</button>
-                    </li>
-                `;
-            }
-            
-            if (endPage < totalPages) {
-                if (endPage < totalPages - 1) {
-                    paginationHTML += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
-                }
-                paginationHTML += `<li class="page-item"><button class="page-link" onclick="changePage(${totalPages})">${totalPages}</button></li>`;
-            }
-            
-            // Next button
-            paginationHTML += `
-                <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
-                    <button class="page-link" onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>
-                        <i class="fas fa-chevron-right"></i>
-                    </button>
-                </li>
-            `;
-            
-            paginationHTML += '</ul>';
-            paginationNav.innerHTML = paginationHTML;
-        }
-
-        // Change page
-        function changePage(page) {
-            const totalPages = Math.ceil(filteredRecords.length / itemsPerPage);
-            if (page < 1 || page > totalPages) return;
-            
-            currentPage = page;
-            renderTableAndPagination();
-        }
-
-        // Reset filters
-        function resetFilters() {
-            document.getElementById('dateFilter').value = '';
-            document.getElementById('sortSelect').value = 'date_desc';
-            document.getElementById('itemsPerPageSelect').value = '100';
-            applyFiltersAndSort();
-        }
-
-        // Setup event listeners
-        function setupEventListeners() {
-            // Prevent multiple listeners
-            const dateFilter = document.getElementById('dateFilter');
-            const sortSelect = document.getElementById('sortSelect');
-            const itemsPerPageSelect = document.getElementById('itemsPerPageSelect');
-            
-            // Remove existing listeners
-            dateFilter.removeEventListener('change', applyFiltersAndSort);
-            sortSelect.removeEventListener('change', applyFiltersAndSort);
-            itemsPerPageSelect.removeEventListener('change', applyFiltersAndSort);
-            
-            // Add new listeners
-            dateFilter.addEventListener('change', applyFiltersAndSort);
-            sortSelect.addEventListener('change', applyFiltersAndSort);
-            itemsPerPageSelect.addEventListener('change', applyFiltersAndSort);
+            // For dashboard, we don't need to show detailed production table anymore
+            // This function is kept for compatibility but doesn't render anything
+            console.log('Production records available:', records?.length || 0);
         }
 
 
