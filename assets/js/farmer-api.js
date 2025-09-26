@@ -333,55 +333,99 @@ const FarmerAPI = {
                 throw new Error(`ข้อมูลไม่ครบถ้วน: ${!shipDate ? 'วันที่จัดส่ง' : ''} ${!distributorCode ? 'รหัสผู้กระจายสินค้า' : ''}`);
             }
 
-            // ส่งข้อมูลเป็น flat object เพื่อให้ทำงานกับ URLSearchParams ได้
+            // เตรียมข้อมูลสำหรับ backend - ใช้ format ที่ backend คาดหวัง
+            const plantDate = productionCycleData.production.plantDate || '';
+            
+            // Validate critical data ก่อนส่ง
+            console.log('=== VALIDATION CHECK ===');
+            console.log('plantDate:', plantDate);
+            console.log('distributorCode:', distributorCode);
+            console.log('shipDate:', shipDate);
+            console.log('========================');
+            
+            if (!plantDate) {
+                throw new Error('ไม่พบวันที่เพาะปลูก กรุณาระบุวันที่เพาะปลูกให้ครบถ้วน');
+            }
+            
+            // ส่งข้อมูลแบบ structured data ที่ backend จะ flatten เอง
             const cycleData = {
                 farmerID: farmerID,
-                // Production data
-                cropType: productionCycleData.production.cropType || '',
-                cropVariety: productionCycleData.production.cropVariety || '',
-                plantingMethod: productionCycleData.production.plantingMethod || '',
-                plantingMethodOther: productionCycleData.production.plantingMethodOther || '',
-                fertilizer: productionCycleData.production.fertilizer || '',
-                pesticide: productionCycleData.production.pesticide || '',
-                plantDate: productionCycleData.production.plantDate || '',
-                harvestDate: productionCycleData.production.harvestDate || '',
-                waterSourceType: productionCycleData.production.waterSourceType || '',
-                waterManagement: productionCycleData.production.waterManagement || '',
-                recordMethod: productionCycleData.production.recordMethod || 'manual',
-                pestControl: productionCycleData.production.pestControl || '',
-                // Harvest data
-                shipDate: shipDate,
-                harvestMethod: productionCycleData.harvest.harvestMethod || '',
-                packagingCompany: productionCycleData.harvest.packagingCompany || '',
-                packagingLocation: productionCycleData.harvest.packagingLocation || '',
-                responsiblePerson: productionCycleData.harvest.responsiblePerson || '',
-                quantity: productionCycleData.harvest.quantity || '',
-                unit: productionCycleData.harvest.unit || '',
-                unitOther: productionCycleData.harvest.unitOther || '',
-                // Transport data
-                farmShipDate: shipDate,
-                transportChannel: productionCycleData.transport.transportChannel || '',
-                transportMethod: productionCycleData.transport.transportMethod || '',
-                transportMethodOther: productionCycleData.transport.transportMethodOther || '',
-                transportCompany: productionCycleData.transport.transportCompany || '',
-                distributorCode: distributorCode,
-                // Additional info
-                comments: productionCycleData.additionalInfo?.comments || ''
+                
+                // Production_Data table fields
+                production: {
+                    seasonID: productionCycleData.production.seasonID || '',
+                    cropType: productionCycleData.production.cropType || '',
+                    cropVariety: productionCycleData.production.cropVariety || '',
+                    plantingMethod: productionCycleData.production.plantingMethod || '',
+                    plantingMethodOther: productionCycleData.production.plantingMethodOther || '',
+                    fertilizer: productionCycleData.production.fertilizer || '',
+                    pesticide: productionCycleData.production.pesticide || '',
+                    plantDate: plantDate, // สำคัญสำหรับ Search Code
+                    harvestDate: productionCycleData.production.harvestDate || '', // สำคัญสำหรับ LotCode
+                    recordMethod: productionCycleData.production.recordMethod || '',
+                    maintenanceRecord: productionCycleData.production.maintenanceRecord || '',
+                    pestControl: productionCycleData.production.pestControl || '',
+                    waterSource: productionCycleData.production.waterSourceType || '', // WaterSource field in DB
+                    waterManagement: productionCycleData.production.waterManagement || '',
+                    waterSourceType: productionCycleData.production.waterSourceType || ''
+                },
+                
+                // Harvest_Data table fields  
+                harvest: {
+                    shipDate: shipDate,
+                    harvestMethod: productionCycleData.harvest.harvestMethod || '',
+                    packagingCompany: productionCycleData.harvest.packagingCompany || '',
+                    packagingLocation: productionCycleData.harvest.packagingLocation || '',
+                    packagingProvince: productionCycleData.harvest.packagingProvince || '',
+                    responsiblePerson: productionCycleData.harvest.responsiblePerson || '',
+                    // lotCode: เอาออก - backend สร้างจาก harvestDate อัตโนมัติ
+                    quantity: productionCycleData.harvest.quantity || '',
+                    unit: productionCycleData.harvest.unit || '',
+                    unitOther: productionCycleData.harvest.unitOther || ''
+                },
+                
+                // Transport_Data table fields
+                transport: {
+                    farmShipDate: productionCycleData.transport.farmShipDate || shipDate,
+                    transportChannel: productionCycleData.transport.transportChannel || '',
+                    transportMethod: productionCycleData.transport.transportMethod || '',
+                    transportMethodOther: productionCycleData.transport.transportMethodOther || '',
+                    transportCompany: productionCycleData.transport.transportCompany || '',
+                    distributorCode: distributorCode // สำคัญสำหรับ Search Code
+                },
+                
+                // Additional_Info table fields - ส่งเป็น comments ตาม backend expectation
+                comments: productionCycleData.additionalInfo?.story || ''
             };
 
-            console.log('Sending to backend:', cycleData);
+            console.log('=== SENDING TO BACKEND ===');
+            console.log('Structured data for backend:', cycleData);
+            console.log('Critical fields check:');
+            console.log('- production.plantDate:', cycleData.production.plantDate);
+            console.log('- production.harvestDate:', cycleData.production.harvestDate);
+            console.log('- transport.distributorCode:', cycleData.transport.distributorCode);
+            console.log('- harvest.shipDate:', cycleData.harvest.shipDate);
+            console.log('- farmerID:', cycleData.farmerID);
+            console.log('=========================');
 
             // สร้าง Production Cycle
             const response = await API.call('createProductionCycle', cycleData);
             console.log('Backend response:', response);
             
-            if (response.success && response.data?.productionID && productionCycleData.documents) {
-                console.log('Production cycle created, uploading files...');
+            // หากสร้างสำเร็จ ให้อัปโหลดไฟล์
+            if (response.success && response.data?.productionID) {
+                const productionID = response.data.productionID;
+                console.log('Production cycle created successfully, productionID:', productionID);
                 
                 // อัปโหลดไฟล์แยก
-                const productionID = response.data.productionID;
-                const uploadResults = await this.uploadProductionFiles(productionID, productionCycleData.documents);
-                console.log('File upload results:', uploadResults);
+                if (productionCycleData.documents) {
+                    console.log('Uploading files...');
+                    const uploadResults = await this.uploadProductionFiles(productionID, productionCycleData.documents);
+                    console.log('File upload results:', uploadResults);
+                }
+                
+                // หมายเหตุ: Search Code จะถูกสร้างโดย backend อัตโนมัติ
+                console.log('Search code will be generated automatically by backend');
             }
             
             return response;
@@ -516,41 +560,53 @@ const FarmerAPI = {
     async updateProductionData(formData) {
         try {
             const currentUser = Auth.getCurrentUser();
+            console.log('updateProductionData called with:', formData);
             
-            // Prepare data for backend API
+            // Prepare data for backend API - match edit-production.html structure
             const requestData = {
+                action: 'updateProductionData',
                 productionId: ensureText(formData.productionId),
-                farmerID: currentUser?.farmerID || null,
-                // Production data
-                plantDate: formData.plantDate || '',
+                farmerId: ensureText(currentUser?.farmerID || ''),
+                // Production data (flat structure to match edit-production.html)
                 cropType: formData.cropType || '',
                 cropVariety: formData.cropVariety || '',
+                plantDate: formData.plantDate || '',
+                harvestDate: formData.harvestDate || '',
                 plantingMethod: formData.plantingMethod || '',
                 plantingMethodOther: formData.plantingMethodOther || '',
                 fertilizer: formData.fertilizer || '',
                 pesticide: formData.pesticide || '',
                 waterSourceType: formData.waterSourceType || '',
                 waterManagement: formData.waterManagement || '',
+                recordMethod: formData.recordMethod || '',
                 pestControl: formData.pestControl || '',
-                maintenanceRecord: formData.maintenanceRecord || '',
-                // Harvest data
-                harvestDate: formData.harvestDate || '',
-                harvestQuantity: formData.harvestQuantity || '',
-                harvestUnit: formData.harvestUnit || '',
+                // Harvest data (flat structure)
                 shipDate: formData.shipDate || '',
+                harvestMethod: formData.harvestMethod || '',
+                quantity: formData.quantity || '',
+                unit: formData.unit || '',
+                unitOther: formData.unitOther || '',
+                packagingCompany: formData.packagingCompany || '',
+                packagingLocation: formData.packagingLocation || '',
+                responsiblePerson: formData.responsiblePerson || '',
+                // Transport data (flat structure)
                 farmShipDate: formData.farmShipDate || '',
-                // Transport data
+                transportChannel: formData.transportChannel || '',
                 transportMethod: formData.transportMethod || '',
-                transportTemperature: formData.transportTemperature || '',
-                transportRoute: formData.transportRoute || '',
-                transportCondition: formData.transportCondition || '',
-                // Additional data
-                additionalStory: formData.additionalStory || '',
-                additionalHighlight: formData.additionalHighlight || '',
-                additionalOther: formData.additionalOther || ''
+                transportMethodOther: formData.transportMethodOther || '',
+                transportCompany: formData.transportCompany || '',
+                distributorCode: formData.distributorCode || '',
+                // Additional info (flat structure)
+                story: formData.story || '',
+                // 🔧 FIX: Add filesToDelete support
+                filesToDelete: formData.filesToDelete || '[]'
             };
             
+            console.log('Sending updateProductionData request:', requestData);
+            
             const response = await API.call('updateProductionData', requestData);
+            console.log('updateProductionData response:', response);
+            
             return response;
             
         } catch (error) {
