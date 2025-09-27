@@ -283,6 +283,25 @@
                                         <input type="text" class="form-control" id="pestControl" placeholder="ระบุชื่อสารป้องกัน/กำจัดศัตรูพืช (ถ้ามี)">
                                     </div>
                                 </div>
+                                
+                                <!-- เพิ่มฟิลด์ Database ที่ขาดหาย -->
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">รหัสฤดูกาล</label>
+                                        <input type="text" class="form-control" id="seasonID" placeholder="ระบุรหัสฤดูกาล">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">แหล่งน้ำ</label>
+                                        <input type="text" class="form-control" id="waterSource" placeholder="ระบุแหล่งน้ำที่ใช้">
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-12 mb-3">
+                                        <label class="form-label">บันทึกการดูแลรักษา</label>
+                                        <textarea class="form-control" id="maintenanceRecord" rows="3" placeholder="ระบุการดูแลรักษาพืช เช่น การรดน้ำ การใส่ปุ่ย การตัดแต่งกิ่ง"></textarea>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -553,6 +572,161 @@
                 console.warn('Error setting cache:', error);
             }
         }
+        
+        /**
+         * 🔧 MEDIUM PRIORITY FIX: Enhanced cache manager
+         */
+        const CacheManager = {
+            // ข้อมูลที่ควร cache ยาวนาน (static data)
+            STATIC_DATA_CACHE_MINUTES: 60, // 1 ชั่วโมง
+            // ข้อมูลที่เปลี่ยนแปลงบ่อย (dynamic data)
+            DYNAMIC_DATA_CACHE_MINUTES: 5, // 5 นาที
+            
+            clearProductionCache(productionId) {
+                const keys = [
+                    `productionDetail_${productionId}`,
+                    `production_files_${productionId}`,
+                    `production_metadata_${productionId}`
+                ];
+                keys.forEach(key => {
+                    localStorage.removeItem(key);
+                    console.log(`🧹 Cleared cache: ${key}`);
+                });
+            },
+            
+            clearAllExpiredCache() {
+                const now = new Date().getTime();
+                const keysToRemove = [];
+                
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key && (key.startsWith('productionDetail_') || key.startsWith('production_'))) {
+                        try {
+                            const cached = localStorage.getItem(key);
+                            if (cached) {
+                                const data = JSON.parse(cached);
+                                if (data.expiry && now > data.expiry) {
+                                    keysToRemove.push(key);
+                                }
+                            }
+                        } catch (error) {
+                            keysToRemove.push(key); // ลบ corrupted cache
+                        }
+                    }
+                }
+                
+                keysToRemove.forEach(key => {
+                    localStorage.removeItem(key);
+                    console.log(`🧹 Removed expired cache: ${key}`);
+                });
+                
+                return keysToRemove.length;
+            },
+            
+            getCacheInfo() {
+                const info = { total: 0, production: 0, expired: 0 };
+                const now = new Date().getTime();
+                
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key && key.startsWith('production')) {
+                        info.total++;
+                        if (key.includes('productionDetail_')) info.production++;
+                        
+                        try {
+                            const cached = localStorage.getItem(key);
+                            if (cached) {
+                                const data = JSON.parse(cached);
+                                if (data.expiry && now > data.expiry) {
+                                    info.expired++;
+                                }
+                            }
+                        } catch (error) {
+                            info.expired++;
+                        }
+                    }
+                }
+                
+                return info;
+            }
+        };
+        
+        /**
+         * 🔧 MEDIUM PRIORITY FIX: Dynamic crop variety loading
+         */
+        const CropVarietyManager = {
+            varieties: {
+                'ผักคะน้า': ['ต้น', 'ฮ่องเต้'],
+                'กวางตุ้ง': ['ใต้', 'กวางสี'],
+                'มะเขือเทศ': ['ท้อ', 'ราชินี']
+            },
+            
+            init() {
+                const cropTypeSelect = document.getElementById('cropType');
+                if (cropTypeSelect) {
+                    cropTypeSelect.addEventListener('change', this.handleCropTypeChange.bind(this));
+                }
+            },
+            
+            handleCropTypeChange(event) {
+                const selectedCrop = event.target.value;
+                const varietyDiv = document.getElementById('cropVarietyDiv');
+                const varietySelect = document.getElementById('cropVariety');
+                
+                if (!varietyDiv || !varietySelect) return;
+                
+                if (selectedCrop && this.varieties[selectedCrop]) {
+                    // แสดง variety dropdown
+                    varietyDiv.style.display = 'block';
+                    
+                    // ล้าง options เดิม
+                    varietySelect.innerHTML = '<option value="">เลือกสายพันธุ์</option>';
+                    
+                    // เพิ่ม varieties สำหรับพืชที่เลือก
+                    this.varieties[selectedCrop].forEach(variety => {
+                        const option = document.createElement('option');
+                        option.value = variety;
+                        option.textContent = variety;
+                        varietySelect.appendChild(option);
+                    });
+                    
+                    console.log(`🌱 Loaded ${this.varieties[selectedCrop].length} varieties for ${selectedCrop}`);
+                } else {
+                    // ซ่อน variety dropdown
+                    varietyDiv.style.display = 'none';
+                    varietySelect.innerHTML = '<option value="">เลือกสายพันธุ์</option>';
+                }
+            },
+            
+            setVariety(cropType, variety) {
+                const cropTypeSelect = document.getElementById('cropType');
+                const varietySelect = document.getElementById('cropVariety');
+                const varietyDiv = document.getElementById('cropVarietyDiv');
+                
+                if (!cropTypeSelect || !varietySelect || !varietyDiv) return;
+                
+                // ตั้งค่า crop type ก่อน
+                cropTypeSelect.value = cropType || '';
+                
+                // ถ้ามี crop type ให้โหลด varieties
+                if (cropType && this.varieties[cropType]) {
+                    varietyDiv.style.display = 'block';
+                    varietySelect.innerHTML = '<option value="">เลือกสายพันธุ์</option>';
+                    
+                    this.varieties[cropType].forEach(v => {
+                        const option = document.createElement('option');
+                        option.value = v;
+                        option.textContent = v;
+                        if (v === variety) option.selected = true;
+                        varietySelect.appendChild(option);
+                    });
+                    
+                    console.log(`🌱 Set variety: ${variety} for crop: ${cropType}`);
+                } else {
+                    varietyDiv.style.display = 'none';
+                }
+            }
+        };
     
         // UI Toggles & Helpers
         function togglePlantingMethodOther() {
@@ -620,6 +794,9 @@
                 if (isSubmitting) return;
                 await submitForm();
             });
+            
+            // Initialize crop variety manager
+            CropVarietyManager.init();
         }
     
         async function loadProductionData() {
@@ -673,13 +850,12 @@
                 const cropType = prod.CropType || '';
                 const cropVariety = prod.CropVariety || '';
                 
-                // Set crop type
-                document.getElementById('cropType').value = cropType;
+                // Use CropVarietyManager to handle crop type and variety
+                CropVarietyManager.setVariety(cropType, cropVariety);
                 
-                // Manually handle crop variety display and value setting
+                // Keep the old manual handling for compatibility (will be removed later)
                 const varietySelect = document.getElementById('cropVariety');
                 const varietyDiv = document.getElementById('cropVarietyDiv');
-                varietySelect.innerHTML = '<option value="">เลือกสายพันธุ์</option>';
                 
                 if (['ผักคะน้า', 'กวางตุ้ง', 'มะเขือเทศ'].includes(cropType)) {
                     varietyDiv.style.display = 'block';
@@ -909,6 +1085,21 @@
                 console.log('API Data to send:', apiData);
                 console.log('============================');
                 
+                // 🔧 CRITICAL FIX: Upload new files first
+                console.log('🔄 Starting file upload process...');
+                const uploadResults = await uploadNewFiles(currentProductionId);
+                
+                // Check for upload failures
+                const failedUploads = uploadResults.filter(result => !result.success);
+                if (failedUploads.length > 0) {
+                    console.error('❌ File upload failures:', failedUploads);
+                    throw new Error(`การอัพโหลดไฟล์ล้มเหลว ${failedUploads.length} ไฟล์`);
+                }
+                
+                if (uploadResults.length > 0) {
+                    console.log(`✅ Successfully uploaded ${uploadResults.length} files`);
+                }
+                
                 const response = await API.call('updateProductionData', apiData);
                 
                 console.log('=== API RESPONSE ===');
@@ -919,7 +1110,7 @@
 
                 if (response.success) {
                     console.log('✅ Update successful, clearing cache and showing success modal');
-                    localStorage.removeItem(`productionDetail_${currentProductionId}`);
+                    CacheManager.clearProductionCache(currentProductionId);
                     
                     // แสดงข้อมูลการลบไฟล์ถ้ามี
                     if (filesToDelete.length > 0) {
@@ -948,7 +1139,8 @@
                     plantingMethodOther: getVal('plantingMethodOther'), fertilizer: getVal('fertilizer'),
                     pesticide: getVal('pesticide'), waterSourceType: getVal('waterSourceType'),
                     waterManagement: getVal('waterManagement'), recordMethod: getVal('recordMethod'),
-                    pestControl: getVal('pestControl')
+                    pestControl: getVal('pestControl'), seasonID: getVal('seasonID'),
+                    maintenanceRecord: getVal('maintenanceRecord'), waterSource: getVal('waterSource')
                 },
                 harvest: {
                     shipDate: getVal('shipDate'), harvestMethod: getVal('harvestMethod'), quantity: getVal('quantity'),
@@ -962,6 +1154,90 @@
                 },
                 additionalInfo: { story: getVal('additionalInfo') }
             };
+        }
+
+        /**
+         * 🔧 CRITICAL FIX: Upload new files function
+         */
+        async function uploadNewFiles(productionId) {
+            console.log('📤 uploadNewFiles() called with productionId:', productionId);
+            
+            const fileInputs = [
+                { elementId: 'plotImages', fileType: 'รูปแปลงปลูก' },
+                { elementId: 'productImages', fileType: 'รูปสินค้า' },
+                { elementId: 'plantingImages', fileType: 'รูปกิจกรรมการปลูก' },
+                { elementId: 'certificationDocs', fileType: 'เอกสารการรับรอง' },
+                { elementId: 'plantingMethodImages', fileType: 'วิธีการปลูก' }
+            ];
+            
+            const uploadResults = [];
+            let totalFiles = 0;
+            
+            // Count total files first
+            fileInputs.forEach(fileInput => {
+                const element = document.getElementById(fileInput.elementId);
+                if (element && element.files && element.files.length > 0) {
+                    totalFiles += element.files.length;
+                }
+            });
+            
+            if (totalFiles === 0) {
+                console.log('📁 No new files to upload');
+                return uploadResults;
+            }
+            
+            console.log(`📊 Found ${totalFiles} files to upload`);
+            let uploadedCount = 0;
+            
+            // Upload files
+            for (const fileInput of fileInputs) {
+                const element = document.getElementById(fileInput.elementId);
+                if (element && element.files && element.files.length > 0) {
+                    console.log(`📂 Processing ${element.files.length} files for ${fileInput.fileType}`);
+                    
+                    for (const file of element.files) {
+                        try {
+                            uploadedCount++;
+                            console.log(`📤 Uploading file ${uploadedCount}/${totalFiles}: ${file.name}`);
+                            
+                            // Show progress
+                            showUploadProgress(uploadedCount, totalFiles, file.name);
+                            
+                            const result = await FarmerAPI.uploadDocument(file, fileInput.fileType, productionId);
+                            
+                            if (result.success) {
+                                console.log(`✅ Successfully uploaded: ${file.name}`);
+                                uploadResults.push({ success: true, fileName: file.name, fileType: fileInput.fileType });
+                            } else {
+                                console.error(`❌ Failed to upload: ${file.name}`, result);
+                                uploadResults.push({ success: false, fileName: file.name, error: result.message || 'Upload failed' });
+                            }
+                        } catch (error) {
+                            console.error(`❌ Upload error for ${file.name}:`, error);
+                            uploadResults.push({ success: false, fileName: file.name, error: error.message });
+                        }
+                    }
+                }
+            }
+            
+            console.log(`📊 Upload completed: ${uploadResults.filter(r => r.success).length}/${uploadResults.length} successful`);
+            return uploadResults;
+        }
+
+        /**
+         * 🔧 CRITICAL FIX: Show upload progress
+         */
+        function showUploadProgress(current, total, filename = '') {
+            const progressEl = document.getElementById('loadingProgress');
+            const progressBar = progressEl?.querySelector('.progress-bar');
+            const messageEl = document.getElementById('loadingMessage');
+            
+            if (progressEl && progressBar && messageEl) {
+                const percentage = Math.round((current / total) * 100);
+                progressEl.style.display = 'block';
+                progressBar.style.width = percentage + '%';
+                messageEl.textContent = `กำลังอัพโหลดไฟล์ ${current}/${total}: ${filename}`;
+            }
         }
     
         function cancelEdit() {
@@ -1013,10 +1289,7 @@
             });
         }
     
-        function showError(message) {
-            document.getElementById('errorText').innerHTML = message.replace(/\n/g, '<br>');
-            document.getElementById('errorMessage').style.display = 'block';
-        }
+        // 🔧 CRITICAL FIX: Removed duplicate showError function (keeping the enhanced version below)
         
         function showLoadingModal(show) {
             const el = document.getElementById('loadingModal');
@@ -1028,6 +1301,132 @@
             const el = document.getElementById('successModal');
             const modal = bootstrap.Modal.getOrCreateInstance(el);
             modal.show();
+        }
+        
+        /**
+         * 🔧 HIGH PRIORITY FIX: File validation functions
+         */
+        function validateFileSize(file, maxSizeMB = 10) {
+            const maxSizeBytes = maxSizeMB * 1024 * 1024;
+            return file.size <= maxSizeBytes;
+        }
+        
+        function validateFileType(file, allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf']) {
+            return allowedTypes.includes(file.type);
+        }
+        
+        function validateFiles() {
+            console.log('🔍 Starting file validation...');
+            
+            const fileInputs = [
+                { id: 'plotImages', name: 'รูปแปลงปลูก', maxFiles: 5 },
+                { id: 'productImages', name: 'รูปสินค้า', maxFiles: 5 },
+                { id: 'plantingImages', name: 'รูปกิจกรรมการปลูก', maxFiles: 10 },
+                { id: 'certificationDocs', name: 'เอกสารการรับรอง', maxFiles: 3 },
+                { id: 'plantingMethodImages', name: 'รูปวิธีการปลูก', maxFiles: 5 }
+            ];
+            
+            for (const fileInput of fileInputs) {
+                const element = document.getElementById(fileInput.id);
+                if (!element || !element.files || element.files.length === 0) {
+                    continue; // ไฟล์ไม่จำเป็นสำหรับการแก้ไข
+                }
+                
+                // ตรวจสอบจำนวนไฟล์
+                if (element.files.length > fileInput.maxFiles) {
+                    showError(`${fileInput.name} สามารถอัพโหลดได้สูงสุด ${fileInput.maxFiles} ไฟล์`);
+                    return false;
+                }
+                
+                // ตรวจสอบแต่ละไฟล์
+                for (let i = 0; i < element.files.length; i++) {
+                    const file = element.files[i];
+                    
+                    // ตรวจสอบขนาดไฟล์
+                    if (!validateFileSize(file, 10)) {
+                        showError(`${fileInput.name}: ไฟล์ "${file.name}" มีขนาดใหญ่เกิน 10 MB`);
+                        return false;
+                    }
+                    
+                    // ตรวจสอบประเภทไฟล์
+                    if (!validateFileType(file)) {
+                        showError(`${fileInput.name}: ไฟล์ "${file.name}" ประเภทไฟล์ไม่ถูกต้อง (อนุญาตเฉพาะ JPG, PNG, GIF, PDF)`);
+                        return false;
+                    }
+                }
+            }
+            
+            console.log('✅ File validation passed!');
+            return true;
+        }
+        
+        /**
+         * 🔧 MEDIUM PRIORITY FIX: Date validation function
+         */
+        function validateDates() {
+            console.log('🔍 Starting date validation...');
+            
+            const plantDateEl = document.getElementById('plantDate');
+            const harvestDateEl = document.getElementById('harvestDate');
+            const shipDateEl = document.getElementById('shipDate');
+            const farmShipDateEl = document.getElementById('farmShipDate');
+            
+            if (!plantDateEl || !harvestDateEl) {
+                console.warn('⚠️ Date elements not found');
+                return true; // ถ้าไม่มี element ก็ข้ามการตรวจสอบ
+            }
+            
+            const plantDate = plantDateEl.value;
+            const harvestDate = harvestDateEl.value;
+            const shipDate = shipDateEl?.value;
+            const farmShipDate = farmShipDateEl?.value;
+            
+            // ตรวจสอบว่าวันที่เก็บเกี่ยวต้องมาหลังวันที่ปลูก
+            if (plantDate && harvestDate) {
+                const plantDateTime = new Date(plantDate);
+                const harvestDateTime = new Date(harvestDate);
+                
+                if (harvestDateTime <= plantDateTime) {
+                    showError('วันที่เก็บเกี่ยวต้องมาหลังวันที่เริ่มปลูก');
+                    harvestDateEl.focus();
+                    return false;
+                }
+                
+                // ตรวจสอบว่าช่วงเวลาระหว่างปลูกและเก็บเกี่ยวไม่ยาวเกินไป (1 ปี)
+                const daysDiff = (harvestDateTime - plantDateTime) / (1000 * 60 * 60 * 24);
+                if (daysDiff > 365) {
+                    showError('ระยะเวลาระหว่างการปลูกและเก็บเกี่ยวไม่ควรเกิน 1 ปี');
+                    harvestDateEl.focus();
+                    return false;
+                }
+            }
+            
+            // ตรวจสอบว่าวันที่จัดส่งต้องมาหลังวันที่เก็บเกี่ยว
+            if (harvestDate && shipDate) {
+                const harvestDateTime = new Date(harvestDate);
+                const shipDateTime = new Date(shipDate);
+                
+                if (shipDateTime < harvestDateTime) {
+                    showError('วันที่จัดส่งต้องมาหลังหรือเท่ากับวันที่เก็บเกี่ยว');
+                    shipDateEl.focus();
+                    return false;
+                }
+            }
+            
+            // ตรวจสอบว่าวันที่ส่งออกจากฟาร์มต้องมาหลังวันที่เก็บเกี่ยว
+            if (harvestDate && farmShipDate) {
+                const harvestDateTime = new Date(harvestDate);
+                const farmShipDateTime = new Date(farmShipDate);
+                
+                if (farmShipDateTime < harvestDateTime) {
+                    showError('วันที่ส่งออกจากฟาร์มต้องมาหลังหรือเท่ากับวันที่เก็บเกี่ยว');
+                    farmShipDateEl.focus();
+                    return false;
+                }
+            }
+            
+            console.log('✅ Date validation passed!');
+            return true;
         }
     
         function validateForm() {
@@ -1056,6 +1455,16 @@
                     element.focus();
                     return false;
                 }
+            }
+            
+            // ตรวจสอบไฟล์ที่เลือกใหม่
+            if (!validateFiles()) {
+                return false;
+            }
+            
+            // ตรวจสอบความถูกต้องของวันที่
+            if (!validateDates()) {
+                return false;
             }
             
             console.log('✅ Form validation passed!');
