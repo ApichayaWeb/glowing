@@ -561,44 +561,61 @@
                 
                 console.log('🔍 Loading production data for farmer:', currentFarmerID);
                 
-                // Parallel loading of all required data
-                const [productionResult, harvestResult, transportResult, searchCodesResult] = await Promise.allSettled([
-                    API.call('getProductionData', { farmerID: currentFarmerID }),
-                    API.call('getHarvestData', { farmerID: currentFarmerID }),
-                    API.call('getTransportData', { farmerID: currentFarmerID }),
-                    API.call('getSearchCodes', { farmerID: currentFarmerID })
-                ]);
+                // Option 1: Use new single API call for farmers (no function collision)
+                const result = await API.call('getFarmerProductionListData', { farmerID: currentFarmerID });
                 
-                // Extract data from results
-                const productionData = productionResult.status === 'fulfilled' ? productionResult.value?.data || [] : [];
-                const harvestData = harvestResult.status === 'fulfilled' ? harvestResult.value?.data || [] : [];
-                const transportData = transportResult.status === 'fulfilled' ? transportResult.value?.data || [] : [];
-                const searchCodesData = searchCodesResult.status === 'fulfilled' ? searchCodesResult.value?.data || [] : [];
+                if (result.success) {
+                    allProductionRecords = result.data || [];
+                    console.log(`📊 Loaded ${allProductionRecords.length} joined records directly from new API`);
+                    console.log('📈 Data counts from API:', result.counts);
+                } else {
+                    console.log('❌ New API failed, using fallback:', result.message);
+                }
                 
-                console.log('📊 Data loaded:', {
-                    production: productionData.length,
-                    harvest: harvestData.length,
-                    transport: transportData.length,
-                    searchCodes: searchCodesData.length
-                });
-                
-                // Join the data
-                const joinedData = joinProductionData(productionData, harvestData, transportData, searchCodesData);
-                
-                // Filter by current farmer
-                allProductionRecords = joinedData.filter(record => {
-                    const recordFarmerID = record.FarmerID || record.farmerID;
-                    return recordFarmerID === currentFarmerID;
-                });
-                
-                console.log(`🔐 Filtered to ${allProductionRecords.length} records for farmer ${currentFarmerID}`);
-                
-                // Sort by plant date (newest first)
-                allProductionRecords.sort((a, b) => {
-                    const dateA = new Date(a.PlantDate || 0);
-                    const dateB = new Date(b.PlantDate || 0);
-                    return dateB - dateA;
-                });
+                // Fallback: Use original parallel loading method
+                if (allProductionRecords.length === 0) {
+                    console.log('🔄 Fallback to parallel loading...');
+                    
+                    const [productionResult, harvestResult, transportResult, searchCodesResult] = await Promise.allSettled([
+                        API.call('getProductionData', { farmerID: currentFarmerID }),
+                        API.call('getHarvestData', { farmerID: currentFarmerID }),
+                        API.call('getTransportData', { farmerID: currentFarmerID }),
+                        API.call('getSearchCodes', { farmerID: currentFarmerID })
+                    ]);
+                    
+                    // Extract data from results
+                    const productionData = productionResult.status === 'fulfilled' ? productionResult.value?.data || [] : [];
+                    const harvestData = harvestResult.status === 'fulfilled' ? harvestResult.value?.data || [] : [];
+                    const transportData = transportResult.status === 'fulfilled' ? transportResult.value?.data || [] : [];
+                    const searchCodesData = searchCodesResult.status === 'fulfilled' ? searchCodesResult.value?.data || [] : [];
+                    
+                    console.log('📊 Data loaded via fallback:', {
+                        production: productionData.length,
+                        harvest: harvestData.length,
+                        transport: transportData.length,
+                        searchCodes: searchCodesData.length
+                    });
+                    
+                    // Join the data
+                    const joinedData = joinProductionData(productionData, harvestData, transportData, searchCodesData);
+                    
+                    // Filter by current farmer (with string cleaning)
+                    allProductionRecords = joinedData.filter(record => {
+                        const recordFarmerID = record.FarmerID || record.farmerID;
+                        const cleanRecordFarmerID = String(recordFarmerID || '').replace(/^'/, '').trim();
+                        const cleanCurrentFarmerID = String(currentFarmerID || '').replace(/^'/, '').trim();
+                        return cleanRecordFarmerID === cleanCurrentFarmerID;
+                    });
+                    
+                    console.log(`🔐 Filtered to ${allProductionRecords.length} records for farmer ${currentFarmerID}`);
+                    
+                    // Sort by plant date (newest first)
+                    allProductionRecords.sort((a, b) => {
+                        const dateA = new Date(a.PlantDate || 0);
+                        const dateB = new Date(b.PlantDate || 0);
+                        return dateB - dateA;
+                    });
+                }
                 
                 // Display data
                 displayProductionRecords();
