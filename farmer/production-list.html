@@ -640,18 +640,15 @@
                 // Find related search code
                 const searchCode = searchCodesData.find(s => s.ProductionID === productionID) || {};
                 
-                // Combine all data
+                // Combine all data (fix field collision issue)
                 return {
                     ...production,
-                    // Harvest data
-                    ShipDate: harvest.ShipDate,
-                    HarvestMethod: harvest.HarvestMethod,
-                    PackagingCompany: harvest.PackagingCompany,
-                    LotCode: harvest.LotCode,
-                    Quantity: harvest.Quantity,
-                    Unit: harvest.Unit,
-                    // Transport data
-                    FarmShipDate: transport.farmShipDate || transport.FarmShipDate,
+                    ...harvest,
+                    ...transport,
+                    ...searchCode,
+                    // Override with correct field names to prevent collision
+                    ShipDate: harvest.ShipDate,  // From Harvest_Data
+                    farmShipDate: transport.farmShipDate || transport.FarmShipDate,  // From Transport_Data
                     TransportChannel: transport.TransportChannel,
                     TransportMethod: transport.TransportMethod,
                     TransportCompany: transport.TransportCompany,
@@ -713,7 +710,7 @@
                         ` : '<span class="text-muted">-</span>'}
                     </td>
                     <td class="py-3">${formatDateThai(record.ShipDate) || '-'}</td>
-                    <td class="py-3">${formatDateThai(record.FarmShipDate) || '-'}</td>
+                    <td class="py-3">${formatDateThai(record.farmShipDate) || '-'}</td>
                     <td class="py-3 text-center">
                         <div class="btn-group" role="group" aria-label="การจัดการ">
                             <button class="btn btn-sm btn-outline-primary" onclick="viewRecord('${record.ProductionID}')" title="ดูรายละเอียด">
