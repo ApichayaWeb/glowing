@@ -289,8 +289,12 @@
                                 <!-- เพิ่มฟิลด์ Database ที่ขาดหาย -->
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
-                                        <label class="form-label">รหัสฤดูกาล</label>
-                                        <input type="text" class="form-control" id="seasonID" placeholder="ระบุรหัสฤดูกาล">
+                                        <label class="form-label">ฤดูกาล <span class="text-danger">*</span></label>
+                                        <select class="form-select" id="seasonID" required>
+                                            <option value="">เลือกฤดูกาล</option>
+                                            <option value="1">ฤดูฝน (เมษายน-กันยายน)</option>
+                                            <option value="2">ฤดูแล้ง (ตุลาคม-มีนาคม)</option>
+                                        </select>
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label">แหล่งน้ำ</label>
@@ -299,9 +303,13 @@
                                 </div>
                                 
                                 <div class="row">
-                                    <div class="col-md-12 mb-3">
+                                    <div class="col-md-6 mb-3">
                                         <label class="form-label">บันทึกการดูแลรักษา</label>
-                                        <textarea class="form-control" id="maintenanceRecord" rows="3" placeholder="ระบุการดูแลรักษาพืช เช่น การรดน้ำ การใส่ปุ่ย การตัดแต่งกิ่ง"></textarea>
+                                        <select class="form-select" id="maintenanceRecord">
+                                            <option value="">เลือกบันทึกการดูแลรักษา</option>
+                                            <option value="มี">มี</option>
+                                            <option value="ไม่มี">ไม่มี</option>
+                                        </select>
                                     </div>
                                 </div>
                             </div>
