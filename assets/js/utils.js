@@ -6,7 +6,7 @@
 // Global Constants
 const CONFIG = {
     // Google Apps Script Web App URL - ต้องอัปเดตเป็น URL ที่ Deploy จริง
-    API_BASE_URL: 'https://script.google.com/macros/s/AKfycbx9BvTEQ9bLnXCLCaHeWU8x6rzRBCkD-arcVekqPW1SIyB2lshyKx0bNsh3znf9tzf7/exec',
+    API_BASE_URL: 'https://script.google.com/macros/s/AKfycbz0_0gV1U_lUmB37_RjRr_je0xQiPPn17ZHgwYwKqOHCwlWAXRe-kUIXjrholzYRULt/exec',
     
     // QR Code patterns
     QR_CODE_PATTERN: /^(\d{2})-(\d{13})$/,
