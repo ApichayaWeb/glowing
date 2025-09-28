@@ -94,30 +94,15 @@ class APIHandler {
                 }
             });
 
-            // 🔧 CRITICAL FIX: ส่งข้อมูลแบบ JSON สำหรับ updateProductionData เพื่อรองรับ nested structure
-            let options;
-            if (endpoint === 'updateProductionData') {
-                options = {
-                    method: method,
-                    mode: 'cors',
-                    redirect: 'follow',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(requestData)
-                };
-                console.log('📤 Sending updateProductionData as JSON:', JSON.stringify(requestData, null, 2));
-            } else {
-                options = {
-                    method: method,
-                    mode: 'cors',
-                    redirect: 'follow',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                    },
-                    body: new URLSearchParams(requestData)
-                };
-            }
+            const options = {
+                method: method,
+                mode: 'cors',
+                redirect: 'follow',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: new URLSearchParams(requestData)
+            };
 
             // Dynamic timeout based on operation type
             const timeoutValue = customTimeout || this.getTimeoutForOperation(endpoint, data);
