@@ -395,7 +395,7 @@ const FarmerAPI = {
                 },
                 
                 // Additional_Info table fields - ส่งเป็น comments ตาม backend expectation
-                comments: productionCycleData.additionalInfo?.story || ''
+                comments: productionCycleData.comments || ''
             };
 
             console.log('=== SENDING TO BACKEND ===');
@@ -597,7 +597,7 @@ const FarmerAPI = {
                 transportCompany: formData.transportCompany || '',
                 distributorCode: formData.distributorCode || '',
                 // Additional info (flat structure)
-                story: formData.story || '',
+                comments: formData.story || '',
                 // 🔧 FIX: Add filesToDelete support
                 filesToDelete: formData.filesToDelete || '[]'
             };
