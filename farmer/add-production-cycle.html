@@ -310,16 +310,15 @@
                                     <input type="text" class="form-control" id="packagingCompany">
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label">สถานที่บรรจุ</label>
+                                    <label class="form-label">สถานที่บรรจุ ให้ระบุ จังหวัด</label>
                                     <input type="text" class="form-control" id="packagingLocation">
                                 </div>
                             </div>
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">จังหวัดที่บรรจุ <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="packagingProvince" required>
-                                </div>
-                            </div>
+                      
+                                
+                                    <input type="hidden" class="form-control" id="packagingProvince">
+                             
+                       
                             <div class="row">
                                 <div class="col-md-12 mb-3">
                                     <label class="form-label">ชื่อผู้รับผิดชอบการเก็บเกี่ยว</label>
@@ -766,6 +765,14 @@
                     )
                 ]);
                 console.log('API Response:', response);
+                console.log('Additional Info sent:', formData.additionalInfo);
+                
+                // Debug: ตรวจสอบว่า story ถูกส่งไปหรือไม่
+                if (formData.additionalInfo && formData.additionalInfo.story) {
+                    console.log('✅ Story data found:', formData.additionalInfo.story);
+                } else {
+                    console.log('❌ No story data found in form');
+                }
                 
                 if (response.success) {
                     showLoading(false);

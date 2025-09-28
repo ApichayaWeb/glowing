@@ -186,6 +186,7 @@
                             </div>
                             <div class="card-body">
                                 <div class="row">
+									
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label">ชนิดพืชผักที่ปลูก <span class="text-danger">*</span></label>
                                         <select class="form-select" id="cropType" required>
@@ -206,12 +207,20 @@
                                     </div>
                                 </div>
                                 <div class="row">
-                                    <div class="col-md-6 mb-3">
+								<div class="col-md-4 mb-3">
+                                        <label class="form-label">ฤดูกาล <span class="text-danger">*</span></label>
+                                        <select class="form-select" id="seasonID" required>
+                                            <option value="">เลือกฤดูกาล</option>
+                                            <option value="1">ฤดูฝน (เมษายน-กันยายน)</option>
+                                            <option value="2">ฤดูแล้ง (ตุลาคม-มีนาคม)</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
                                         <label class="form-label">วันที่เริ่มเพาะปลูก <span class="text-danger">*</span></label>
                                         <input type="date" class="form-control" id="plantDate" required>
                                         <small class="text-muted" id="plantDateBE"></small>
                                     </div>
-                                    <div class="col-md-6 mb-3">
+                                    <div class="col-md-4 mb-3">
                                         <label class="form-label">วันที่เก็บเกี่ยว <span class="text-danger">*</span></label>
                                         <input type="date" class="form-control" id="harvestDate" required>
                                         <small class="text-muted" id="harvestDateBE"></small>
@@ -263,60 +272,13 @@
                                         </select>
                                     </div>
                                 </div>
+                     
                                 <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">การบันทึกวิธีการปลูก</label>
-                                        <select class="form-select" id="recordMethod" onchange="toggleRecordMethodImages()">
-                                            <option value="">เลือกการบันทึก</option>
-                                            <option value="มี">มี</option>
-                                            <option value="ไม่มี">ไม่มี</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-6 mb-3" id="recordMethodImages" style="display: none;">
-                                        <label class="form-label">อัพโหลดรูปการบันทึกวิธีการปลูก</label>
-                                        <input type="file" class="form-control" id="plantingMethodImages" multiple accept="image/*">
-                                        <small class="text-muted">อัพโหลดได้หลายไฟล์</small>
-                                        <div id="existingMethodImages" class="mt-2"></div>
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-12 mb-3">
+									<div class="col-md-6 mb-3">
                                         <label class="form-label">การใช้สารป้องกัน/กำจัดศัตรูพืช (ถ้ามี) ให้ระบุ</label>
                                         <input type="text" class="form-control" id="pestControl" placeholder="ระบุชื่อสารป้องกัน/กำจัดศัตรูพืช (ถ้ามี)">
                                     </div>
-                                </div>
-                                
-                                <!-- เพิ่มฟิลด์ Database ที่ขาดหาย -->
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">ฤดูกาล <span class="text-danger">*</span></label>
-                                        <select class="form-select" id="seasonID" required>
-                                            <option value="">เลือกฤดูกาล</option>
-                                            <option value="1">ฤดูฝน (เมษายน-กันยายน)</option>
-                                            <option value="2">ฤดูแล้ง (ตุลาคม-มีนาคม)</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">แหล่งน้ำ</label>
-                                        <select class="form-select" id="waterSourceType">
-                                            <option value="">เลือกแหล่งน้ำ</option>
-                                            <option value="น้ำฝน">น้ำฝน</option>
-                                            <option value="น้ำบาดาล">น้ำบาดาล</option>
-                                            <option value="น้ำประปา">น้ำประปา</option>
-                                            <option value="น้ำคลอง">น้ำคลอง</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">การจัดการน้ำ</label>
-                                        <select class="form-select" id="waterManagement">
-                                            <option value="">เลือกการจัดการน้ำ</option>
-                                            <option value="รดน้ำด้วยมือ">รดน้ำด้วยมือ</option>
-                                            <option value="ระบบสปริงเกอร์">ระบบสปริงเกอร์</option>
-                                            <option value="ระบบน้ำหยด">ระบบน้ำหยด</option>
-                                        </select>
-                                    </div>
+                                   
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label">การบันทึกวิธีการปลูก</label>
                                         <select class="form-select" id="recordMethod" onchange="toggleRecordMethodImages()">
@@ -891,6 +853,9 @@
         }
 
         function populateForm(data) {
+            console.log('🔍 DEBUG: populateForm data received:', data);
+            console.log('🔍 DEBUG: data.transports:', data.transports);
+            
             document.getElementById('productionSubtitle').textContent = `รหัสการผลิต: ${currentProductionId} | ${data.farmer?.FullName || 'ไม่ระบุชื่อ'}`;
             
             if (data.productions && data.productions.length > 0) {
@@ -981,7 +946,21 @@
 
             if (data.transports && data.transports.length > 0) {
                 const transport = data.transports[0];
-                document.getElementById('farmShipDate').value = Utils.formatDateForInput(transport.ShipDate);
+                console.log('🔍 DEBUG: transport data:', transport);
+                console.log('🔍 DEBUG: transport.ShipDate:', transport.ShipDate);
+                console.log('🔍 DEBUG: transport date fields:', {
+                    ShipDate: transport.ShipDate,
+                    FarmShipDate: transport.FarmShipDate,
+                    shipDate: transport.shipDate,
+                    farmShipDate: transport.farmShipDate
+                });
+                
+                // ลองหาฟิลด์วันที่ที่ถูกต้อง (ลำดับความสำคัญ: FarmShipDate > ShipDate > อื่นๆ)
+                const farmShipDate = transport.FarmShipDate || transport.ShipDate || transport.shipDate || transport.farmShipDate;
+                console.log('🔍 DEBUG: Final farmShipDate value:', farmShipDate);
+                console.log('🔍 DEBUG: Formatted date:', Utils.formatDateForInput(farmShipDate));
+                
+                document.getElementById('farmShipDate').value = Utils.formatDateForInput(farmShipDate);
                 document.getElementById('transportChannel').value = transport.TransportChannel || '';
                 
                 const transportMethod = transport.TransportMethod || '';
