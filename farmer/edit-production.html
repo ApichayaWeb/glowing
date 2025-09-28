@@ -14,6 +14,8 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root{
             /* Brown nature theme colors */
@@ -991,20 +993,144 @@
             }).join('');
         }
     
-        function markFileForDeletion(fileId, category) {
-             if(confirm('ต้องการลบไฟล์นี้หรือไม่? การลบจะมีผลเมื่อกดบันทึก')) {
-                filesToDelete.push({ fileId, category });
-                console.log('🗑️ Marked file for deletion:', { fileId, category });
-                console.log('📋 Current filesToDelete array:', filesToDelete);
+        async function markFileForDeletion(fileId, category) {
+            try {
+                // Get file info for display
+                const fileElement = document.getElementById(`file-${fileId}`);
+                const fileName = fileElement?.querySelector('.file-name')?.textContent || 'ไฟล์นี้';
                 
-                // ซ่อนไฟล์ทันทีแทนการทำให้มัว
-                const el = document.getElementById(`file-${fileId}`);
-                if(el) {
-                    el.style.display = 'none';
-                    // เพิ่ม hidden marker
-                    el.setAttribute('data-deleted', 'true');
+                // Use SweetAlert for better UX
+                const result = await Swal.fire({
+                    title: 'ยืนยันการลบไฟล์',
+                    html: `
+                        <div class="text-start">
+                            <p><strong>ไฟล์:</strong> ${fileName}</p>
+                            <p><strong>ประเภท:</strong> ${category}</p>
+                            <hr>
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                การลบจะมีผลเมื่อกดบันทึก<br>
+                                คุณสามารถยกเลิกได้ก่อนบันทึก
+                            </div>
+                        </div>
+                    `,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    showDenyButton: true,
+                    confirmButtonText: '<i class="fas fa-trash me-1"></i>ลบไฟล์',
+                    denyButtonText: '<i class="fas fa-eye me-1"></i>ดูตัวอย่าง',
+                    cancelButtonText: '<i class="fas fa-times me-1"></i>ยกเลิก',
+                    confirmButtonColor: '#dc3545',
+                    denyButtonColor: '#6c757d',
+                    cancelButtonColor: '#6c757d',
+                    reverseButtons: true
+                });
+                
+                if (result.isConfirmed) {
+                    // Mark file for deletion
+                    filesToDelete.push({ fileId, category });
+                    console.log('🗑️ Marked file for deletion:', { fileId, category });
+                    console.log('📋 Current filesToDelete array:', filesToDelete);
+                    
+                    // Show deletion UI state
+                    if(fileElement) {
+                        fileElement.style.opacity = '0.5';
+                        fileElement.style.position = 'relative';
+                        fileElement.setAttribute('data-deleted', 'true');
+                        
+                        // Add deletion indicator
+                        const deletionBadge = document.createElement('div');
+                        deletionBadge.className = 'deletion-badge';
+                        deletionBadge.innerHTML = `
+                            <div class="badge bg-danger position-absolute top-0 start-50 translate-middle-x">
+                                <i class="fas fa-trash me-1"></i>จะลบเมื่อบันทึก
+                            </div>
+                        `;
+                        fileElement.appendChild(deletionBadge);
+                        
+                        // Add undo button
+                        const undoButton = document.createElement('button');
+                        undoButton.className = 'btn btn-sm btn-outline-secondary position-absolute bottom-0 end-0 m-2';
+                        undoButton.innerHTML = '<i class="fas fa-undo me-1"></i>ยกเลิก';
+                        undoButton.onclick = () => undoFileDeletion(fileId, category);
+                        fileElement.appendChild(undoButton);
+                    }
+                    
+                    // Show success notification
+                    Swal.fire({
+                        title: 'ทำเครื่องหมายสำเร็จ!',
+                        text: 'ไฟล์จะถูกลบเมื่อกดบันทึก',
+                        icon: 'success',
+                        timer: 2000,
+                        showConfirmButton: false,
+                        toast: true,
+                        position: 'top-end'
+                    });
+                    
+                } else if (result.isDenied) {
+                    // Preview file
+                    previewFile(fileId, fileName);
                 }
+                
+            } catch (error) {
+                console.error('Error in markFileForDeletion:', error);
+                showError('เกิดข้อผิดพลาดในการทำเครื่องหมายลบไฟล์');
             }
+        }
+
+        function undoFileDeletion(fileId, category) {
+            // Remove from filesToDelete array
+            const index = filesToDelete.findIndex(item => item.fileId === fileId && item.category === category);
+            if (index > -1) {
+                filesToDelete.splice(index, 1);
+                console.log('↩️ Undid file deletion:', { fileId, category });
+            }
+            
+            // Restore UI state
+            const fileElement = document.getElementById(`file-${fileId}`);
+            if (fileElement) {
+                fileElement.style.opacity = '1';
+                fileElement.removeAttribute('data-deleted');
+                
+                // Remove deletion indicators
+                const deletionBadge = fileElement.querySelector('.deletion-badge');
+                const undoButton = fileElement.querySelector('button[onclick*="undoFileDeletion"]');
+                if (deletionBadge) deletionBadge.remove();
+                if (undoButton) undoButton.remove();
+            }
+            
+            // Show undo notification
+            Swal.fire({
+                title: 'ยกเลิกการลบแล้ว',
+                text: 'ไฟล์จะไม่ถูกลบ',
+                icon: 'info',
+                timer: 1500,
+                showConfirmButton: false,
+                toast: true,
+                position: 'top-end'
+            });
+        }
+
+        function previewFile(fileId, fileName) {
+            // Implementation for file preview
+            Swal.fire({
+                title: 'ตัวอย่างไฟล์',
+                html: `
+                    <div class="text-center">
+                        <p><strong>${fileName}</strong></p>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            การดูตัวอย่างไฟล์จะเพิ่มในเวอร์ชันถัดไป
+                        </div>
+                        <a href="#" class="btn btn-primary" onclick="window.open('#', '_blank')">
+                            <i class="fas fa-external-link-alt me-1"></i>เปิดในแท็บใหม่
+                        </a>
+                    </div>
+                `,
+                showConfirmButton: false,
+                showCancelButton: true,
+                cancelButtonText: 'ปิด'
+            });
         }
         
         async function submitForm() {
@@ -1089,15 +1215,65 @@
                 console.log('🔄 Starting file upload process...');
                 const uploadResults = await uploadNewFiles(currentProductionId);
                 
-                // Check for upload failures
+                // Check for upload failures and show detailed results
+                const successfulUploads = uploadResults.filter(result => result.success);
                 const failedUploads = uploadResults.filter(result => !result.success);
-                if (failedUploads.length > 0) {
-                    console.error('❌ File upload failures:', failedUploads);
-                    throw new Error(`การอัพโหลดไฟล์ล้มเหลว ${failedUploads.length} ไฟล์`);
-                }
                 
                 if (uploadResults.length > 0) {
-                    console.log(`✅ Successfully uploaded ${uploadResults.length} files`);
+                    console.log(`📊 Upload Summary: ${successfulUploads.length}/${uploadResults.length} files uploaded successfully`);
+                    
+                    if (successfulUploads.length > 0) {
+                        console.log('✅ Successful uploads:', successfulUploads.map(r => r.fileName));
+                        
+                        // Show success notification
+                        const totalSize = successfulUploads.reduce((sum, r) => sum + (r.fileSize || 0), 0);
+                        Swal.fire({
+                            title: 'อัพโหลดสำเร็จ!',
+                            html: `
+                                <div class="text-start">
+                                    <p><strong>ไฟล์ที่อัพโหลด:</strong> ${successfulUploads.length} ไฟล์</p>
+                                    <p><strong>ขนาดรวม:</strong> ${formatFileSize(totalSize)}</p>
+                                    ${failedUploads.length > 0 ? `<p class="text-warning"><strong>ไฟล์ที่ล้มเหลว:</strong> ${failedUploads.length} ไฟล์</p>` : ''}
+                                </div>
+                            `,
+                            icon: successfulUploads.length === uploadResults.length ? 'success' : 'warning',
+                            timer: 3000,
+                            showConfirmButton: false,
+                            toast: true,
+                            position: 'top-end'
+                        });
+                    }
+                }
+                
+                if (failedUploads.length > 0) {
+                    console.error('❌ File upload failures:', failedUploads);
+                    
+                    // Show detailed error message
+                    const errorDetails = failedUploads.map(f => `• ${f.fileName}: ${f.error}`).join('\n');
+                    
+                    if (failedUploads.length === uploadResults.length) {
+                        // All uploads failed
+                        throw new Error(`การอัพโหลดไฟล์ล้มเหลวทั้งหมด:\n\n${errorDetails}`);
+                    } else {
+                        // Some uploads failed, but continue with form submission
+                        console.warn(`⚠️ ${failedUploads.length} files failed to upload, but continuing with form submission`);
+                        
+                        Swal.fire({
+                            title: 'ไฟล์บางส่วนอัพโหลดไม่สำเร็จ',
+                            html: `
+                                <div class="text-start">
+                                    <p>ไฟล์ที่อัพโหลดไม่สำเร็จ:</p>
+                                    <div class="alert alert-warning small text-start">
+                                        ${failedUploads.map(f => `• ${f.fileName}: ${f.error}`).join('<br>')}
+                                    </div>
+                                    <p>ระบบจะดำเนินการบันทึกข้อมูลอื่นต่อไป</p>
+                                </div>
+                            `,
+                            icon: 'warning',
+                            confirmButtonText: 'ดำเนินการต่อ',
+                            timer: 5000
+                        });
+                    }
                 }
                 
                 const response = await API.call('updateProductionData', apiData);
@@ -1157,7 +1333,88 @@
         }
 
         /**
-         * 🔧 CRITICAL FIX: Upload new files function
+         * File validation configuration
+         */
+        const FILE_VALIDATION = {
+            maxSize: 10 * 1024 * 1024, // 10MB
+            maxFilesPerType: 5,
+            allowedTypes: {
+                'รูปแปลงปลูก': {
+                    mimeTypes: ['image/jpeg', 'image/png', 'image/jpg'],
+                    maxSize: 5 * 1024 * 1024 // 5MB for images
+                },
+                'รูปสินค้า': {
+                    mimeTypes: ['image/jpeg', 'image/png', 'image/jpg'],
+                    maxSize: 5 * 1024 * 1024
+                },
+                'รูปกิจกรรมการปลูก': {
+                    mimeTypes: ['image/jpeg', 'image/png', 'image/jpg'],
+                    maxSize: 5 * 1024 * 1024
+                },
+                'เอกสารการรับรอง': {
+                    mimeTypes: ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'],
+                    maxSize: 10 * 1024 * 1024 // 10MB for documents
+                },
+                'วิธีการปลูก': {
+                    mimeTypes: ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'],
+                    maxSize: 8 * 1024 * 1024 // 8MB
+                }
+            }
+        };
+
+        /**
+         * Validate file before upload
+         */
+        function validateFile(file, fileType) {
+            console.log(`🔍 Validating file: ${file.name} (${file.type}, ${file.size} bytes) for type: ${fileType}`);
+            
+            // Check if file type is configured
+            if (!FILE_VALIDATION.allowedTypes[fileType]) {
+                throw new Error(`ประเภทไฟล์ "${fileType}" ไม่ได้รับการรองรับ`);
+            }
+            
+            const config = FILE_VALIDATION.allowedTypes[fileType];
+            
+            // Check file size
+            if (file.size > config.maxSize) {
+                const maxSizeMB = Math.round(config.maxSize / (1024 * 1024));
+                const fileSizeMB = Math.round(file.size / (1024 * 1024) * 100) / 100;
+                throw new Error(`ไฟล์ "${file.name}" ขนาด ${fileSizeMB}MB ใหญ่เกินกำหนด (สูงสุด ${maxSizeMB}MB)`);
+            }
+            
+            // Check MIME type
+            if (!config.mimeTypes.includes(file.type)) {
+                const allowedExtensions = config.mimeTypes
+                    .map(mime => {
+                        switch(mime) {
+                            case 'image/jpeg': return 'JPG';
+                            case 'image/jpg': return 'JPG';  
+                            case 'image/png': return 'PNG';
+                            case 'application/pdf': return 'PDF';
+                            default: return mime;
+                        }
+                    })
+                    .join(', ');
+                throw new Error(`ไฟล์ "${file.name}" ประเภทไม่ถูกต้อง\nอนุญาตเฉพาะ: ${allowedExtensions}`);
+            }
+            
+            console.log(`✅ File validation passed for: ${file.name}`);
+            return true;
+        }
+
+        /**
+         * Format file size for display
+         */
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        /**
+         * 🔧 CRITICAL FIX: Upload new files function with validation
          */
         async function uploadNewFiles(productionId) {
             console.log('📤 uploadNewFiles() called with productionId:', productionId);
@@ -1173,50 +1430,132 @@
             const uploadResults = [];
             let totalFiles = 0;
             
-            // Count total files first
+            // Validate and count total files first
+            const validationErrors = [];
             fileInputs.forEach(fileInput => {
                 const element = document.getElementById(fileInput.elementId);
                 if (element && element.files && element.files.length > 0) {
-                    totalFiles += element.files.length;
+                    // Check file count limit
+                    if (element.files.length > FILE_VALIDATION.maxFilesPerType) {
+                        validationErrors.push(`${fileInput.fileType}: อนุญาตสูงสุด ${FILE_VALIDATION.maxFilesPerType} ไฟล์ (พบ ${element.files.length} ไฟล์)`);
+                        return;
+                    }
+                    
+                    // Validate each file
+                    Array.from(element.files).forEach(file => {
+                        try {
+                            validateFile(file, fileInput.fileType);
+                            totalFiles++;
+                        } catch (validationError) {
+                            validationErrors.push(`${fileInput.fileType}: ${validationError.message}`);
+                        }
+                    });
                 }
             });
+            
+            // Show validation errors if any
+            if (validationErrors.length > 0) {
+                const errorMessage = 'พบไฟล์ที่ไม่ถูกต้อง:\n\n' + validationErrors.join('\n\n');
+                showError(errorMessage);
+                return uploadResults;
+            }
             
             if (totalFiles === 0) {
                 console.log('📁 No new files to upload');
                 return uploadResults;
             }
             
-            console.log(`📊 Found ${totalFiles} files to upload`);
+            console.log(`📊 Found ${totalFiles} valid files to upload`);
             let uploadedCount = 0;
             
-            // Upload files
-            for (const fileInput of fileInputs) {
+            // Prepare files for parallel upload
+            const uploadTasks = [];
+            
+            fileInputs.forEach(fileInput => {
                 const element = document.getElementById(fileInput.elementId);
                 if (element && element.files && element.files.length > 0) {
-                    console.log(`📂 Processing ${element.files.length} files for ${fileInput.fileType}`);
+                    console.log(`📂 Preparing ${element.files.length} files for ${fileInput.fileType}`);
                     
-                    for (const file of element.files) {
+                    Array.from(element.files).forEach(file => {
                         try {
-                            uploadedCount++;
-                            console.log(`📤 Uploading file ${uploadedCount}/${totalFiles}: ${file.name}`);
+                            // Validate file again (double-check)
+                            validateFile(file, fileInput.fileType);
                             
-                            // Show progress
-                            showUploadProgress(uploadedCount, totalFiles, file.name);
-                            
-                            const result = await FarmerAPI.uploadDocument(file, fileInput.fileType, productionId);
-                            
-                            if (result.success) {
-                                console.log(`✅ Successfully uploaded: ${file.name}`);
-                                uploadResults.push({ success: true, fileName: file.name, fileType: fileInput.fileType });
-                            } else {
-                                console.error(`❌ Failed to upload: ${file.name}`, result);
-                                uploadResults.push({ success: false, fileName: file.name, error: result.message || 'Upload failed' });
-                            }
-                        } catch (error) {
-                            console.error(`❌ Upload error for ${file.name}:`, error);
-                            uploadResults.push({ success: false, fileName: file.name, error: error.message });
+                            // Create upload task
+                            uploadTasks.push({
+                                file: file,
+                                fileType: fileInput.fileType,
+                                fileName: file.name,
+                                fileSize: file.size
+                            });
+                        } catch (validationError) {
+                            // This shouldn't happen as we validated earlier, but just in case
+                            console.error(`❌ Validation error during upload prep: ${validationError.message}`);
+                            uploadResults.push({ 
+                                success: false, 
+                                fileName: file.name, 
+                                error: validationError.message 
+                            });
                         }
+                    });
+                }
+            });
+            
+            console.log(`🚀 Starting parallel upload of ${uploadTasks.length} files`);
+            
+            // Upload files in parallel with limited concurrency
+            const CONCURRENT_UPLOADS = 3; // Upload max 3 files at the same time
+            const uploadPromises = [];
+            
+            for (let i = 0; i < uploadTasks.length; i += CONCURRENT_UPLOADS) {
+                const batch = uploadTasks.slice(i, i + CONCURRENT_UPLOADS);
+                
+                const batchPromises = batch.map(async (task, batchIndex) => {
+                    const globalIndex = i + batchIndex + 1;
+                    
+                    try {
+                        console.log(`📤 Uploading file ${globalIndex}/${uploadTasks.length}: ${task.fileName} (${formatFileSize(task.fileSize)})`);
+                        
+                        // Show progress
+                        showUploadProgress(globalIndex, uploadTasks.length, task.fileName, task.fileSize);
+                        
+                        const result = await FarmerAPI.uploadDocument(task.file, task.fileType, productionId);
+                        
+                        if (result.success) {
+                            console.log(`✅ Successfully uploaded: ${task.fileName}`);
+                            return { 
+                                success: true, 
+                                fileName: task.fileName, 
+                                fileType: task.fileType,
+                                fileSize: task.fileSize
+                            };
+                        } else {
+                            console.error(`❌ Failed to upload: ${task.fileName}`, result);
+                            return { 
+                                success: false, 
+                                fileName: task.fileName, 
+                                error: result.message || 'Upload failed',
+                                fileType: task.fileType
+                            };
+                        }
+                    } catch (error) {
+                        console.error(`❌ Upload error for ${task.fileName}:`, error);
+                        return { 
+                            success: false, 
+                            fileName: task.fileName, 
+                            error: error.message,
+                            fileType: task.fileType
+                        };
                     }
+                });
+                
+                // Wait for current batch to complete before starting next batch
+                const batchResults = await Promise.all(batchPromises);
+                uploadResults.push(...batchResults);
+                
+                // Small delay between batches to prevent overwhelming the server
+                if (i + CONCURRENT_UPLOADS < uploadTasks.length) {
+                    await new Promise(resolve => setTimeout(resolve, 500));
                 }
             }
             
@@ -1225,18 +1564,25 @@
         }
 
         /**
-         * 🔧 CRITICAL FIX: Show upload progress
+         * 🔧 IMPROVED: Show detailed upload progress
          */
-        function showUploadProgress(current, total, filename = '') {
+        function showUploadProgress(current, total, filename = '', fileSize = 0) {
             const progressEl = document.getElementById('loadingProgress');
             const progressBar = progressEl?.querySelector('.progress-bar');
             const messageEl = document.getElementById('loadingMessage');
             
             if (progressEl && progressBar && messageEl) {
                 const percentage = Math.round((current / total) * 100);
+                const fileSizeText = fileSize > 0 ? ` (${formatFileSize(fileSize)})` : '';
+                
                 progressEl.style.display = 'block';
                 progressBar.style.width = percentage + '%';
-                messageEl.textContent = `กำลังอัพโหลดไฟล์ ${current}/${total}: ${filename}`;
+                progressBar.textContent = `${percentage}%`;
+                
+                messageEl.innerHTML = `
+                    <div>กำลังอัพโหลดไฟล์ ${current}/${total}</div>
+                    <div class="small text-muted">${filename}${fileSizeText}</div>
+                `;
             }
         }
     
