@@ -310,14 +310,8 @@
                                     <input type="text" class="form-control" id="packagingCompany">
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label">สถานที่บรรจุ</label>
+                                    <label class="form-label">สถานที่บรรจุ ให้ระบุ จังหวัด</label>
                                     <input type="text" class="form-control" id="packagingLocation">
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">จังหวัดที่บรรจุ <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="packagingProvince" required>
                                 </div>
                             </div>
                             <div class="row">
@@ -669,7 +663,6 @@
                 { id: 'plantDate', name: 'วันที่เริ่มปลูก' },
                 { id: 'harvestDate', name: 'วันที่เก็บเกี่ยว' },
                 { id: 'shipDate', name: 'วันที่ส่งสินค้า' },
-                { id: 'packagingProvince', name: 'จังหวัดที่บรรจุ' },
                 { id: 'distributorCode', name: 'บริษัทผู้กระจายสินค้า' }
             ];
             
@@ -829,8 +822,7 @@
                     shipDate: getElementValue('shipDate'),
                     harvestMethod: getElementValue('harvestMethod'),
                     packagingCompany: getElementValue('packagingCompany'),
-                    packagingLocation: getElementValue('packagingLocation'),
-                    packagingProvince: getElementValue('packagingProvince'),
+                    packagingProvince: getElementValue('packagingLocation'),
                     responsiblePerson: getElementValue('responsiblePerson'),
                     // lotCode: เอาออก - backend จะสร้างอัตโนมัติ
                     quantity: getElementValue('quantity'),
