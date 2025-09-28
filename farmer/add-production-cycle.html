@@ -759,13 +759,13 @@
                     )
                 ]);
                 console.log('API Response:', response);
-                console.log('Additional Info sent:', formData.additionalInfo);
+                console.log('Comments sent:', formData.comments);
                 
-                // Debug: ตรวจสอบว่า story ถูกส่งไปหรือไม่
-                if (formData.additionalInfo && formData.additionalInfo.story) {
-                    console.log('✅ Story data found:', formData.additionalInfo.story);
+                // Debug: ตรวจสอบว่า story/comments ถูกส่งไปหรือไม่
+                if (formData.comments) {
+                    console.log('✅ Story/Comments data found:', formData.comments);
                 } else {
-                    console.log('❌ No story data found in form');
+                    console.log('❌ No story/comments data found in form');
                 }
                 
                 if (response.success) {
@@ -844,9 +844,7 @@
                     certificationDocs: getElementFiles('certificationDocs'),
                     plantingMethodImages: getElementFiles('plantingMethodImages')
                 },
-                additionalInfo: {
-                    story: getElementValue('story')
-                }
+                comments: getElementValue('story')
             };
         }
 
