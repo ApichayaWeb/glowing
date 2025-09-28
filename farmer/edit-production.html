@@ -298,11 +298,47 @@
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label">แหล่งน้ำ</label>
-                                        <input type="text" class="form-control" id="waterSource" placeholder="ระบุแหล่งน้ำที่ใช้">
+                                        <select class="form-select" id="waterSourceType">
+                                            <option value="">เลือกแหล่งน้ำ</option>
+                                            <option value="น้ำฝน">น้ำฝน</option>
+                                            <option value="น้ำบาดาล">น้ำบาดาล</option>
+                                            <option value="น้ำประปา">น้ำประปา</option>
+                                            <option value="น้ำคลอง">น้ำคลอง</option>
+                                        </select>
                                     </div>
                                 </div>
-                                
                                 <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">การจัดการน้ำ</label>
+                                        <select class="form-select" id="waterManagement">
+                                            <option value="">เลือกการจัดการน้ำ</option>
+                                            <option value="รดน้ำด้วยมือ">รดน้ำด้วยมือ</option>
+                                            <option value="ระบบสปริงเกอร์">ระบบสปริงเกอร์</option>
+                                            <option value="ระบบน้ำหยด">ระบบน้ำหยด</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">การบันทึกวิธีการปลูก</label>
+                                        <select class="form-select" id="recordMethod" onchange="toggleRecordMethodImages()">
+                                            <option value="">เลือกการบันทึก</option>
+                                            <option value="มี">มี</option>
+                                            <option value="ไม่มี">ไม่มี</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="row" id="recordMethodImages" style="display: none;">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">อัพโหลดรูปการบันทึกวิธีการปลูก</label>
+                                        <input type="file" class="form-control" id="plantingMethodImages" multiple accept="image/*">
+                                        <small class="text-muted">อัพโหลดได้หลายไฟล์</small>
+                                        <div id="existingRecordMethodImages" class="mt-2"></div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">การใช้สารป้องกัน/กำจัดศัตรูพืช (ถ้ามี) ให้ระบุ</label>
+                                        <input type="text" class="form-control" id="pestControl" placeholder="ระบุชื่อสารป้องกัน/กำจัดศัตรูพืช (ถ้ามี)">
+                                    </div>
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label">บันทึกการดูแลรักษา</label>
                                         <select class="form-select" id="maintenanceRecord">
@@ -824,8 +860,10 @@
                     showLoading(true, 'กำลังเชื่อมต่อเซิร์ฟเวอร์...', 30);
                     
                     // 🔧 PERFORMANCE FIX: Add timeout and better error handling
+                    const currentUser = Auth.getCurrentUser();
                     const response = await API.call('getProductionDetail', {
-                        productionId: currentProductionId 
+                        productionId: ensureText(currentProductionId),
+                        farmerID: currentUser?.farmerID || null
                     }, 'POST', 45000); // 45 second timeout for data loading
                     
                     showLoading(true, 'กำลังประมวลผลข้อมูล...', 70);
@@ -897,7 +935,11 @@
                 
                 document.getElementById('fertilizer').value = prod.Fertilizer || '';
                 document.getElementById('pesticide').value = prod.Pesticide || '';
-                document.getElementById('waterSourceType').value = prod.WaterSourceType || '';
+                
+                // ตั้งค่าแหล่งน้ำ - ใช้ WaterSourceType หรือ WaterSource (เพื่อ backward compatibility)
+                const waterSourceType = prod.WaterSourceType || prod.WaterSource || '';
+                document.getElementById('waterSourceType').value = waterSourceType;
+                
                 document.getElementById('waterManagement').value = prod.WaterManagement || '';
                 
                 const recordMethod = prod.RecordMethod || '';
@@ -909,6 +951,12 @@
                 }
                 
                 document.getElementById('pestControl').value = prod.PestControl || '';
+                
+                // ตั้งค่า seasonID if available
+                document.getElementById('seasonID').value = prod.SeasonID || '';
+                
+                // ตั้งค่า maintenanceRecord if available  
+                document.getElementById('maintenanceRecord').value = prod.MaintenanceRecord || '';
             }
 
             if (data.harvests && data.harvests.length > 0) {
@@ -976,6 +1024,11 @@
             document.getElementById('existingPlantingImages').innerHTML = displayFileList(groupedFiles['รูปกิจกรรมการปลูก'], 'รูปกิจกรรมการปลูก');
             document.getElementById('existingCertificationDocs').innerHTML = displayFileList(groupedFiles['เอกสารการรับรอง'], 'เอกสารการรับรอง');
             document.getElementById('existingMethodImages').innerHTML = displayFileList(groupedFiles['วิธีการปลูก'], 'วิธีการปลูก');
+            
+            // แสดงไฟล์เดิมสำหรับ recordMethodImages (ใช้ไฟล์ประเภทเดียวกับ วิธีการปลูก)
+            if (document.getElementById('existingRecordMethodImages')) {
+                document.getElementById('existingRecordMethodImages').innerHTML = displayFileList(groupedFiles['วิธีการปลูก'], 'วิธีการปลูก');
+            }
         }
     
         function displayFileList(files, category) {
@@ -1170,43 +1223,53 @@
                     return v == null ? '' : String(v);
                 };
 
-                // 🔧 FIX: ส่งข้อมูลแบบเดียวกับ add-production-cycle.html (ไม่ใช้ ensureText ส่วนใหญ่)
+                // 🔧 CRITICAL FIX: ส่งข้อมูลแบบ nested structure ตามที่ Google Apps Script คาดหวัง
                 const apiData = {
                     action: 'updateProductionData',
-                    // ใช้ ensureText เฉพาะ ID fields
+                    // ใช้ ensureText เฉพาะ ID fields และแก้ไข farmerId เป็น farmerID
                     productionId: ensureText(currentProductionId),
-                    farmerId: ensureText(currentUser.farmerID),
-                    // Production data (flat) - ไม่ใช้ ensureText
-                    cropType: formData.production.cropType || '',
-                    cropVariety: formData.production.cropVariety || '',
-                    plantDate: formData.production.plantDate || '',
-                    harvestDate: formData.production.harvestDate || '',
-                    plantingMethod: formData.production.plantingMethod || '',
-                    plantingMethodOther: formData.production.plantingMethodOther || '',
-                    fertilizer: formData.production.fertilizer || '',
-                    pesticide: formData.production.pesticide || '',
-                    waterSourceType: formData.production.waterSourceType || '',
-                    waterManagement: formData.production.waterManagement || '',
-                    recordMethod: formData.production.recordMethod || '',
-                    pestControl: formData.production.pestControl || '',
-                    // Harvest data (flat) - ไม่ใช้ ensureText
-                    shipDate: formData.harvest.shipDate || '',
-                    harvestMethod: formData.harvest.harvestMethod || '',
-                    quantity: formData.harvest.quantity || '',
-                    unit: formData.harvest.unit || '',
-                    unitOther: formData.harvest.unitOther || '',
-                    packagingCompany: formData.harvest.packagingCompany || '',
-                    packagingLocation: formData.harvest.packagingLocation || '',
-                    responsiblePerson: formData.harvest.responsiblePerson || '',
-                    // Transport data (flat) - ไม่ใช้ ensureText
-                    farmShipDate: formData.transport.farmShipDate || '',
-                    transportChannel: formData.transport.transportChannel || '',
-                    transportMethod: formData.transport.transportMethod || '',
-                    transportMethodOther: formData.transport.transportMethodOther || '',
-                    transportCompany: formData.transport.transportCompany || '',
-                    distributorCode: formData.transport.distributorCode || '',
-                    // Additional info (flat) - ไม่ใช้ ensureText
-                    story: formData.additionalInfo.story || '',
+                    farmerID: ensureText(currentUser.farmerID),  // แก้ไขจาก farmerId
+                    // Production data (nested structure)
+                    production: {
+                        cropType: formData.production.cropType || '',
+                        cropVariety: formData.production.cropVariety || '',
+                        plantDate: formData.production.plantDate || '',
+                        harvestDate: formData.production.harvestDate || '',
+                        plantingMethod: formData.production.plantingMethod || '',
+                        plantingMethodOther: formData.production.plantingMethodOther || '',
+                        fertilizer: formData.production.fertilizer || '',
+                        pesticide: formData.production.pesticide || '',
+                        waterSourceType: formData.production.waterSourceType || '',
+                        waterManagement: formData.production.waterManagement || '',
+                        recordMethod: formData.production.recordMethod || '',
+                        pestControl: formData.production.pestControl || '',
+                        seasonID: formData.production.seasonID || '',
+                        maintenanceRecord: formData.production.maintenanceRecord || ''
+                    },
+                    // Harvest data (nested structure)
+                    harvest: {
+                        shipDate: formData.harvest.shipDate || '',
+                        harvestMethod: formData.harvest.harvestMethod || '',
+                        quantity: formData.harvest.quantity || '',
+                        unit: formData.harvest.unit || '',
+                        unitOther: formData.harvest.unitOther || '',
+                        packagingCompany: formData.harvest.packagingCompany || '',
+                        packagingLocation: formData.harvest.packagingLocation || '',
+                        responsiblePerson: formData.harvest.responsiblePerson || ''
+                    },
+                    // Transport data (nested structure)
+                    transport: {
+                        farmShipDate: formData.transport.farmShipDate || '',
+                        transportChannel: formData.transport.transportChannel || '',
+                        transportMethod: formData.transport.transportMethod || '',
+                        transportMethodOther: formData.transport.transportMethodOther || '',
+                        transportCompany: formData.transport.transportCompany || '',
+                        distributorCode: formData.transport.distributorCode || ''
+                    },
+                    // Additional info (nested structure)
+                    additionalInfo: {
+                        story: formData.additionalInfo.story || ''
+                    },
                     // Files to delete (as JSON string since it's array)
                     filesToDelete: filesToDelete.length > 0 ? JSON.stringify(filesToDelete) : '[]'
                 };
@@ -1324,7 +1387,7 @@
                     pesticide: getVal('pesticide'), waterSourceType: getVal('waterSourceType'),
                     waterManagement: getVal('waterManagement'), recordMethod: getVal('recordMethod'),
                     pestControl: getVal('pestControl'), seasonID: getVal('seasonID'),
-                    maintenanceRecord: getVal('maintenanceRecord'), waterSource: getVal('waterSource')
+                    maintenanceRecord: getVal('maintenanceRecord')
                 },
                 harvest: {
                     shipDate: getVal('shipDate'), harvestMethod: getVal('harvestMethod'), quantity: getVal('quantity'),
