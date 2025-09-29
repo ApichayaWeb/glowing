@@ -983,6 +983,29 @@ const FarmerAPI = {
     },
 
     /**
+     * ลบข้อมูลการผลิตและข้อมูลที่เกี่ยวข้องทั้งหมด
+     */
+    async deleteProductionRecord(productionID) {
+        try {
+            console.log('Deleting production record:', productionID);
+            
+            const response = await API.call('deleteProductionCycle', {
+                productionID: ensureText(productionID),
+                deleteFiles: true
+            });
+            
+            return response;
+        } catch (error) {
+            console.error('Error deleting production record:', error);
+            return { 
+                success: false, 
+                message: 'เกิดข้อผิดพลาดในการลบข้อมูลการผลิต',
+                error: error.message
+            };
+        }
+    },
+
+    /**
      * Convert file to base64
      */
     fileToBase64(file) {
