@@ -474,11 +474,11 @@
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
-    <!-- Core Dependencies -->
+    <!-- Core Dependencies - แก้ไขลำดับการโหลดเพื่อป้องกัน race condition -->
     <script src="../assets/js/utils.js"></script>
     <script src="../assets/js/api.js"></script>
-    <script src="../assets/js/farmer-api.js"></script>
     <script src="../assets/js/auth.js"></script>
+    <script src="../assets/js/farmer-api.js"></script>
 
     <script>
         let isSubmitting = false;
@@ -540,18 +540,30 @@
         async function initializePage() {
             try {
                 // Check authentication
+                console.log('🔍 Initializing page - checking Auth object:', typeof Auth);
+                console.log('🔍 FarmerAPI available:', typeof window.FarmerAPI);
+                console.log('🔍 API available:', typeof API);
+                
                 if (!Auth || !Auth.isAuthenticated()) {
+                    console.error('❌ Authentication failed - redirecting to login');
                     window.location.href = '../login.html';
                     return;
                 }
 
                 const currentUser = Auth.getCurrentUser();
+                console.log('👤 Current user:', currentUser);
+                console.log('👤 User role:', currentUser?.role);
+                console.log('👤 FarmerID:', currentUser?.farmerID);
+                
                 if (!currentUser || currentUser.role !== 'farmer') {
+                    console.error('❌ User validation failed - redirecting to login');
                     window.location.href = '../login.html';
                     return;
                 }
 
-                console.log('Current user:', currentUser);
+                if (!currentUser.farmerID) {
+                    console.warn('⚠️ Warning: No farmerID found in user data');
+                }
                 
                 // Set default dates
                 const today = new Date().toISOString().split('T')[0];
@@ -737,7 +749,12 @@
                 isSubmitting = true;
                 showLoading(true);
                 
-                console.log('Form validation passed. Starting submission...');
+                console.log('🚀 Form validation passed. Starting submission...');
+                console.log('🔍 Dependencies check:');
+                console.log('  - Auth:', typeof Auth);
+                console.log('  - FarmerAPI:', typeof window.FarmerAPI);
+                console.log('  - API:', typeof API);
+                console.log('  - Current user:', Auth?.getCurrentUser()?.farmerID ? 'Has farmerID' : 'Missing farmerID');
                 
                 // Update loading message
                 document.getElementById('loadingTitle').textContent = 'กำลังเตรียมข้อมูล...';
@@ -751,9 +768,9 @@
                 document.getElementById('loadingTitle').textContent = 'กำลังส่งข้อมูลและไฟล์...';
                 document.getElementById('loadingMessage').textContent = 'การอัปโหลดไฟล์อาจใช้เวลา 30-60 วินาที';
                 
-                // Submit to API with timeout
+                // Submit to API with timeout - ใช้ฟังก์ชันใหม่ที่แก้ปัญหา CORS
                 const response = await Promise.race([
-                    window.FarmerAPI.createProductionCycle(formData),
+                    window.FarmerAPI.createProductionCycleFormData(formData),
                     new Promise((_, reject) => 
                         setTimeout(() => reject(new Error('การส่งข้อมูลใช้เวลานานเกินไป (90 วินาที)')), 90000)
                     )
