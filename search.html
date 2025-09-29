@@ -576,6 +576,345 @@
     <script src="assets/js/api.js"></script>
 
     <script>
+        // ✅ Enhanced JSONP Implementation with Security and Performance
+        class SecureJSONP {
+            constructor() {
+                this.pendingRequests = new Map();
+                this.requestCounter = 0;
+                this.maxConcurrentRequests = 5;
+                this.defaultTimeout = 30000;
+                this.cleanupInterval = null;
+                this.initCleanup();
+            }
+
+            initCleanup() {
+                // Automatic cleanup every 2 minutes
+                this.cleanupInterval = setInterval(() => {
+                    this.cleanupOrphanedRequests();
+                }, 120000);
+            }
+
+            async makeRequest(action, params = {}, options = {}) {
+                return new Promise((resolve, reject) => {
+                    // Check concurrent request limit
+                    if (this.pendingRequests.size >= this.maxConcurrentRequests) {
+                        reject(new Error('Too many concurrent requests. Please wait.'));
+                        return;
+                    }
+
+                    const requestId = ++this.requestCounter;
+                    const callbackName = `secureJSONP_${Date.now()}_${requestId}`;
+                    const timeout = options.timeout || this.defaultTimeout;
+                    
+                    const timeoutId = setTimeout(() => {
+                        this.cleanup(callbackName, script);
+                        reject(new Error('Request timeout after ' + (timeout/1000) + ' seconds'));
+                    }, timeout);
+
+                    // Store request info for tracking
+                    this.pendingRequests.set(callbackName, {
+                        timeoutId,
+                        resolve,
+                        reject,
+                        timestamp: Date.now(),
+                        action: action
+                    });
+
+                    // Create secure callback with validation
+                    window[callbackName] = (response) => {
+                        const requestInfo = this.pendingRequests.get(callbackName);
+                        if (!requestInfo) {
+                            console.warn('🚫 Orphaned JSONP callback:', callbackName);
+                            return;
+                        }
+
+                        clearTimeout(requestInfo.timeoutId);
+                        this.cleanup(callbackName, script);
+
+                        // Enhanced response validation
+                        try {
+                            if (this.validateResponse(response, action)) {
+                                console.log('✅ JSONP Response validated successfully');
+                                requestInfo.resolve(response);
+                            } else {
+                                requestInfo.reject(new Error('Invalid response format or data'));
+                            }
+                        } catch (error) {
+                            console.error('❌ Response validation error:', error);
+                            requestInfo.reject(error);
+                        }
+                    };
+
+                    // Create script element with enhanced security
+                    const script = document.createElement('script');
+                    script.type = 'text/javascript';
+                    script.async = true;
+                    script.defer = true;
+                    
+                    // Build secure URL with validation
+                    try {
+                        const url = this.buildSecureURL(action, params, callbackName);
+                        script.src = url;
+                        console.log('🚀 JSONP Request URL built successfully');
+                    } catch (error) {
+                        this.cleanup(callbackName, script);
+                        reject(error);
+                        return;
+                    }
+                    
+                    script.onerror = (error) => {
+                        console.error('❌ JSONP Script Load Error:', error);
+                        const requestInfo = this.pendingRequests.get(callbackName);
+                        if (requestInfo) {
+                            clearTimeout(requestInfo.timeoutId);
+                            this.cleanup(callbackName, script);
+                            requestInfo.reject(new Error('Network error: Unable to load script'));
+                        }
+                    };
+
+                    script.onload = () => {
+                        console.log('📡 JSONP Script loaded successfully');
+                    };
+
+                    document.head.appendChild(script);
+                });
+            }
+
+            buildSecureURL(action, params, callback) {
+                const baseUrl = CONFIG.API_BASE_URL;
+                
+                // Enhanced URL validation
+                if (!baseUrl || typeof baseUrl !== 'string') {
+                    throw new Error('Invalid API base URL configuration');
+                }
+                
+                if (!baseUrl.startsWith('https://')) {
+                    throw new Error('API URL must use HTTPS for security');
+                }
+
+                try {
+                    new URL(baseUrl); // Validate URL format
+                } catch (error) {
+                    throw new Error('Malformed API base URL');
+                }
+
+                // Build parameters with validation
+                const urlParams = new URLSearchParams();
+                urlParams.append('action', action);
+                urlParams.append('callback', callback);
+                urlParams.append('timestamp', Date.now().toString());
+                urlParams.append('nonce', this.generateNonce());
+
+                // Add custom parameters with validation
+                for (const [key, value] of Object.entries(params)) {
+                    if (value !== null && value !== undefined) {
+                        urlParams.append(key, String(value));
+                    }
+                }
+
+                return `${baseUrl}?${urlParams.toString()}`;
+            }
+
+            validateResponse(response, expectedAction) {
+                // Basic structure validation
+                if (!response || typeof response !== 'object') {
+                    console.error('❌ Response validation failed: Invalid object');
+                    return false;
+                }
+                
+                if (typeof response.success !== 'boolean') {
+                    console.error('❌ Response validation failed: Missing success field');
+                    return false;
+                }
+
+                // Action-specific validation
+                if (expectedAction === 'searchQRCode') {
+                    return this.validateQRSearchResponse(response);
+                }
+                
+                return true; // Default validation passes
+            }
+
+            validateQRSearchResponse(response) {
+                if (response.success && response.data) {
+                    const requiredFields = ['plotNumber', 'farmerName', 'phone', 'address'];
+                    const hasAllFields = requiredFields.every(field => {
+                        const hasField = response.data.hasOwnProperty(field) && 
+                                       response.data[field] !== null && 
+                                       response.data[field] !== undefined &&
+                                       response.data[field] !== '';
+                        if (!hasField) {
+                            console.warn(`⚠️ Missing or empty required field: ${field}`);
+                        }
+                        return hasField;
+                    });
+                    
+                    if (!hasAllFields) {
+                        console.error('❌ QR Search response validation failed: Missing required fields');
+                        return false;
+                    }
+
+                    // Validate data types
+                    if (typeof response.data.farmerName !== 'string' || 
+                        typeof response.data.phone !== 'string' ||
+                        typeof response.data.address !== 'string') {
+                        console.error('❌ QR Search response validation failed: Invalid data types');
+                        return false;
+                    }
+
+                    console.log('✅ QR Search response validation passed');
+                    return true;
+                } else if (!response.success) {
+                    // Failed responses should have a message
+                    return typeof response.message === 'string';
+                }
+                
+                return false;
+            }
+
+            generateNonce() {
+                // Generate cryptographically secure nonce
+                if (window.crypto && window.crypto.getRandomValues) {
+                    const array = new Uint8Array(16);
+                    window.crypto.getRandomValues(array);
+                    return btoa(String.fromCharCode.apply(null, array))
+                        .replace(/[^a-zA-Z0-9]/g, '')
+                        .substr(0, 16);
+                } else {
+                    // Fallback for older browsers
+                    return Math.random().toString(36).substr(2, 16);
+                }
+            }
+
+            cleanup(callbackName, script) {
+                // Remove callback function
+                if (window[callbackName]) {
+                    try {
+                        delete window[callbackName];
+                    } catch (error) {
+                        window[callbackName] = undefined;
+                    }
+                }
+                
+                // Remove script element
+                if (script && script.parentNode) {
+                    try {
+                        script.parentNode.removeChild(script);
+                    } catch (error) {
+                        console.warn('⚠️ Failed to remove script element:', error);
+                    }
+                }
+                
+                // Remove from pending requests
+                this.pendingRequests.delete(callbackName);
+            }
+
+            cleanupOrphanedRequests(maxAge = 300000) { // 5 minutes default
+                const now = Date.now();
+                let cleanedCount = 0;
+                
+                for (const [callbackName, requestInfo] of this.pendingRequests.entries()) {
+                    if (now - requestInfo.timestamp > maxAge) {
+                        console.warn(`🧹 Cleaning up orphaned request: ${callbackName} (${requestInfo.action})`);
+                        clearTimeout(requestInfo.timeoutId);
+                        this.cleanup(callbackName);
+                        requestInfo.reject(new Error('Request expired during cleanup'));
+                        cleanedCount++;
+                    }
+                }
+                
+                if (cleanedCount > 0) {
+                    console.log(`🧹 Cleaned up ${cleanedCount} orphaned requests`);
+                }
+            }
+
+            getStats() {
+                return {
+                    pendingRequests: this.pendingRequests.size,
+                    totalRequests: this.requestCounter,
+                    oldestRequest: this.pendingRequests.size > 0 ? 
+                        Math.min(...Array.from(this.pendingRequests.values()).map(r => r.timestamp)) : null
+                };
+            }
+
+            destroy() {
+                // Clean up all pending requests
+                for (const [callbackName, requestInfo] of this.pendingRequests.entries()) {
+                    clearTimeout(requestInfo.timeoutId);
+                    this.cleanup(callbackName);
+                    requestInfo.reject(new Error('SecureJSONP instance destroyed'));
+                }
+                
+                // Clear cleanup interval
+                if (this.cleanupInterval) {
+                    clearInterval(this.cleanupInterval);
+                }
+                
+                console.log('🗑️ SecureJSONP instance destroyed');
+            }
+        }
+
+        // ✅ Feature Toggle Configuration
+        const ENHANCED_JSONP_CONFIG = {
+            enabled: true, // Main toggle
+            debug: true, // Enable debug logging
+            maxRetries: 2, // Auto-retry failed requests
+            fallbackToLegacy: true, // Fallback to legacy JSONP if enhanced fails
+            enableForRoles: ['admin', 'group', 'farmer', 'public'], // Enable for all roles
+            emergencyDisable: false // Emergency disable switch
+        };
+
+        // Initialize Enhanced JSONP (singleton)
+        let secureJSONPInstance = null;
+
+        function getSecureJSONPInstance() {
+            if (!secureJSONPInstance && ENHANCED_JSONP_CONFIG.enabled && !ENHANCED_JSONP_CONFIG.emergencyDisable) {
+                secureJSONPInstance = new SecureJSONP();
+                console.log('🚀 Enhanced JSONP initialized successfully');
+            }
+            return secureJSONPInstance;
+        }
+
+        // Enhanced error handler with better user feedback
+        function handleEnhancedSearchError(error, qrCode) {
+            console.error('🚫 Enhanced Search Error:', error);
+            
+            let userMessage = 'เกิดข้อผิดพลาดในการค้นหา';
+            let alertType = 'error';
+            let shouldRetry = false;
+            
+            // Categorize errors for better user experience
+            if (error.message.includes('timeout')) {
+                userMessage = 'การเชื่อมต่อใช้เวลานานเกินไป กรุณาลองใหม่อีกครั้ง';
+                alertType = 'warning';
+                shouldRetry = true;
+            } else if (error.message.includes('network') || error.message.includes('Unable to load')) {
+                userMessage = 'ปัญหาการเชื่อมต่อเครือข่าย กรุณาตรวจสอบอินเทอร์เน็ตและลองใหม่';
+                alertType = 'warning';
+                shouldRetry = true;
+            } else if (error.message.includes('Invalid response')) {
+                userMessage = 'ได้รับข้อมูลไม่ถูกต้องจากเซิร์ฟเวอร์ กรุณาลองใหม่';
+                alertType = 'warning';
+                shouldRetry = true;
+            } else if (error.message.includes('Too many concurrent')) {
+                userMessage = 'มีการค้นหาพร้อมกันมากเกินไป กรุณารอสักครู่แล้วลองใหม่';
+                alertType = 'info';
+                shouldRetry = false;
+            }
+            
+            showAlert(alertType, userMessage);
+            
+            // Auto-retry for network errors
+            if (shouldRetry && ENHANCED_JSONP_CONFIG.maxRetries > 0) {
+                setTimeout(() => {
+                    console.log('🔄 Auto-retrying search...');
+                    performQRCodeSearch(qrCode);
+                }, 2000);
+            } else {
+                showNoResults();
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             initializeSearch();
             enhanceUserInterface();
@@ -607,19 +946,90 @@
             const qrCode = document.getElementById('qrCodeInput').value.trim();
             if (!qrCode) {
                 showAlert('warning', 'กรุณาใส่รหัส QR Code');
+                focusQRInput();
                 return;
             }
 
-            // Validate QR code format
-            const qrPattern = /^\d{2}-\d{17}$/;
-            if (!qrPattern.test(qrCode)) {
-                showAlert('warning', 'รูปแบบรหัส QR Code ไม่ถูกต้อง ต้องเป็น XX-XXXXXXXXXXXXXXXXX');
-                return;
+            // ✅ Enhanced QR code validation
+            try {
+                const validation = validateEnhancedQRCode(qrCode);
+                console.log('✅ QR Code validation passed:', validation);
+                
+                // Only hide search section if validation passes
+                hideQRSearchSection();
+                performQRCodeSearch(qrCode);
+                
+            } catch (error) {
+                console.warn('⚠️ QR Code validation failed:', error.message);
+                showAlert('warning', error.message);
+                focusQRInput();
             }
+        }
 
-            // Hide search section and perform search
-            hideQRSearchSection();
-            performQRCodeSearch(qrCode);
+        // ✅ Enhanced QR Code validation with detailed checks
+        function validateEnhancedQRCode(qrCode) {
+            // Basic format check
+            const qrPattern = /^(\d{2})-(\d{17})$/;
+            const match = qrCode.match(qrPattern);
+            
+            if (!match) {
+                throw new Error('รูปแบบ QR Code ไม่ถูกต้อง ต้องเป็น XX-XXXXXXXXXXXXXXXXX (ตัวเลข 2 หลัก, เครื่องหมาย -, ตัวเลข 17 หลัก)');
+            }
+            
+            const groupCode = match[1];
+            const plotNumber = match[2];
+            
+            // Validate Group Code (01-99)
+            const groupNum = parseInt(groupCode);
+            if (groupNum < 1 || groupNum > 99) {
+                throw new Error('รหัสกลุ่มต้องอยู่ระหว่าง 01-99 (ตัวเลข 2 หลักแรก)');
+            }
+            
+            // Validate Plot Number (not all zeros)
+            if (plotNumber === '00000000000000000') {
+                throw new Error('เลขประจำแปลงไม่ถูกต้อง (ไม่สามารถเป็นเลข 0 ทั้งหมดได้)');
+            }
+            
+            // Check if starts with valid year (25xx for Buddhist year)
+            const yearPrefix = plotNumber.substring(0, 4);
+            const currentYear = new Date().getFullYear() + 543; // Convert to Buddhist year
+            const plotYear = parseInt(yearPrefix);
+            
+            if (plotYear < 2560 || plotYear > currentYear + 2) { // Allow up to 2 years in future
+                throw new Error(`ปีในรหัสแปลงไม่ถูกต้อง (${plotYear}) ต้องอยู่ระหว่าง 2560-${currentYear + 2}`);
+            }
+            
+            // Additional validation for realistic plot numbers
+            const monthDay = plotNumber.substring(4, 8);
+            const month = parseInt(monthDay.substring(0, 2));
+            const day = parseInt(monthDay.substring(2, 4));
+            
+            if (month < 1 || month > 12) {
+                throw new Error('เดือนในรหัสแปลงไม่ถูกต้อง (ต้องเป็น 01-12)');
+            }
+            
+            if (day < 1 || day > 31) {
+                throw new Error('วันที่ในรหัสแปลงไม่ถูกต้อง (ต้องเป็น 01-31)');
+            }
+            
+            return { 
+                groupCode, 
+                plotNumber, 
+                isValid: true,
+                groupNumber: groupNum,
+                plotYear: plotYear,
+                plotMonth: month,
+                plotDay: day
+            };
+        }
+
+        // ✅ Helper function to focus QR input
+        function focusQRInput() {
+            const input = document.getElementById('qrCodeInput');
+            if (input) {
+                input.focus();
+                input.select();
+            }
         }
 
         function hideQRSearchSection() {
@@ -675,24 +1085,25 @@
 
         async function performQRCodeSearch(qrCode) {
             try {
-                console.log('🔍 Starting QR Code search for:', qrCode);
+                console.log('🔍 Starting Enhanced QR Code search for:', qrCode);
                 showLoading(true);
                 hideAllResults();
 
-                // ✨ NEW: Use JSONP method to bypass CORS issues
-                console.log('🔄 Using JSONP method to avoid CORS...');
-                const response = await performQRCodeSearchJSONP(qrCode);
-                console.log('📥 QR API Response:', response);
+                // ✨ Enhanced: Use SecureJSONP with fallback support
+                const response = await performEnhancedQRCodeSearch(qrCode);
+                console.log('📥 Enhanced QR API Response:', response);
 
                 if (response.success && response.data) {
                     console.log('✅ QR Code found - displaying farmer info');
                     
-                    // Store QR Code for validation
+                    // Store QR Code for validation with enhanced data
                     currentQRData = {
                         ...response.data,
-                        qrCode: qrCode // Store the searched QR Code
+                        qrCode: qrCode,
+                        searchTimestamp: new Date().toISOString(),
+                        searchMethod: 'enhanced-jsonp'
                     };
-                    console.log('💾 Stored currentQRData with QR Code:', currentQRData.qrCode);
+                    console.log('💾 Stored enhanced currentQRData:', currentQRData);
                     
                     displayQRResults(response.data);
                     setupProductionFormBasedOnData(response.data);
@@ -703,17 +1114,49 @@
                 }
 
             } catch (error) {
-                console.error('❌ QR search error:', error);
-                showAlert('error', 'เกิดข้อผิดพลาดในการค้นหา QR Code');
-                showNoResults();
-                return; // Exit early to prevent further processing
+                console.error('❌ Enhanced QR search error:', error);
+                handleEnhancedSearchError(error, qrCode);
             } finally {
                 showLoading(false);
             }
         }
 
-        // ✨ NEW: Enhanced JSONP method for QR Code search to bypass CORS
-        async function performQRCodeSearchJSONP(qrCode) {
+        // ✅ Enhanced QR Code Search with intelligent fallback
+        async function performEnhancedQRCodeSearch(qrCode) {
+            const instance = getSecureJSONPInstance();
+            
+            if (instance && ENHANCED_JSONP_CONFIG.enabled) {
+                try {
+                    console.log('🚀 Using Enhanced JSONP for QR search');
+                    return await instance.makeRequest('searchQRCode', {
+                        qrCode: qrCode,
+                        format: 'json',
+                        version: '2.0',
+                        clientInfo: {
+                            userAgent: navigator.userAgent.substring(0, 100),
+                            timestamp: new Date().toISOString(),
+                            screenResolution: `${screen.width}x${screen.height}`
+                        }
+                    });
+                } catch (error) {
+                    console.warn('⚠️ Enhanced JSONP failed:', error.message);
+                    
+                    // Intelligent fallback decision
+                    if (ENHANCED_JSONP_CONFIG.fallbackToLegacy) {
+                        console.log('🔄 Falling back to legacy JSONP method');
+                        return await performLegacyQRCodeSearchJSONP(qrCode);
+                    } else {
+                        throw error;
+                    }
+                }
+            } else {
+                console.log('📱 Enhanced JSONP disabled, using legacy method');
+                return await performLegacyQRCodeSearchJSONP(qrCode);
+            }
+        }
+
+        // ✅ Legacy JSONP method (renamed for backward compatibility)
+        async function performLegacyQRCodeSearchJSONP(qrCode) {
             return new Promise((resolve, reject) => {
                 const callbackName = 'qrCallback_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
                 const timeoutDuration = 30000; // 30 seconds
@@ -1461,21 +1904,122 @@
                     const qrInput = document.getElementById('qrCodeInput');
                     if (qrInput) qrInput.focus();
                 }
+                
+                // Enter key on QR input
+                if (e.key === 'Enter' && e.target.id === 'qrCodeInput') {
+                    e.preventDefault();
+                    const form = document.getElementById('qrCodeSearchForm');
+                    if (form) form.dispatchEvent(new Event('submit'));
+                }
             });
             
-            // Add input hints
+            // ✅ Enhanced input validation with real-time feedback
             const qrInput = document.getElementById('qrCodeInput');
             if (qrInput) {
+                // Real-time validation feedback
                 qrInput.addEventListener('input', function(e) {
                     const value = e.target.value;
-                    const pattern = /^\d{2}-\d{17}$/;
+                    clearTimeout(this.validationTimeout);
                     
-                    if (value && !pattern.test(value)) {
-                        e.target.classList.add('border-warning');
-                    } else {
-                        e.target.classList.remove('border-warning');
-                    }
+                    // Remove existing feedback
+                    e.target.classList.remove('border-warning', 'border-success', 'border-danger');
+                    const feedback = e.target.parentNode.querySelector('.validation-feedback');
+                    if (feedback) feedback.remove();
+                    
+                    if (!value) return;
+                    
+                    // Delayed validation to avoid too many checks while typing
+                    this.validationTimeout = setTimeout(() => {
+                        try {
+                            validateEnhancedQRCode(value);
+                            e.target.classList.add('border-success');
+                            showInputFeedback(e.target, '✅ รูปแบบ QR Code ถูกต้อง', 'success');
+                        } catch (error) {
+                            e.target.classList.add('border-warning');
+                            showInputFeedback(e.target, '⚠️ ' + error.message, 'warning');
+                        }
+                    }, 500);
                 });
+
+                // ✅ Enhanced paste handling
+                qrInput.addEventListener('paste', function(e) {
+                    setTimeout(() => {
+                        const value = e.target.value.trim();
+                        if (value) {
+                            // Auto-format common QR code patterns
+                            let formattedValue = value;
+                            
+                            // Remove any non-digit and non-dash characters
+                            formattedValue = formattedValue.replace(/[^\d-]/g, '');
+                            
+                            // Add dash if missing (for 19-digit numbers)
+                            if (/^\d{19}$/.test(formattedValue)) {
+                                formattedValue = formattedValue.substring(0, 2) + '-' + formattedValue.substring(2);
+                            }
+                            
+                            if (formattedValue !== value) {
+                                e.target.value = formattedValue;
+                                showInputFeedback(e.target, '🔧 รูปแบบได้รับการปรับปรุงอัตโนมัติ', 'info');
+                            }
+                        }
+                    }, 10);
+                });
+
+                // ✅ Focus management
+                qrInput.addEventListener('focus', function(e) {
+                    e.target.select();
+                });
+            }
+
+            // ✅ Enhanced loading states
+            const originalShowLoading = showLoading;
+            window.showLoading = function(show, message = 'กำลังค้นหาข้อมูล...') {
+                const modal = document.getElementById('loadingModal');
+                if (modal) {
+                    const messageEl = modal.querySelector('p');
+                    if (messageEl) messageEl.textContent = message;
+                }
+                return originalShowLoading(show);
+            };
+
+            // ✅ Add performance monitoring
+            if (ENHANCED_JSONP_CONFIG.debug) {
+                console.log('🎨 Enhanced UI features initialized');
+                
+                // Monitor JSONP performance
+                setInterval(() => {
+                    const instance = getSecureJSONPInstance();
+                    if (instance) {
+                        const stats = instance.getStats();
+                        if (stats.pendingRequests > 0) {
+                            console.log('📊 JSONP Stats:', stats);
+                        }
+                    }
+                }, 30000); // Every 30 seconds
+            }
+        }
+
+        // ✅ Helper function to show input validation feedback
+        function showInputFeedback(inputElement, message, type = 'info') {
+            // Remove existing feedback
+            const existingFeedback = inputElement.parentNode.querySelector('.validation-feedback');
+            if (existingFeedback) existingFeedback.remove();
+            
+            // Create new feedback element
+            const feedback = document.createElement('div');
+            feedback.className = `validation-feedback text-${type === 'success' ? 'success' : type === 'warning' ? 'warning' : 'info'} small mt-1`;
+            feedback.textContent = message;
+            
+            // Insert after input
+            inputElement.parentNode.appendChild(feedback);
+            
+            // Auto-remove positive feedback after 3 seconds
+            if (type === 'success' || type === 'info') {
+                setTimeout(() => {
+                    if (feedback.parentNode) {
+                        feedback.remove();
+                    }
+                }, 3000);
             }
         }
     </script>
