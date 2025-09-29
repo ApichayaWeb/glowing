@@ -876,43 +876,28 @@
         }
 
         // Enhanced error handler with better user feedback
+        function handleSearchError(error, qrCode) {
+            console.error('🚫 Simple Search Error:', error);
+            
+            let userMessage = 'ไม่สามารถค้นหาได้ กรุณาลองใหม่อีกครั้ง';
+            
+            // Simple error categorization
+            if (error.message.includes('network') || error.message.includes('Failed to fetch')) {
+                userMessage = 'ปัญหาการเชื่อมต่อเครือข่าย กรุณาตรวจสอบอินเทอร์เน็ต';
+            } else if (error.message.includes('timeout')) {
+                userMessage = 'การเชื่อมต่อใช้เวลานานเกินไป กรุณาลองใหม่';
+            } else if (error.message.includes('รูปแบบ')) {
+                userMessage = error.message; // Show validation errors directly
+            }
+            
+            showAlert('error', userMessage);
+            showNoResults();
+        }
+        
+        // Keep legacy function for backward compatibility
         function handleEnhancedSearchError(error, qrCode) {
-            console.error('🚫 Enhanced Search Error:', error);
-            
-            let userMessage = 'เกิดข้อผิดพลาดในการค้นหา';
-            let alertType = 'error';
-            let shouldRetry = false;
-            
-            // Categorize errors for better user experience
-            if (error.message.includes('timeout')) {
-                userMessage = 'การเชื่อมต่อใช้เวลานานเกินไป กรุณาลองใหม่อีกครั้ง';
-                alertType = 'warning';
-                shouldRetry = true;
-            } else if (error.message.includes('network') || error.message.includes('Unable to load')) {
-                userMessage = 'ปัญหาการเชื่อมต่อเครือข่าย กรุณาตรวจสอบอินเทอร์เน็ตและลองใหม่';
-                alertType = 'warning';
-                shouldRetry = true;
-            } else if (error.message.includes('Invalid response')) {
-                userMessage = 'ได้รับข้อมูลไม่ถูกต้องจากเซิร์ฟเวอร์ กรุณาลองใหม่';
-                alertType = 'warning';
-                shouldRetry = true;
-            } else if (error.message.includes('Too many concurrent')) {
-                userMessage = 'มีการค้นหาพร้อมกันมากเกินไป กรุณารอสักครู่แล้วลองใหม่';
-                alertType = 'info';
-                shouldRetry = false;
-            }
-            
-            showAlert(alertType, userMessage);
-            
-            // Auto-retry for network errors
-            if (shouldRetry && ENHANCED_JSONP_CONFIG.maxRetries > 0) {
-                setTimeout(() => {
-                    console.log('🔄 Auto-retrying search...');
-                    performQRCodeSearch(qrCode);
-                }, 2000);
-            } else {
-                showNoResults();
-            }
+            // Redirect to simple error handler
+            handleSearchError(error, qrCode);
         }
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -1063,43 +1048,44 @@
 
         async function performQRCodeSearch(qrCode) {
             try {
-                console.log('🔍 Starting Enhanced QR Code search for:', qrCode);
+                console.log('🔍 Starting Simple QR Code search for:', qrCode);
                 showLoading(true);
                 hideAllResults();
 
-                // ✨ Enhanced: Use SecureJSONP with fallback support
-                const response = await performEnhancedQRCodeSearch(qrCode);
-                console.log('📥 Enhanced QR API Response:', response);
+                // ✨ Simple & Reliable: Use standard API call
+                const result = await QRAPI.searchByQRCode(qrCode);
+                console.log('📥 Simple QR API Response:', result);
 
-                if (response.success && response.data) {
+                if (result.success && result.data) {
                     console.log('✅ QR Code found - displaying farmer info');
                     
-                    // Store QR Code for validation with enhanced data
+                    // Store QR Code data
                     currentQRData = {
-                        ...response.data,
+                        ...result.data,
                         qrCode: qrCode,
                         searchTimestamp: new Date().toISOString(),
-                        searchMethod: 'enhanced-jsonp'
+                        searchMethod: 'simple-api'
                     };
-                    console.log('💾 Stored enhanced currentQRData:', currentQRData);
+                    console.log('💾 Stored currentQRData:', currentQRData);
                     
-                    displayQRResults(response.data);
-                    setupProductionFormBasedOnData(response.data);
+                    displayQRResults(result.data);
+                    setupProductionFormBasedOnData(result.data);
                 } else {
                     console.log('❌ QR Code not found');
                     showNoResults();
-                    showAlert('info', response.message || 'ไม่พบข้อมูลสำหรับ QR Code นี้');
+                    showAlert('info', result.message || 'ไม่พบข้อมูลสำหรับ QR Code นี้');
                 }
 
             } catch (error) {
-                console.error('❌ Enhanced QR search error:', error);
-                handleEnhancedSearchError(error, qrCode);
+                console.error('❌ Simple QR search error:', error);
+                handleSearchError(error, qrCode);
             } finally {
                 showLoading(false);
             }
         }
 
-        // ✅ Enhanced QR Code Search with intelligent fallback
+        // ❌ DEPRECATED: Enhanced QR Code Search with intelligent fallback
+        // This function is no longer used - replaced with simple API calls
         async function performEnhancedQRCodeSearch(qrCode) {
             const instance = getSecureJSONPInstance();
             
