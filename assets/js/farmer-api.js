@@ -1054,9 +1054,10 @@ const FarmerAPI = {
                 });
             }
             
-            // ข้อมูลเพิ่มเติม
-            if (cycleData.story) {
-                formData.append('story', cycleData.story);
+            // ข้อมูลเพิ่มเติม - รองรับทั้ง story และ comments
+            if (cycleData.story || cycleData.comments) {
+                formData.append('story', cycleData.story || cycleData.comments);
+                console.log('✅ Story data added:', cycleData.story || cycleData.comments);
             }
             
             console.log('Sending form data request to createProductionCycleFormData');
