@@ -409,7 +409,12 @@ const FarmerAPI = {
             console.log('=========================');
 
             // สร้าง Production Cycle
-            const response = await API.call('createProductionCycle', cycleData);
+            const requestData = {
+                action: 'createProductionCycle',  // เพิ่ม action field สำหรับ backend routing
+                ...cycleData
+            };
+            
+            const response = await API.call('createProductionCycle', requestData);
             console.log('Backend response:', response);
             
             // หากสร้างสำเร็จ ให้อัปโหลดไฟล์
@@ -1000,6 +1005,82 @@ const FarmerAPI = {
             return { 
                 success: false, 
                 message: 'เกิดข้อผิดพลาดในการลบข้อมูลการผลิต',
+                error: error.message
+            };
+        }
+    },
+
+    /**
+     * สร้างรอบการผลิต (Form Data version - ไม่ใช้ JSON)
+     */
+    async createProductionCycleFormData(cycleData) {
+        try {
+            console.log('createProductionCycleFormData called with data:', cycleData);
+            
+            const currentUser = Auth.getCurrentUser();
+            if (!currentUser || !currentUser.farmerID) {
+                throw new Error('ไม่พบข้อมูลเกษตรกรหรือ Farmer ID');
+            }
+
+            // สร้าง FormData เพื่อส่งเป็น form-encoded แทน JSON
+            const formData = new FormData();
+            formData.append('action', 'createProductionCycleFormData');
+            formData.append('farmerID', currentUser.farmerID);
+            
+            // ข้อมูลการผลิต (flatten structure)
+            if (cycleData.production) {
+                Object.keys(cycleData.production).forEach(key => {
+                    if (cycleData.production[key] !== undefined && cycleData.production[key] !== null) {
+                        formData.append(`production_${key}`, cycleData.production[key]);
+                    }
+                });
+            }
+            
+            // ข้อมูลการเก็บเกี่ยว (flatten structure)
+            if (cycleData.harvest) {
+                Object.keys(cycleData.harvest).forEach(key => {
+                    if (cycleData.harvest[key] !== undefined && cycleData.harvest[key] !== null) {
+                        formData.append(`harvest_${key}`, cycleData.harvest[key]);
+                    }
+                });
+            }
+            
+            // ข้อมูลการขนส่ง (flatten structure)
+            if (cycleData.transport) {
+                Object.keys(cycleData.transport).forEach(key => {
+                    if (cycleData.transport[key] !== undefined && cycleData.transport[key] !== null) {
+                        formData.append(`transport_${key}`, cycleData.transport[key]);
+                    }
+                });
+            }
+            
+            // ข้อมูลเพิ่มเติม
+            if (cycleData.story) {
+                formData.append('story', cycleData.story);
+            }
+            
+            console.log('Sending form data request to createProductionCycleFormData');
+            
+            // ใช้ fetch โดยตรงแทน API.call เพื่อส่ง FormData
+            const response = await fetch(CONFIG.API_BASE_URL, {
+                method: 'POST',
+                body: formData // ไม่ตั้ง Content-Type ให้ browser จัดการเอง
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const result = await response.json();
+            console.log('createProductionCycleFormData response:', result);
+            
+            return result;
+            
+        } catch (error) {
+            console.error('Error creating production cycle:', error);
+            return { 
+                success: false, 
+                message: 'เกิดข้อผิดพลาดในการสร้างรอบการผลิต: ' + error.message,
                 error: error.message
             };
         }
