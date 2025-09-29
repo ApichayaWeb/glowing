@@ -848,7 +848,7 @@
         
         function editRecord(productionId) {
             console.log('Edit record:', productionId);
-            window.location.href = `add-production-cycle.html?edit=${productionId}`;
+            window.location.href = `edit-production.html?id=${productionId}`;
         }
         
         function confirmDeleteRecord(productionId, cropName) {
@@ -877,11 +877,8 @@
                 confirmBtn.innerHTML = '<span class="loading-spinner me-1"></span>กำลังลบ...';
                 confirmBtn.disabled = true;
                 
-                // Call delete API
-                const response = await API.call('deleteProductionRecord', { 
-                    productionID: productionId,
-                    deleteFiles: true // ลบไฟล์ที่เกี่ยวข้องด้วย
-                });
+                // Call delete API using FarmerAPI
+                const response = await FarmerAPI.deleteProductionRecord(productionId);
                 
                 if (response.success) {
                     showAlert('success', 'ลบข้อมูลการผลิตเรียบร้อยแล้ว');
