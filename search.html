@@ -679,8 +679,9 @@
                 showLoading(true);
                 hideAllResults();
 
-                // Use regular API method (JSONP has issues with deployment)
-                const response = await API.call('searchQRCode', { qrCode: qrCode }, 30000);
+                // ✨ NEW: Use JSONP method to bypass CORS issues
+                console.log('🔄 Using JSONP method to avoid CORS...');
+                const response = await performQRCodeSearchJSONP(qrCode);
                 console.log('📥 QR API Response:', response);
 
                 if (response.success && response.data) {
@@ -711,43 +712,64 @@
             }
         }
 
-        // GET method for QR Code search to avoid CORS
-        async function performQRCodeSearchGET(qrCode) {
+        // ✨ NEW: Enhanced JSONP method for QR Code search to bypass CORS
+        async function performQRCodeSearchJSONP(qrCode) {
             return new Promise((resolve, reject) => {
-                const callbackName = 'qrCallback_' + Date.now();
+                const callbackName = 'qrCallback_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
                 const timeoutDuration = 30000; // 30 seconds
+                let timeoutId;
+                let script;
+                
+                // Cleanup function
+                const cleanup = () => {
+                    if (timeoutId) clearTimeout(timeoutId);
+                    if (window[callbackName]) delete window[callbackName];
+                    if (script && script.parentNode) {
+                        script.parentNode.removeChild(script);
+                    }
+                };
                 
                 // Create JSONP callback
                 window[callbackName] = function(response) {
-                    clearTimeout(timeoutId);
-                    delete window[callbackName];
-                    document.head.removeChild(script);
+                    console.log('📥 JSONP Response received:', response);
+                    cleanup();
                     resolve(response);
                 };
                 
                 // Create script element for JSONP
-                const script = document.createElement('script');
-                const baseUrl = CONFIG.API_BASE_URL || 'https://script.google.com/macros/s/AKfycbxYCJQvzILZM3_GRUaC_1jy8-qj1n9OTisTatRUAZlGBCmfOEBakAhk3hatHqPmm12Z/exec';
-                const url = `${baseUrl}?action=searchQRCode&qrCode=${encodeURIComponent(qrCode)}&callback=${callbackName}`;
+                script = document.createElement('script');
+                script.async = true;
+                script.defer = true;
+                
+                // Use current API_BASE_URL from CONFIG
+                const baseUrl = CONFIG.API_BASE_URL;
+                const url = `${baseUrl}?action=searchQRCode&qrCode=${encodeURIComponent(qrCode)}&callback=${callbackName}&timestamp=${Date.now()}`;
+                
+                console.log('🚀 JSONP Request URL:', url);
                 
                 script.src = url;
-                script.onerror = function() {
-                    clearTimeout(timeoutId);
-                    delete window[callbackName];
-                    document.head.removeChild(script);
-                    reject(new Error('Failed to load search script'));
+                script.onerror = function(error) {
+                    console.error('❌ JSONP Script Error:', error);
+                    cleanup();
+                    reject(new Error('ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต'));
                 };
                 
                 // Set timeout
-                const timeoutId = setTimeout(() => {
-                    delete window[callbackName];
-                    document.head.removeChild(script);
-                    reject(new Error('Search request timeout'));
+                timeoutId = setTimeout(() => {
+                    console.warn('⏰ JSONP Request timeout after 30 seconds');
+                    cleanup();
+                    reject(new Error('การเชื่อมต่อใช้เวลานานเกินไป กรุณาลองใหม่อีกครั้ง'));
                 }, timeoutDuration);
                 
                 // Add script to head to execute
                 document.head.appendChild(script);
             });
+        }
+
+        // Legacy GET method for backward compatibility
+        async function performQRCodeSearchGET(qrCode) {
+            console.warn('⚠️ Using legacy GET method, consider using JSONP instead');
+            return performQRCodeSearchJSONP(qrCode);
         }
 
         // Store current QR data for validation
@@ -1278,38 +1300,69 @@
             
             if (show) {
                 try {
+                    // ✨ FIX: Properly handle aria-hidden to avoid accessibility warnings
+                    modal.removeAttribute('aria-hidden');
+                    modal.setAttribute('aria-modal', 'true');
+                    
                     // Check if Bootstrap is loaded
                     if (typeof bootstrap !== 'undefined') {
-                        new bootstrap.Modal(modal).show();
+                        const modalInstance = new bootstrap.Modal(modal, {
+                            backdrop: 'static',
+                            keyboard: false
+                        });
+                        modalInstance.show();
                     } else {
                         // Fallback: show modal manually
                         modal.style.display = 'block';
                         modal.classList.add('show');
+                        document.body.classList.add('modal-open');
                         document.body.style.overflow = 'hidden';
                     }
                 } catch (error) {
                     console.error('Error showing loading modal:', error);
-                    // Fallback
+                    // Enhanced fallback
                     modal.style.display = 'block';
                     modal.classList.add('show');
+                    modal.removeAttribute('aria-hidden');
+                    modal.setAttribute('aria-modal', 'true');
                 }
             } else {
                 try {
+                    // ✨ FIX: Properly handle hiding and cleanup
+                    modal.setAttribute('aria-hidden', 'true');
+                    modal.removeAttribute('aria-modal');
+                    
                     if (typeof bootstrap !== 'undefined') {
                         const instance = bootstrap.Modal.getInstance(modal);
-                        if (instance) instance.hide();
+                        if (instance) {
+                            instance.hide();
+                        }
                     } else {
-                        // Fallback: hide modal manually
+                        // Enhanced fallback: hide modal manually
                         modal.style.display = 'none';
                         modal.classList.remove('show');
+                        document.body.classList.remove('modal-open');
                         document.body.style.overflow = '';
+                        
+                        // Remove backdrop if it exists
+                        const backdrop = document.querySelector('.modal-backdrop');
+                        if (backdrop) {
+                            backdrop.remove();
+                        }
                     }
                 } catch (error) {
                     console.error('Error hiding loading modal:', error);
-                    // Fallback
+                    // Enhanced fallback
                     modal.style.display = 'none';
                     modal.classList.remove('show');
+                    modal.setAttribute('aria-hidden', 'true');
+                    modal.removeAttribute('aria-modal');
+                    document.body.classList.remove('modal-open');
                     document.body.style.overflow = '';
+                    
+                    // Force remove backdrop
+                    const backdrop = document.querySelector('.modal-backdrop');
+                    if (backdrop) backdrop.remove();
                 }
             }
         }
