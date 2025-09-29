@@ -877,8 +877,15 @@
                 confirmBtn.innerHTML = '<span class="loading-spinner me-1"></span>กำลังลบ...';
                 confirmBtn.disabled = true;
                 
-                // Call delete API using FarmerAPI
-                const response = await FarmerAPI.deleteProductionRecord(productionId);
+                // Debug: Check what's available
+                console.log('FarmerAPI available:', typeof FarmerAPI !== 'undefined');
+                console.log('FarmerAPI.deleteProductionRecord available:', typeof FarmerAPI !== 'undefined' && typeof FarmerAPI.deleteProductionRecord === 'function');
+                
+                // Call delete API directly
+                const response = await API.call('deleteProductionRecord', { 
+                    productionID: productionId,
+                    deleteFiles: true
+                });
                 
                 if (response.success) {
                     showAlert('success', 'ลบข้อมูลการผลิตเรียบร้อยแล้ว');
@@ -887,9 +894,9 @@
                     const modal = bootstrap.Modal.getInstance(document.getElementById('confirmationModal'));
                     modal.hide();
                     
-                    // Reload data
+                    // Refresh entire page
                     setTimeout(() => {
-                        loadProductionData();
+                        window.location.reload();
                     }, 1000);
                     
                 } else {
