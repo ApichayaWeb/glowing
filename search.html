@@ -966,9 +966,9 @@
             }
         }
 
-        // ✅ Enhanced QR Code validation with detailed checks
+        // ✅ Simplified QR Code validation (format only)
         function validateEnhancedQRCode(qrCode) {
-            // Basic format check
+            // Basic format check only - เช็คแค่รูปแบบ ไม่เช็คเนื้อหา
             const qrPattern = /^(\d{2})-(\d{17})$/;
             const match = qrCode.match(qrPattern);
             
@@ -979,47 +979,25 @@
             const groupCode = match[1];
             const plotNumber = match[2];
             
-            // Validate Group Code (01-99)
+            // Validate Group Code (01-99) - เช็คแค่ช่วงที่สมเหตุสมผล
             const groupNum = parseInt(groupCode);
             if (groupNum < 1 || groupNum > 99) {
                 throw new Error('รหัสกลุ่มต้องอยู่ระหว่าง 01-99 (ตัวเลข 2 หลักแรก)');
             }
             
-            // Validate Plot Number (not all zeros)
+            // Validate Plot Number (not all zeros) - เช็คแค่ไม่ให้เป็น 0 ทั้งหมด
             if (plotNumber === '00000000000000000') {
                 throw new Error('เลขประจำแปลงไม่ถูกต้อง (ไม่สามารถเป็นเลข 0 ทั้งหมดได้)');
             }
             
-            // Check if starts with valid year (25xx for Buddhist year)
-            const yearPrefix = plotNumber.substring(0, 4);
-            const currentYear = new Date().getFullYear() + 543; // Convert to Buddhist year
-            const plotYear = parseInt(yearPrefix);
-            
-            if (plotYear < 2560 || plotYear > currentYear + 2) { // Allow up to 2 years in future
-                throw new Error(`ปีในรหัสแปลงไม่ถูกต้อง (${plotYear}) ต้องอยู่ระหว่าง 2560-${currentYear + 2}`);
-            }
-            
-            // Additional validation for realistic plot numbers
-            const monthDay = plotNumber.substring(4, 8);
-            const month = parseInt(monthDay.substring(0, 2));
-            const day = parseInt(monthDay.substring(2, 4));
-            
-            if (month < 1 || month > 12) {
-                throw new Error('เดือนในรหัสแปลงไม่ถูกต้อง (ต้องเป็น 01-12)');
-            }
-            
-            if (day < 1 || day > 31) {
-                throw new Error('วันที่ในรหัสแปลงไม่ถูกต้อง (ต้องเป็น 01-31)');
-            }
+            // ✅ ไม่เช็คปี เดือน วัน เพราะ Database มีข้อมูลหลากหลาย
+            // ปล่อยให้ Backend ตรวจสอบแทน
             
             return { 
                 groupCode, 
                 plotNumber, 
                 isValid: true,
-                groupNumber: groupNum,
-                plotYear: plotYear,
-                plotMonth: month,
-                plotDay: day
+                groupNumber: groupNum
             };
         }
 
