@@ -9,7 +9,7 @@ const CONFIG = {
     API_BASE_URL: 'https://script.google.com/macros/s/AKfycbwLOHphKsOdsxU4RCdVIwV2BjzBRcvomKUxx49x261iBD6fjuznK6ZxdT9PKGChUy-z/exec',
     
     // QR Code patterns
-    QR_CODE_PATTERN: /^(\d{2})-(\d{13})$/,
+    QR_CODE_PATTERN: /^(\d{2})-(\d{17})$/,
     SEARCH_CODE_PATTERN: /^(\d{8})-(\d{3})$/,
     
     // Roles
