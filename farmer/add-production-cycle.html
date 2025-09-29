@@ -731,75 +731,6 @@
             return true;
         }
 
-        // Submit form without CORS using hidden form
-        async function submitFormWithoutCORS(formData) {
-            return new Promise((resolve, reject) => {
-                // สร้าง hidden form
-                const form = document.createElement('form');
-                form.style.display = 'none';
-                form.method = 'POST';
-                form.action = CONFIG.API_BASE_URL; // ใช้ URL จาก utils.js
-                form.target = 'hidden-iframe-' + Date.now(); // Unique target
-                
-                // สร้าง hidden iframe
-                const iframe = document.createElement('iframe');
-                iframe.name = form.target;
-                iframe.style.display = 'none';
-                
-                // เพิ่ม form fields
-                Object.keys(formData).forEach(key => {
-                    const input = document.createElement('input');
-                    input.type = 'hidden';
-                    input.name = key;
-                    input.value = typeof formData[key] === 'object' ? 
-                                 JSON.stringify(formData[key]) : formData[key];
-                    form.appendChild(input);
-                });
-                
-                // Listen for iframe load
-                iframe.onload = function() {
-                    setTimeout(() => {
-                        try {
-                            // Cleanup
-                            document.body.removeChild(form);
-                            document.body.removeChild(iframe);
-                            
-                            // Assume success (since we can't read response due to CORS)
-                            resolve({
-                                success: true,
-                                message: 'บันทึกข้อมูลเรียบร้อยแล้ว',
-                                data: { searchCode: 'รอการสร้าง' }
-                            });
-                        } catch (cleanupError) {
-                            console.warn('Cleanup error:', cleanupError);
-                            resolve({
-                                success: true,
-                                message: 'บันทึกข้อมูลเรียบร้อยแล้ว',
-                                data: { searchCode: 'รอการสร้าง' }
-                            });
-                        }
-                    }, 2000); // รอ 2 วินาทีให้ Google Apps Script ประมวลผล
-                };
-                
-                iframe.onerror = function() {
-                    // Cleanup on error
-                    try {
-                        document.body.removeChild(form);
-                        document.body.removeChild(iframe);
-                    } catch (e) {}
-                    
-                    reject(new Error('เกิดข้อผิดพลาดในการส่งข้อมูล'));
-                };
-                
-                // Add to DOM and submit
-                document.body.appendChild(iframe);
-                document.body.appendChild(form);
-                
-                console.log('📤 Submitting form data without CORS:', formData);
-                form.submit();
-            });
-        }
-
         // Submit form
         async function submitForm() {
             try {
@@ -820,9 +751,9 @@
                 document.getElementById('loadingTitle').textContent = 'กำลังส่งข้อมูลและไฟล์...';
                 document.getElementById('loadingMessage').textContent = 'การอัปโหลดไฟล์อาจใช้เวลา 30-60 วินาที';
                 
-                // Submit using hidden form to avoid CORS
+                // Submit to API with timeout
                 const response = await Promise.race([
-                    submitFormWithoutCORS(formData),
+                    window.FarmerAPI.createProductionCycle(formData),
                     new Promise((_, reject) => 
                         setTimeout(() => reject(new Error('การส่งข้อมูลใช้เวลานานเกินไป (90 วินาที)')), 90000)
                     )
@@ -841,15 +772,8 @@
                     showLoading(false);
                     
                     // Show success modal with search code
-                    document.getElementById('generatedSearchCode').textContent = response.data?.searchCode || 'รอการสร้าง';
-                    
-                    const successModal = new bootstrap.Modal(document.getElementById('successModal'));
-                    successModal.show();
-                    
-                    // Auto redirect after 3 seconds
-                    setTimeout(() => {
-                        window.location.href = 'production-list.html';
-                    }, 3000);
+                    document.getElementById('generatedSearchCode').textContent = response.data?.searchCode || 'ไม่ได้รับรหัส';
+                    new bootstrap.Modal(document.getElementById('successModal')).show();
                     
                 } else {
                     showLoading(false);
