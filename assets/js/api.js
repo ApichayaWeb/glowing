@@ -99,7 +99,6 @@ class APIHandler {
             if (endpoint === 'updateProductionData' || endpoint === 'createProductionCycle') {
                 options = {
                     method: method,
-                    mode: 'cors',
                     redirect: 'follow',
                     headers: {
                         'Content-Type': 'application/json'
@@ -114,7 +113,6 @@ class APIHandler {
             } else {
                 options = {
                     method: method,
-                    mode: 'cors',
                     redirect: 'follow',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded'
