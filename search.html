@@ -160,9 +160,15 @@
             box-shadow: 0 10px 25px -5px rgba(16,185,129,0.4);
         }
         .btn-success:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 20px 40px -5px rgba(16,185,129,0.5);
+            transform: translateY(-1px);
+            box-shadow: 0 15px 30px -5px rgba(16,185,129,0.4);
             color: white;
+            filter: brightness(1.05);
+        }
+        .btn-success:active {
+            transform: translateY(0px);
+            box-shadow: 0 5px 15px -5px rgba(16,185,129,0.3);
+            transition: all 0.1s ease;
         }
         .btn-primary {
             background: linear-gradient(135deg, var(--info), #2563eb);
@@ -170,9 +176,15 @@
             box-shadow: 0 10px 25px -5px rgba(59,130,246,0.4);
         }
         .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 20px 40px -5px rgba(59,130,246,0.5);
+            transform: translateY(-1px);
+            box-shadow: 0 15px 30px -5px rgba(59,130,246,0.4);
             color: white;
+            filter: brightness(1.05);
+        }
+        .btn-primary:active {
+            transform: translateY(0px);
+            box-shadow: 0 5px 15px -5px rgba(59,130,246,0.3);
+            transition: all 0.1s ease;
         }
         .btn-outline-secondary {
             border: 2px solid var(--muted);
@@ -229,10 +241,162 @@
         @media (max-width: 768px) {
             .card-header { padding: 1.5rem 1rem; }
             .card-body { padding: 1.5rem 1rem; }
-            .btn { padding: 0.875rem 1.5rem; font-size: 1rem; }
+            .btn { 
+                padding: 1rem 1.5rem; 
+                font-size: 1rem; 
+                min-height: 48px;
+                touch-action: manipulation;
+                -webkit-tap-highlight-color: transparent;
+            }
             .display-4 { font-size: 2rem; }
-            .card:hover { transform: translateY(-4px); }
+            .card:hover { transform: translateY(-2px); }
             .container { width: 95vw; }
+            
+            /* ปรับปรุงเอฟเฟคปุ่มสำหรับมือถือ */
+            .btn-success:hover, .btn-primary:hover {
+                transform: none;
+                filter: brightness(1.1);
+                box-shadow: 0 8px 20px -5px rgba(16,185,129,0.3);
+            }
+            .btn-success:active, .btn-primary:active {
+                transform: scale(0.98);
+                transition: transform 0.1s ease;
+                box-shadow: 0 3px 10px -3px rgba(16,185,129,0.4);
+            }
+            
+            /* Navigation responsive */
+            .nav-inner { 
+                flex-wrap: wrap;
+                gap: 8px; 
+                padding: 12px 0; 
+            }
+            .brand { 
+                font-size: 0.9rem;
+            }
+            .nav .link {
+                padding: 0.5rem 0.75rem;
+                font-size: 0.9rem;
+            }
+            .nav .btn, .nav .btn-outline { 
+                padding: 0.5rem 1rem;
+                font-size: 0.9rem;
+                min-height: 36px;
+            }
+            
+            /* Form controls responsive */
+            .form-control {
+                font-size: 16px; /* ป้องกันการ zoom ใน iOS */
+                padding: 1rem;
+                border-radius: 12px;
+            }
+            .form-control.form-control-lg {
+                padding: 1.125rem;
+                font-size: 16px;
+            }
+            
+            /* Info cards responsive */
+            .info-card {
+                padding: 1rem;
+                margin-bottom: 1rem;
+            }
+            
+            /* Main content spacing */
+            .main-content {
+                padding-top: 100px;
+            }
+        }
+        
+        /* Small mobile devices */
+        @media (max-width: 480px) {
+            .card-header { padding: 1rem 0.75rem; }
+            .card-body { padding: 1rem 0.75rem; }
+            .btn { 
+                padding: 1rem 1.25rem; 
+                font-size: 0.95rem; 
+                width: 100%;
+                margin-bottom: 0.5rem;
+                min-height: 44px;
+            }
+            .display-4 { font-size: 1.75rem; }
+            .container { width: 98vw; }
+            
+            /* Navigation สำหรับหน้าจอเล็ก */
+            .nav-inner {
+                flex-direction: column;
+                text-align: center;
+                gap: 8px;
+            }
+            .brand {
+                font-size: 0.85rem;
+                flex-direction: column;
+                gap: 4px;
+            }
+            .brand .logo {
+                width: 28px;
+                height: 28px;
+            }
+            
+            /* Form adjustments for very small screens */
+            .form-control {
+                padding: 0.875rem;
+                font-size: 16px;
+            }
+            .form-control.form-control-lg {
+                padding: 1rem;
+                font-size: 16px;
+            }
+            
+            .info-card {
+                padding: 0.75rem;
+            }
+            
+            /* Typography adjustments */
+            h1 { font-size: 1.5rem; }
+            h6 { font-size: 1rem; }
+            p { font-size: 0.9rem; }
+            
+            /* ปรับเอฟเฟคปุ่มสำหรับหน้าจอเล็ก */
+            .btn:active {
+                transform: scale(0.96);
+                transition: transform 0.1s ease;
+            }
+        }
+        
+        /* Touch-Friendly Interactions */
+        .btn, .form-control, .nav .link, .nav .btn-outline {
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+        
+        /* ปรับปรุงการโต้ตอบสำหรับสัมผัส */
+        .btn:focus-visible {
+            outline: 2px solid var(--brand);
+            outline-offset: 2px;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: var(--brand);
+            box-shadow: 0 0 0 3px var(--ring);
+        }
+        
+        /* ขนาดพื้นที่สัมผัสขั้นต่ำ 44px ตาม Apple HIG */
+        .btn, .nav .link, .nav .btn-outline {
+            min-height: 44px;
+            min-width: 44px;
+        }
+        
+        /* Smooth scrolling */
+        html {
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        /* ปรับปรุงการเลื่อนในอุปกรณ์มือถือ */
+        body {
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
         }
         
         /* Loading Animation */
@@ -276,7 +440,7 @@
                         ค้นหาข้อมูลเชิงลึก
                     </h1>
                     <p class="lead text-muted mb-5">
-                        ค้นหาข้อมูลการผลิต การเก็บเกี่ยว การขนส่ง และเอกสารการรับรองคุณภาพแบบละเอียด
+                        ค้นหาข้อมูลการผลิต การเก็บเกี่ยว การขนส่ง และเอกสารการรับรองคุณภาพ
                     </p>
                 </div>
             </div>
@@ -294,12 +458,12 @@
                         <div class="card-body">
                             <form id="qrCodeSearchForm">
                                 <div class="mb-3">
-                                    <label for="qrCodeInput" class="form-label">รหัสเกษตรกร (QR Code)</label>
+                                    <label for="qrCodeInput" class="form-label">รหัสเกษตรกร </label>
                                     <input type="text" class="form-control form-control-lg" id="qrCodeInput" 
                                            placeholder="สแกน QR Code หรือป้อนรหัส: 02-12345678901234567" required>
                                     <div class="form-text">
                                         <i class="fas fa-qrcode text-success me-1"></i>
-                                        สแกน QR Code หรือป้อนรหัสรูปแบบ: XX-XXXXXXXXXXXXXXXXX
+                                        ป้อนรหัสรูปแบบ: XX-XXXXXXXXXXXXXXXXX
                                     </div>
                                 </div>
                                 <button type="submit" class="btn btn-success w-100" style="background: linear-gradient(180deg, var(--brand), var(--brand-2)); border: none; border-radius: 12px; padding: .75rem 1.5rem; font-weight: 700; box-shadow: 0 8px 20px rgba(25,135,84,.25);">
@@ -336,7 +500,7 @@
                                     <div class="info-card">
                                         <h6 class="text-success mb-3"><i class="fas fa-map-marker-alt me-2"></i>ที่อยู่และพื้นที่</h6>
                                         <p><strong>ที่อยู่แปลงปลูก:</strong> <span id="qrFarmerAddress"></span></p>
-                                        <p><strong>พื้นที่:</strong> <span id="qrFarmerArea"></span> ไร่</p>
+                                        <p><strong>พื้นที่:</strong> <span id="qrFarmerArea"></span></p>
                                     </div>
                                 </div>
                             </div>
@@ -361,7 +525,7 @@
                                                        pattern="^\d{8}-\d{3}$">
                                                 <div class="form-text">
                                                     <i class="fas fa-calendar me-1"></i>
-                                                    รูปแบบ: YYYYMMDD-XXX (วันที่จัดส่ง-รหัสผู้จำหน่าย)
+                                                    รูปแบบ: YYYYMMDD-XXX
                                                 </div>
                                             </div>
                                             <div class="col-md-4">
