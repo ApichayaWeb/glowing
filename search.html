@@ -2337,9 +2337,50 @@
                 };
             }
 
-            const production = searchData.productions[0]; // Take first production record
-            const actualCropType = production.CropType || '';
-            const actualCropVariety = production.CropVariety || '';
+            // 🔍 ค้นหา production record ที่ตรงกับ SearchCode
+            // ต้องหาจาก ProductionID ที่เกี่ยวข้องกับ SearchCode หรือ LotCode
+            console.log('🌱 Available productions:', searchData.productions.map(p => ({
+                ProductionID: p.ProductionID,
+                CropType: p.CropType,
+                CropVariety: p.CropVariety,
+                Created: p.Created
+            })));
+
+            // วิธีที่ 1: หาจาก harvest data ที่มี LotCode ตรงกับ SearchCode date
+            const searchDateCode = searchData.searchCode.split('-')[0]; // 25680909
+            console.log('🗓️ SearchCode date part:', searchDateCode);
+
+            let targetProduction = null;
+
+            // หาจาก harvest records ที่มี LotCode ตรงกัน
+            if (searchData.harvests && searchData.harvests.length > 0) {
+                const relatedHarvest = searchData.harvests.find(h => {
+                    const lotCodeStr = h.LotCode ? h.LotCode.toString() : '';
+                    return lotCodeStr === searchDateCode;
+                });
+
+                if (relatedHarvest) {
+                    console.log('🎯 Found related harvest:', relatedHarvest);
+                    targetProduction = searchData.productions.find(p => p.ProductionID === relatedHarvest.ProductionID);
+                    console.log('🎯 Found target production from harvest:', targetProduction);
+                }
+            }
+
+            // ถ้าหาไม่เจอ ให้หาจาก production ที่มี CropType ตรงกับที่เลือก
+            if (!targetProduction) {
+                console.log('🔍 Searching by expected crop type:', expectedCropType);
+                targetProduction = searchData.productions.find(p => p.CropType === expectedCropType);
+                console.log('🎯 Found production by crop type:', targetProduction);
+            }
+
+            // ถ้ายังหาไม่เจอ ใช้ production แรก
+            if (!targetProduction) {
+                console.log('⚠️ No specific production found, using first one');
+                targetProduction = searchData.productions[0];
+            }
+
+            const actualCropType = targetProduction.CropType || '';
+            const actualCropVariety = targetProduction.CropVariety || '';
 
             console.log('🌱 Actual crop data from system:', {
                 actualCropType,
