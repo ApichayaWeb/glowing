@@ -552,19 +552,19 @@
                                     <form id="cropVerificationForm">
                                         <div class="row">
                                             <div class="col-md-6 mb-3">
-                                                <label for="expectedCropType" class="form-label">ชนิดผักที่คาดหวัง</label>
+                                                <label for="expectedCropType" class="form-label">ชนิดผัก</label>
                                                 <select class="form-select" id="expectedCropType" required>
                                                     <option value="">เลือกชนิดผัก</option>
-                                                    <option value="ผักกาดหอม">ผักกาดหอม</option>
-                                                    <option value="กะหล่ำปลี">กะหล่ำปลี</option>
-                                                    <option value="ผักกาดขาว">ผักกาดขาว</option>
-                                                    <option value="คะน้า">คะน้า</option>
-                                                    <option value="บร็อกโคลี่">บร็อกโคลี่</option>
-                                                    <option value="ผักบุ้งจีน">ผักบุ้งจีน</option>
+                                                    <option value="ผักคะน้า">ผักคะน้า</option>
+                                                    <option value="กวางตุ้ง">กวางตุ้ง</option>
+                                                    <option value="มะเขือเทศ">มะเขือเทศ</option>
+                                                    <option value="ผักสลัดเรดโอ๊ค">ผักสลัดเรดโอ๊ค</option>
+                                                    <option value="ผักสลัดกรีนโอ๊ค">ผักสลัดกรีนโอ๊ค</option>
+                                                    <option value="ผักสลัดคอส">ผักสลัดคอส</option>
                                                 </select>
                                             </div>
                                             <div class="col-md-6 mb-3">
-                                                <label for="expectedCropVariety" class="form-label">สายพันธุ์ที่คาดหวัง</label>
+                                                <label for="expectedCropVariety" class="form-label">สายพันธุ์</label>
                                                 <select class="form-select" id="expectedCropVariety" required>
                                                     <option value="">เลือกสายพันธุ์</option>
                                                 </select>
@@ -2246,14 +2246,14 @@
         // 🌱 CROP VERIFICATION FUNCTIONALITY
         // ========================================
 
-        // Master data for crop types and varieties (hardcoded from Production_Data table)
+        // Master data for crop types and varieties (ตรงกับข้อมูลจริงในระบบ)
         const CROP_MASTER_DATA = {
-            'ผักกาดหอม': ['โซ่ห้อง (โซ่ลึก)', 'ไอซ์เบิร์ก'],
-            'กะหล่ำปลี': ['KK Sweet', 'KY Cross', 'เทพราช', 'นาตสึ', 'ลูบูล'],
-            'ผักกาดขาว': ['คิวตี้', 'ซูมิ', 'พีโซ'],
-            'คะน้า': ['เออร์ลี่ฮานโซม'],
-            'บร็อกโคลี่': ['Green Magic'],
-            'ผักบุ้งจีน': ['ใบใหญ่']
+            'ผักคะน้า': ['คะน้าต้น', 'คะน้าเห็ดหอม'],
+            'กวางตุ้ง': ['ต้น', 'ฮ่องเต้'],
+            'มะเขือเทศ': ['ท้อ', 'ราชินี'],
+            'ผักสลัดเรดโอ๊ค': [],
+            'ผักสลัดกรีนโอ๊ค': [],
+            'ผักสลัดคอส': []
         };
 
         // Initialize crop verification functionality
@@ -2286,16 +2286,32 @@
 
             if (cropType && CROP_MASTER_DATA[cropType]) {
                 const varieties = CROP_MASTER_DATA[cropType];
-                varieties.forEach(variety => {
+                
+                if (varieties.length > 0) {
+                    // ผักนี้มีสายพันธุ์
+                    varieties.forEach(variety => {
+                        const option = document.createElement('option');
+                        option.value = variety;
+                        option.textContent = variety;
+                        varietySelect.appendChild(option);
+                    });
+                    varietySelect.disabled = false;
+                    varietySelect.required = true;
+                    console.log(`🌱 Populated ${varieties.length} varieties for ${cropType}`);
+                } else {
+                    // ผักนี้ไม่มีสายพันธุ์ - เพิ่ม option "ไม่มีสายพันธุ์"
                     const option = document.createElement('option');
-                    option.value = variety;
-                    option.textContent = variety;
+                    option.value = 'ไม่มีสายพันธุ์';
+                    option.textContent = 'ไม่มีสายพันธุ์';
+                    option.selected = true;
                     varietySelect.appendChild(option);
-                });
-                varietySelect.disabled = false;
-                console.log(`🌱 Populated ${varieties.length} varieties for ${cropType}`);
+                    varietySelect.disabled = true;
+                    varietySelect.required = false;
+                    console.log(`🌱 ${cropType} ไม่มีสายพันธุ์ - เลือกอัตโนมัติ`);
+                }
             } else {
                 varietySelect.disabled = true;
+                varietySelect.required = true;
                 console.log('🌱 No varieties available for selected crop type');
             }
         }
@@ -2310,12 +2326,12 @@
 
             // Step 1: Validate form inputs
             if (!expectedCropType) {
-                showAlert('warning', 'กรุณาเลือกชนิดผักที่คาดหวัง');
+                showAlert('warning', 'กรุณาเลือกชนิดผัก');
                 return;
             }
 
             if (!expectedCropVariety) {
-                showAlert('warning', 'กรุณาเลือกสายพันธุ์ที่คาดหวัง');
+                showAlert('warning', 'กรุณาเลือกสายพันธุ์');
                 return;
             }
 
@@ -2359,7 +2375,7 @@
                 }
 
                 // Step 5: If validation passes, display results
-                showAlert('success', `✅ ตรวจสอบสำเร็จ! ผัก${expectedCropType} สายพันธุ์${expectedCropVariety} ตรงกันกับข้อมูลในระบบ`);
+                showAlert('success', `✅ ตรวจสอบสำเร็จ! ${expectedCropType} สายพันธุ์${expectedCropVariety} ตรงกันกับข้อมูลในระบบ`);
                 displayResults(result.data);
                 showProductionResults();
 
@@ -2407,15 +2423,30 @@
                 };
             }
 
-            // Check crop variety match
-            if (actualCropVariety !== expectedCropVariety) {
-                return {
-                    isValid: false,
-                    error: 'สายพันธุ์ไม่ตรงกัน',
-                    actualCropType,
-                    actualCropVariety,
-                    mismatchType: 'cropVariety'
-                };
+            // Check crop variety match (รองรับผักที่ไม่มีสายพันธุ์)
+            if (expectedCropVariety === 'ไม่มีสายพันธุ์') {
+                // ผักนี้ไม่ควรมีสายพันธุ์ในระบบ
+                if (actualCropVariety && actualCropVariety.trim() !== '') {
+                    return {
+                        isValid: false,
+                        error: 'ผักนี้ไม่ควรมีสายพันธุ์ แต่ในระบบมีข้อมูลสายพันธุ์',
+                        actualCropType,
+                        actualCropVariety,
+                        mismatchType: 'cropVariety'
+                    };
+                }
+                // ถ้าไม่มีสายพันธุ์ในระบบ = ถูกต้อง
+            } else {
+                // ผักนี้ควรมีสายพันธุ์ - ตรวจสอบว่าตรงกันหรือไม่
+                if (actualCropVariety !== expectedCropVariety) {
+                    return {
+                        isValid: false,
+                        error: 'สายพันธุ์ไม่ตรงกัน',
+                        actualCropType,
+                        actualCropVariety,
+                        mismatchType: 'cropVariety'
+                    };
+                }
             }
 
             return {
