@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Search Test - ระบบสอบย้อนกลับผักอุดร</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background: #f8f9fa; padding: 2rem; }
+        .test-result { font-family: monospace; background: #f8f9fa; padding: 1rem; border-radius: 5px; min-height: 200px; }
+        .test-pass { color: #28a745; }
+        .test-fail { color: #dc3545; }
+        .test-info { color: #17a2b8; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-10 mx-auto">
+                <h1 class="text-center mb-4">🧪 Complete Search System Test</h1>
+                
+                <!-- Test Configuration -->
+                <div class="card mb-4">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">🔧 Test Both QR Code & Search Code</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <label class="form-label">QR Code</label>
+                                <input type="text" id="testQRCode" class="form-control" value="02-25681225001234567">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Search Code</label>
+                                <input type="text" id="testSearchCode" class="form-control" value="20241201-001">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Test Type</label>
+                                <select id="testType" class="form-control">
+                                    <option value="qr-only">QR Code Only</option>
+                                    <option value="search-only">Search Code Only</option>
+                                    <option value="both-match">Both (Should Match)</option>
+                                    <option value="both-mismatch">Both (Should NOT Match)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <button class="btn btn-success" onclick="runCompleteTest()">🚀 Run Complete Test</button>
+                            <button class="btn btn-warning" onclick="clearResults()">🧹 Clear</button>
+                            <button class="btn btn-info" onclick="loadSampleData()">📋 Load Sample Data</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Test Results -->
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">📊 Test Results</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="testResults" class="test-result">
+                            <p class="text-muted">Click "Run Complete Test" to start comprehensive testing...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Include necessary JS files -->
+    <script src="assets/js/utils.js"></script>
+    <script src="assets/js/api.js"></script>
+    
+    <script>
+        let currentQRData = null; // Simulate current QR data
+        
+        // Test search functions (same as in search.html)
+        async function searchQRCodeSimple(qrCode) {
+            try {
+                console.log('🔍 Testing QR search for:', qrCode);
+                const result = await QRAPI.searchByQRCode(qrCode);
+                
+                if (result.success) {
+                    // Store current QR data for SearchCode validation
+                    currentQRData = {
+                        ...result.data,
+                        qrCode: qrCode,
+                        searchTimestamp: new Date().toISOString(),
+                        searchMethod: 'simple-api'
+                    };
+                    
+                    return {
+                        success: true,
+                        message: 'QR Code found successfully!',
+                        data: result.data
+                    };
+                } else {
+                    return {
+                        success: false,
+                        message: result.message || 'QR Code not found'
+                    };
+                }
+            } catch (error) {
+                console.error('QR search error:', error);
+                return {
+                    success: false,
+                    message: 'Network error: ' + error.message
+                };
+            }
+        }
+
+        async function searchCodeSimple(searchCode) {
+            try {
+                console.log('🔍 Testing SearchCode search for:', searchCode);
+                
+                // Basic format validation
+                const cleanedSearchCode = searchCode.trim();
+                if (!Utils.validateSearchCode(cleanedSearchCode)) {
+                    return {
+                        success: false,
+                        message: 'รูปแบบรหัสรอบการผลิตไม่ถูกต้อง (ต้องเป็น YYYYMMDD-XXX)'
+                    };
+                }
+                
+                const result = await QRAPI.searchByDeepCode(cleanedSearchCode);
+                
+                if (result.success && result.data) {
+                    // QR Code matching validation
+                    if (currentQRData && currentQRData.qrCode) {
+                        const currentQRCode = currentQRData.qrCode;
+                        const searchResultQRCode = result.data.qrCode;
+                        
+                        if (searchResultQRCode && currentQRCode !== searchResultQRCode) {
+                            return {
+                                success: false,
+                                message: `รหัสรอบการผลิตไม่ตรงกับ QR Code\nQR Code: ${currentQRCode}\nSearchCode เป็นของ: ${searchResultQRCode}`,
+                                mismatch: true
+                            };
+                        }
+                    }
+                    
+                    return {
+                        success: true,
+                        message: 'SearchCode found and validated!',
+                        data: result.data
+                    };
+                } else {
+                    return {
+                        success: false,
+                        message: result.message || 'SearchCode not found'
+                    };
+                }
+            } catch (error) {
+                console.error('SearchCode error:', error);
+                return {
+                    success: false,
+                    message: 'Network error: ' + error.message
+                };
+            }
+        }
+
+        async function runCompleteTest() {
+            const results = document.getElementById('testResults');
+            const qrCode = document.getElementById('testQRCode').value;
+            const searchCode = document.getElementById('testSearchCode').value;
+            const testType = document.getElementById('testType').value;
+            
+            results.innerHTML = '<p class="test-info">🔄 Running complete search test...</p>';
+            
+            let output = [];
+            output.push(`<h6>🧪 Complete Search Test Started: ${new Date().toLocaleString('th-TH')}</h6>`);
+            output.push(`<p><strong>Test Type:</strong> ${testType}</p>`);
+            output.push(`<p><strong>QR Code:</strong> ${qrCode}</p>`);
+            output.push(`<p><strong>Search Code:</strong> ${searchCode}</p>`);
+            output.push('<hr>');
+
+            try {
+                // Reset state
+                currentQRData = null;
+                
+                if (testType === 'qr-only' || testType.startsWith('both')) {
+                    output.push('<h6>🔍 Step 1: QR Code Search</h6>');
+                    const startTime = performance.now();
+                    const qrResult = await searchQRCodeSimple(qrCode);
+                    const qrDuration = Math.round(performance.now() - startTime);
+                    
+                    if (qrResult.success) {
+                        output.push(`<p class="test-pass">✅ QR Code Success (${qrDuration}ms): ${qrResult.message}</p>`);
+                        if (qrResult.data) {
+                            output.push(`<p><strong>Farmer:</strong> ${qrResult.data.farmer?.fullName || 'N/A'}</p>`);
+                            output.push(`<p><strong>Group:</strong> ${qrResult.data.farmer?.groupName || 'N/A'}</p>`);
+                        }
+                    } else {
+                        output.push(`<p class="test-fail">❌ QR Code Failed (${qrDuration}ms): ${qrResult.message}</p>`);
+                    }
+                    output.push('<hr>');
+                }
+                
+                if (testType === 'search-only' || testType.startsWith('both')) {
+                    output.push('<h6>🔍 Step 2: Search Code Search</h6>');
+                    const startTime = performance.now();
+                    const searchResult = await searchCodeSimple(searchCode);
+                    const searchDuration = Math.round(performance.now() - startTime);
+                    
+                    if (searchResult.success) {
+                        output.push(`<p class="test-pass">✅ SearchCode Success (${searchDuration}ms): ${searchResult.message}</p>`);
+                        if (searchResult.data) {
+                            output.push(`<p><strong>Production Date:</strong> ${searchResult.data.productionDate || 'N/A'}</p>`);
+                            output.push(`<p><strong>Crop Type:</strong> ${searchResult.data.cropType || 'N/A'}</p>`);
+                        }
+                    } else {
+                        const resultClass = searchResult.mismatch ? 'test-info' : 'test-fail';
+                        const icon = searchResult.mismatch ? '⚠️' : '❌';
+                        output.push(`<p class="${resultClass}">${icon} SearchCode ${searchResult.mismatch ? 'Validation' : 'Failed'} (${searchDuration}ms): ${searchResult.message}</p>`);
+                    }
+                }
+                
+                // Test Summary
+                output.push('<hr>');
+                output.push('<h6>📋 Test Summary</h6>');
+                
+                if (testType === 'both-match') {
+                    output.push('<p class="test-info">💡 Expected: Both should work and SearchCode should match QR Code</p>');
+                } else if (testType === 'both-mismatch') {
+                    output.push('<p class="test-info">💡 Expected: QR Code should work, SearchCode should show mismatch warning</p>');
+                }
+                
+            } catch (error) {
+                output.push(`<p class="test-fail"><strong>❌ TEST ERROR:</strong> ${error.message}</p>`);
+            }
+            
+            output.push('<hr>');
+            output.push(`<p><strong>🎉 Test Complete: ${new Date().toLocaleString('th-TH')}</strong></p>`);
+            
+            results.innerHTML = output.join('');
+        }
+
+        function clearResults() {
+            document.getElementById('testResults').innerHTML = '<p class="text-muted">Results cleared. Click "Run Complete Test" to start...</p>';
+            currentQRData = null;
+        }
+        
+        function loadSampleData() {
+            // Load sample test data
+            const samples = [
+                { qr: '02-25681225001234567', search: '20241201-001', type: 'both-match' },
+                { qr: '03-25681225001234567', search: '20241201-002', type: 'both-mismatch' },
+                { qr: '01-25681225001234567', search: '20241215-001', type: 'qr-only' }
+            ];
+            
+            const randomSample = samples[Math.floor(Math.random() * samples.length)];
+            document.getElementById('testQRCode').value = randomSample.qr;
+            document.getElementById('testSearchCode').value = randomSample.search;
+            document.getElementById('testType').value = randomSample.type;
+            
+            alert(`Sample data loaded:\nQR: ${randomSample.qr}\nSearch: ${randomSample.search}\nType: ${randomSample.type}`);
+        }
+    </script>
+</body>
+</html>
