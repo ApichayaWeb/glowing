@@ -1184,53 +1184,82 @@
 
         async function performSearchCodeSearch(searchCode) {
             try {
-                console.log('🔍 Starting SearchCode search for:', searchCode);
+                console.log('🔍 Starting Simple SearchCode search for:', searchCode);
                 showLoading(true);
+                
+                // Validate input first
+                if (!searchCode || searchCode.trim() === '') {
+                    showValidationError('กรุณาใส่รหัสรอบการผลิต');
+                    return;
+                }
+                
+                // Basic format validation only
+                const cleanedSearchCode = searchCode.trim();
+                if (!Utils.validateSearchCode(cleanedSearchCode)) {
+                    showValidationError('รูปแบบรหัสรอบการผลิตไม่ถูกต้อง (ต้องเป็น YYYYMMDD-XXX เช่น 20241201-001)');
+                    return;
+                }
+                
+                console.log('✅ SearchCode format validated:', cleanedSearchCode);
                 
                 // Hide only production results, keep QR results visible
                 hideElement('productionResults');
                 hideElement('noResults');
 
-                const response = await API.call('handleDeepSearch', { searchCode: searchCode }, 30000); // 30 second timeout
-                console.log('📥 SearchCode API Response:', response);
+                // ✨ Simple & Reliable: Use QRAPI with proper error handling
+                const result = await QRAPI.searchByDeepCode(cleanedSearchCode);
+                console.log('📥 Simple SearchCode API Response:', result);
 
-                if (response.success && response.data) {
-                    // Enhanced validation: SearchCode must belong to current QR Code
-                    if (currentQRData) {
+                if (result.success && result.data) {
+                    // ✅ Core validation: Ensure SearchCode belongs to current QR Code
+                    if (currentQRData && currentQRData.qrCode) {
                         const currentQRCode = currentQRData.qrCode;
-                        const searchResultQRCode = response.data.qrCode;
+                        const searchResultQRCode = result.data.qrCode;
                         
-                        console.log('🔍 Validating QR Code match:');
-                        console.log('  Current QR Code:', currentQRCode);
-                        console.log('  SearchCode QR Code:', searchResultQRCode);
+                        console.log('🔍 QR Code Matching Validation:');
+                        console.log('  สแกนแล้ว:', currentQRCode);
+                        console.log('  รหัสรอบการผลิตเป็นของ:', searchResultQRCode);
                         
-                        if (!currentQRCode) {
-                            console.log('⚠️ No current QR Code - QR scan required first');
-                            showAlert('warning', 'กรุณาสแกน QR Code ก่อนค้นหารหัสรอบการผลิต');
-                            clearSearchCodeInput();
+                        if (searchResultQRCode && currentQRCode !== searchResultQRCode) {
+                            console.log('❌ SearchCode and QRCode do not match');
+                            showValidationError(`รหัสรอบการผลิตนี้ไม่ตรงกับ QR Code ที่สแกน\n\nQR Code ที่สแกน: ${currentQRCode}\nรหัสรอบการผลิตเป็นของ: ${searchResultQRCode}\n\nกรุณาตรวจสอบความถูกต้อง`);
                             return;
                         }
                         
-                        if (currentQRCode !== searchResultQRCode) {
-                            console.log('❌ SearchCode does not belong to current QR Code');
-                            console.log(`❌ Expected QR: "${currentQRCode}", Got QR: "${searchResultQRCode}"`);
-                            showValidationError('รหัสค้นหานี้ไม่ใช่ของ QR Code ที่สแกนไว้ กรุณาตรวจสอบและลองอีกครั้ง');
-                            return;
-                        }
-                        
-                        console.log('✅ QR Code validation passed');
+                        console.log('✅ QR Code และ SearchCode ตรงกัน');
+                    } else {
+                        console.log('⚠️ ไม่มี QR Code ปัจจุบัน - อนุญาตให้ค้นหา SearchCode โดยตรง');
                     }
                     
-                    console.log('✅ SearchCode found and validated - displaying production results');
-                    displayProductionResults(response.data);
+                    console.log('✅ SearchCode found - displaying production results');
+                    displayProductionResults(result.data);
+                    
+                    // Store search method for analytics
+                    if (result.data) {
+                        result.data.searchMethod = 'simple-search-code';
+                        result.data.searchTimestamp = new Date().toISOString();
+                    }
+                    
                 } else {
-                    console.log('❌ SearchCode not found - showing validation error');
-                    showValidationError(response.message || 'ไม่พบข้อมูล โปรดตรวจสอบและลองอีกครั้ง');
+                    console.log('❌ SearchCode not found');
+                    showValidationError(result.message || 'ไม่พบข้อมูลสำหรับรหัสรอบการผลิตนี้ กรุณาตรวจสอบและลองอีกครั้ง');
                 }
 
             } catch (error) {
-                console.error('❌ SearchCode search error:', error);
-                showValidationError('ไม่พบข้อมูล โปรดตรวจสอบและลองอีกครั้ง');
+                console.error('❌ Simple SearchCode error:', error);
+                
+                // Better error categorization
+                let errorMessage = 'ไม่พบข้อมูล โปรดตรวจสอบและลองอีกครั้ง';
+                
+                if (error.message.includes('รูปแบบ')) {
+                    errorMessage = error.message; // Show validation errors directly
+                } else if (error.message.includes('network') || error.message.includes('Failed to fetch')) {
+                    errorMessage = 'ปัญหาการเชื่อมต่อเครือข่าย กรุณาตรวจสอบอินเทอร์เน็ต';
+                } else if (error.message.includes('timeout')) {
+                    errorMessage = 'การเชื่อมต่อใช้เวลานานเกินไป กรุณาลองใหม่อีกครั้ง';
+                }
+                
+                showValidationError(errorMessage);
             } finally {
                 showLoading(false);
             }
