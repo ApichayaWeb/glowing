@@ -537,6 +537,59 @@
                                     </form>
                                 </div>
                             </div>
+                            
+                            <!-- Crop Verification Section -->
+                            <div class="card border-warning mt-3">
+                                <div class="card-body">
+                                    <h6 class="text-warning mb-3">
+                                        <i class="fas fa-leaf me-2"></i>
+                                        ตรวจสอบความถูกต้องของผักและสายพันธุ์
+                                    </h6>
+                                    <div class="alert alert-warning mb-3" style="background: rgba(245,158,11,.1); border: 1px solid rgba(245,158,11,.2); color: #92400e; border-radius: 12px;">
+                                        <i class="fas fa-exclamation-triangle me-2"></i>
+                                        เลือกชนิดผักและสายพันธุ์ที่คุณคาดหวังก่อนค้นหา เพื่อตรวจสอบความถูกต้อง
+                                    </div>
+                                    <form id="cropVerificationForm">
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label for="expectedCropType" class="form-label">ชนิดผักที่คาดหวัง</label>
+                                                <select class="form-select" id="expectedCropType" required>
+                                                    <option value="">เลือกชนิดผัก</option>
+                                                    <option value="ผักกาดหอม">ผักกาดหอม</option>
+                                                    <option value="กะหล่ำปลี">กะหล่ำปลี</option>
+                                                    <option value="ผักกาดขาว">ผักกาดขาว</option>
+                                                    <option value="คะน้า">คะน้า</option>
+                                                    <option value="บร็อกโคลี่">บร็อกโคลี่</option>
+                                                    <option value="ผักบุ้งจีน">ผักบุ้งจีน</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label for="expectedCropVariety" class="form-label">สายพันธุ์ที่คาดหวัง</label>
+                                                <select class="form-select" id="expectedCropVariety" required>
+                                                    <option value="">เลือกสายพันธุ์</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="row align-items-end">
+                                            <div class="col-md-8">
+                                                <label for="cropVerificationSearchCode" class="form-label">รหัสรอบการผลิต (SearchCode)</label>
+                                                <input type="text" class="form-control form-control-lg" id="cropVerificationSearchCode" 
+                                                       placeholder="ตัวอย่าง: 25680920-003" 
+                                                       pattern="^\d{8}-\d{3}$" required>
+                                                <div class="form-text">
+                                                    <i class="fas fa-calendar me-1"></i>
+                                                    รูปแบบ: YYYYMMDD-XXX
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <button type="submit" class="btn btn-warning w-100 btn-lg" style="background: linear-gradient(180deg, #f59e0b, #d97706); border: none; border-radius: 12px; padding: 1rem 1.5rem; font-weight: 700; box-shadow: 0 8px 20px rgba(245,158,11,.25); color: white;">
+                                                    <i class="fas fa-check-double me-2"></i>ตรวจสอบและค้นหา
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1176,7 +1229,7 @@
         async function handleSearchCodeSubmit(e) {
             e.preventDefault();
             
-            const searchCode = document.getElementById('searchCodeInput').value.trim();
+            const searchCode = document.getElementById('productionSearchInput').value.trim();
             if (!searchCode) {
                 showAlert('warning', 'กรุณาใส่รหัสค้นหา');
                 return;
@@ -1205,7 +1258,7 @@
 
             // Generate search code
             const searchCode = toBuddhistYMD(shipDate) + '-' + distributorCode;
-            document.getElementById('searchCodeInput').value = searchCode;
+            document.getElementById('productionSearchInput').value = searchCode;
             
             await performSearchCodeSearch(searchCode);
         }
@@ -1888,7 +1941,16 @@
         }
 
         function fillSearchCode(code) {
-            document.getElementById('searchCodeInput').value = code;
+            // Fill both search code inputs if they exist
+            const productionInput = document.getElementById('productionSearchInput');
+            const cropVerificationInput = document.getElementById('cropVerificationSearchCode');
+            
+            if (productionInput) {
+                productionInput.value = code;
+            }
+            if (cropVerificationInput) {
+                cropVerificationInput.value = code;
+            }
         }
 
         function showLoading(show) {
@@ -2179,6 +2241,227 @@
                 }, 3000);
             }
         }
+
+        // ========================================
+        // 🌱 CROP VERIFICATION FUNCTIONALITY
+        // ========================================
+
+        // Master data for crop types and varieties (hardcoded from Production_Data table)
+        const CROP_MASTER_DATA = {
+            'ผักกาดหอม': ['โซ่ห้อง (โซ่ลึก)', 'ไอซ์เบิร์ก'],
+            'กะหล่ำปลี': ['KK Sweet', 'KY Cross', 'เทพราช', 'นาตสึ', 'ลูบูล'],
+            'ผักกาดขาว': ['คิวตี้', 'ซูมิ', 'พีโซ'],
+            'คะน้า': ['เออร์ลี่ฮานโซม'],
+            'บร็อกโคลี่': ['Green Magic'],
+            'ผักบุ้งจีน': ['ใบใหญ่']
+        };
+
+        // Initialize crop verification functionality
+        function initializeCropVerification() {
+            const cropTypeSelect = document.getElementById('expectedCropType');
+            const cropVarietySelect = document.getElementById('expectedCropVariety');
+            const cropVerificationForm = document.getElementById('cropVerificationForm');
+
+            if (!cropTypeSelect || !cropVarietySelect || !cropVerificationForm) {
+                console.warn('🌱 Crop verification elements not found');
+                return;
+            }
+
+            // Handle crop type selection change
+            cropTypeSelect.addEventListener('change', function() {
+                const selectedCropType = this.value;
+                populateCropVarieties(selectedCropType, cropVarietySelect);
+            });
+
+            // Handle crop verification form submission
+            cropVerificationForm.addEventListener('submit', handleCropVerificationSubmit);
+
+            console.log('🌱 Crop verification initialized successfully');
+        }
+
+        // Populate crop varieties based on selected crop type
+        function populateCropVarieties(cropType, varietySelect) {
+            // Clear existing options
+            varietySelect.innerHTML = '<option value="">เลือกสายพันธุ์</option>';
+
+            if (cropType && CROP_MASTER_DATA[cropType]) {
+                const varieties = CROP_MASTER_DATA[cropType];
+                varieties.forEach(variety => {
+                    const option = document.createElement('option');
+                    option.value = variety;
+                    option.textContent = variety;
+                    varietySelect.appendChild(option);
+                });
+                varietySelect.disabled = false;
+                console.log(`🌱 Populated ${varieties.length} varieties for ${cropType}`);
+            } else {
+                varietySelect.disabled = true;
+                console.log('🌱 No varieties available for selected crop type');
+            }
+        }
+
+        // Handle crop verification form submission
+        async function handleCropVerificationSubmit(e) {
+            e.preventDefault();
+            
+            const expectedCropType = document.getElementById('expectedCropType').value.trim();
+            const expectedCropVariety = document.getElementById('expectedCropVariety').value.trim();
+            const searchCode = document.getElementById('cropVerificationSearchCode').value.trim();
+
+            // Step 1: Validate form inputs
+            if (!expectedCropType) {
+                showAlert('warning', 'กรุณาเลือกชนิดผักที่คาดหวัง');
+                return;
+            }
+
+            if (!expectedCropVariety) {
+                showAlert('warning', 'กรุณาเลือกสายพันธุ์ที่คาดหวัง');
+                return;
+            }
+
+            if (!searchCode) {
+                showAlert('warning', 'กรุณาใส่รหัสรอบการผลิต');
+                return;
+            }
+
+            // Step 2: Validate SearchCode format
+            const searchPattern = /^\d{8}-\d{3}$/;
+            if (!searchPattern.test(searchCode)) {
+                showAlert('error', 'รูปแบบรหัสค้นหาไม่ถูกต้อง ต้องเป็น YYYYMMDD-XXX');
+                return;
+            }
+
+            console.log('🌱 Starting crop verification process:', {
+                expectedCropType,
+                expectedCropVariety,
+                searchCode
+            });
+
+            // Step 3: Perform SearchCode lookup
+            showLoading(true);
+
+            try {
+                // Perform search
+                const result = await performSearchCodeSearch(searchCode);
+                
+                if (!result.success) {
+                    showAlert('error', result.message || 'ไม่พบข้อมูลสำหรับรหัสรอบการผลิตนี้');
+                    return;
+                }
+
+                // Step 4: Validate crop type and variety against search results
+                const validationResult = validateCropMatch(result.data, expectedCropType, expectedCropVariety);
+                
+                if (!validationResult.isValid) {
+                    // Show validation error and stop
+                    showCropValidationError(validationResult, expectedCropType, expectedCropVariety);
+                    return;
+                }
+
+                // Step 5: If validation passes, display results
+                showAlert('success', `✅ ตรวจสอบสำเร็จ! ผัก${expectedCropType} สายพันธุ์${expectedCropVariety} ตรงกันกับข้อมูลในระบบ`);
+                displayResults(result.data);
+                showProductionResults();
+
+            } catch (error) {
+                console.error('❌ Crop verification error:', error);
+                showAlert('error', 'เกิดข้อผิดพลาดในการตรวจสอบ: ' + error.message);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Validate crop type and variety match
+        function validateCropMatch(searchData, expectedCropType, expectedCropVariety) {
+            console.log('🔍 Validating crop match:', {
+                expected: { cropType: expectedCropType, variety: expectedCropVariety },
+                searchData: searchData
+            });
+
+            if (!searchData.productions || searchData.productions.length === 0) {
+                return {
+                    isValid: false,
+                    error: 'ไม่พบข้อมูลการปลูกในระบบ',
+                    actualCropType: null,
+                    actualCropVariety: null
+                };
+            }
+
+            const production = searchData.productions[0]; // Take first production record
+            const actualCropType = production.CropType || '';
+            const actualCropVariety = production.CropVariety || '';
+
+            console.log('🌱 Actual crop data from system:', {
+                actualCropType,
+                actualCropVariety
+            });
+
+            // Check crop type match
+            if (actualCropType !== expectedCropType) {
+                return {
+                    isValid: false,
+                    error: 'ชนิดผักไม่ตรงกัน',
+                    actualCropType,
+                    actualCropVariety,
+                    mismatchType: 'cropType'
+                };
+            }
+
+            // Check crop variety match
+            if (actualCropVariety !== expectedCropVariety) {
+                return {
+                    isValid: false,
+                    error: 'สายพันธุ์ไม่ตรงกัน',
+                    actualCropType,
+                    actualCropVariety,
+                    mismatchType: 'cropVariety'
+                };
+            }
+
+            return {
+                isValid: true,
+                actualCropType,
+                actualCropVariety
+            };
+        }
+
+        // Show crop validation error with detailed information
+        function showCropValidationError(validationResult, expectedCropType, expectedCropVariety) {
+            let errorMessage = `❌ ${validationResult.error}\n\n`;
+            errorMessage += `🎯 ที่คาดหวัง:\n`;
+            errorMessage += `   • ชนิดผัก: ${expectedCropType}\n`;
+            errorMessage += `   • สายพันธุ์: ${expectedCropVariety}\n\n`;
+            errorMessage += `📊 ข้อมูลจริงในระบบ:\n`;
+            errorMessage += `   • ชนิดผัก: ${validationResult.actualCropType || 'ไม่มีข้อมูล'}\n`;
+            errorMessage += `   • สายพันธุ์: ${validationResult.actualCropVariety || 'ไม่มีข้อมูล'}\n\n`;
+            errorMessage += `⚠️ การตรวจสอบหยุดทำงาน กรุณาตรวจสอบข้อมูลและลองใหม่อีกครั้ง`;
+
+            // Show detailed error alert
+            showAlert('error', errorMessage);
+
+            // Hide any existing results
+            hideAllResults();
+            
+            console.log('❌ Crop validation failed:', validationResult);
+        }
+
+        // Show production results
+        function showProductionResults() {
+            hideAllResults();
+            const productionResults = document.getElementById('productionResults');
+            if (productionResults) {
+                productionResults.style.display = 'block';
+                // Scroll to results
+                productionResults.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
+        // Initialize crop verification when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeSearch();
+            enhanceUserInterface();
+            initializeCropVerification(); // Add crop verification initialization
+        });
     </script>
     
     <!-- Bootstrap JS -->
