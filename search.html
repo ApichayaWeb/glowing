@@ -1533,9 +1533,14 @@
             if (data.productions && data.productions.length > 0) {
                 // Use the production record that matches matchedProductionID from crop validation
                 // If no matchedProductionID, fall back to first record
+                console.log('🔧 displayResults - matchedProductionID:', data.matchedProductionID);
+                console.log('🔧 displayResults - productions count:', data.productions.length);
+                
                 const prod = data.matchedProductionID 
                     ? data.productions.find(p => p.ProductionID === data.matchedProductionID) || data.productions[0]
                     : data.productions[0];
+                    
+                console.log('🔧 displayResults - selected production:', prod.ProductionID, 'CropType:', prod.CropType);
                 document.getElementById('prodCropType').textContent = prod.CropType || '-';
                 document.getElementById('prodCropVariety').textContent = prod.CropVariety || '-';
                 
@@ -2408,7 +2413,11 @@
                     `ข้อมูลทั้งหมดตรงกันกับข้อมูลในระบบ` :
                     `✅ ค้นหาข้อมูลสำเร็จ!`;
                     
-                // แสดงผลลัพธ์และปิด modal  
+                // แสดงผลลัพธ์และปิด modal
+                // 🔧 FIXED: Add matchedProductionID to data before passing to showProductionResults
+                if (result.matchedProductionID) {
+                    result.data.matchedProductionID = result.matchedProductionID;
+                }
                 showProductionResults(result.data);
                 showAlert('success', successMessage);
 
