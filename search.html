@@ -1533,14 +1533,14 @@
             if (data.productions && data.productions.length > 0) {
                 // Use the production record that matches matchedProductionID from crop validation
                 // If no matchedProductionID, fall back to first record
-                console.log('🔧 displayResults - matchedProductionID:', data.matchedProductionID);
-                console.log('🔧 displayResults - productions count:', data.productions.length);
+                // console.log('🔧 displayResults - matchedProductionID:', data.matchedProductionID);
+                // console.log('🔧 displayResults - productions count:', data.productions.length);
                 
                 const prod = data.matchedProductionID 
                     ? data.productions.find(p => p.ProductionID === data.matchedProductionID) || data.productions[0]
                     : data.productions[0];
                     
-                console.log('🔧 displayResults - selected production:', prod.ProductionID, 'CropType:', prod.CropType);
+                // console.log('🔧 displayResults - selected production:', prod.ProductionID, 'CropType:', prod.CropType);
                 document.getElementById('prodCropType').textContent = prod.CropType || '-';
                 document.getElementById('prodCropVariety').textContent = prod.CropVariety || '-';
                 
