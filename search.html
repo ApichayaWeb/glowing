@@ -1449,6 +1449,82 @@
             }
         }
 
+        // New function for search with crop validation using Google Apps Script
+        async function performSearchCodeSearchWithCropValidation(searchCode, expectedCropType, expectedCropVariety) {
+            try {
+                console.log('🌱 Starting SearchCode search with crop validation in Google Sheets:', {
+                    searchCode, expectedCropType, expectedCropVariety
+                });
+                
+                // Validate input first
+                if (!searchCode || searchCode.trim() === '') {
+                    return { success: false, message: 'กรุณาใส่รหัสรอบการผลิต' };
+                }
+                
+                // Basic format validation only
+                const cleanedSearchCode = searchCode.trim();
+                if (!Utils.validateSearchCode(cleanedSearchCode)) {
+                    return { success: false, message: 'รูปแบบรหัสรอบการผลิตไม่ถูกต้อง' };
+                }
+                
+                console.log('✅ SearchCode format validated:', cleanedSearchCode);
+                
+                // ✨ Call enhanced API with crop validation parameters
+                const apiParams = {
+                    expectedCropType: expectedCropType,
+                    expectedCropVariety: expectedCropVariety
+                };
+                
+                const result = await QRAPI.searchByDeepCode(cleanedSearchCode, apiParams);
+                console.log('📥 SearchCode API Response with crop validation from GAS:', result);
+                
+                if (result.success && result.data) {
+                    // ✅ Core validation: Ensure SearchCode belongs to current QR Code
+                    if (currentQRData && currentQRData.qrCode) {
+                        const currentQRCode = currentQRData.qrCode;
+                        const searchResultQRCode = result.data.qrCode;
+                        
+                        if (searchResultQRCode && currentQRCode !== searchResultQRCode) {
+                            console.log('❌ SearchCode and QRCode do not match');
+                            return { success: false, message: 'QR Code และ SearchCode ไม่ตรงกัน' };
+                        }
+                        
+                        console.log('✅ QR Code และ SearchCode ตรงกัน');
+                    }
+                    
+                    // ✅ Check server-side crop validation results from Google Apps Script
+                    console.log('🌱 Crop validation results from Google Sheets:', {
+                        isValidCrop: result.isValidCrop,
+                        actualCropType: result.actualCropType,
+                        actualCropVariety: result.actualCropVariety,
+                        expectedCropType: result.expectedCropType,
+                        expectedCropVariety: result.expectedCropVariety
+                    });
+                    
+                    // Return the complete result with crop validation info
+                    return {
+                        success: true,
+                        data: result.data,
+                        isValidCrop: result.isValidCrop,
+                        actualCropType: result.actualCropType,
+                        actualCropVariety: result.actualCropVariety,
+                        expectedCropType: result.expectedCropType,
+                        expectedCropVariety: result.expectedCropVariety,
+                        matchedProductionID: result.matchedProductionID,
+                        message: result.message
+                    };
+                    
+                } else {
+                    console.log('❌ SearchCode not found');
+                    return { success: false, message: result.message || 'ไม่พบข้อมูลสำหรับรหัสรอบการผลิตนี้' };
+                }
+                
+            } catch (error) {
+                console.error('❌ SearchCode with crop validation error:', error);
+                return { success: false, message: 'เกิดข้อผิดพลาดในการตรวจสอบ: ' + error.message };
+            }
+        }
+
         // Legacy function for backward compatibility
         async function performSearch(searchCode) {
             return await performSearchCodeSearch(searchCode);
@@ -1741,13 +1817,8 @@
         }
 
         function displayProductionResults(data) {
-            // Show production results section  
-            document.getElementById('productionResults').style.display = 'block';
-            document.getElementById('qrResults').style.display = 'none';
-            document.getElementById('noResults').style.display = 'none';
-
-            // Use existing displayResults function for production data
-            displayResults(data);
+            // Legacy function - redirect to new showProductionResults()
+            showProductionResults(data);
         }
 
         // Simplified helper functions
@@ -2287,37 +2358,49 @@
                 searchCode
             });
 
-            // Step 3: Perform SearchCode lookup
+            // Step 3: Perform SearchCode lookup with crop validation
             showLoading(true);
 
             try {
-                // Perform search
-                const result = await performSearchCodeSearch(searchCode);
+                // Perform search with crop validation parameters
+                const result = await performSearchCodeSearchWithCropValidation(searchCode, expectedCropType, expectedCropVariety);
                 
                 if (!result.success) {
-                    showAlert('error', result.message || 'ไม่พบข้อมูลสำหรับรหัสรอบการผลิตนี้');
+                    showLoading(false); // ✅ ปิด modal ก่อน return
+                    // เพิ่ม delay เล็กน้อยเพื่อให้ modal ปิดเรียบร้อยก่อนแสดง error
+                    setTimeout(() => {
+                        showAlert('error', result.message || 'ไม่พบข้อมูลสำหรับรหัสรอบการผลิตนี้');
+                    }, 100);
                     return;
                 }
 
-                // Step 4: Validate crop type and variety against search results
-                const validationResult = validateCropMatch(result.data, expectedCropType, expectedCropVariety);
-                
-                if (!validationResult.isValid) {
-                    // Show validation error and stop
-                    showCropValidationError(validationResult, expectedCropType, expectedCropVariety);
+                // Step 4: Check crop validation result from Google Sheets
+                if (result.isValidCrop !== null && !result.isValidCrop) {
+                    showLoading(false); // ✅ ปิด modal ก่อน return
+                    // เพิ่ม delay เล็กน้อยเพื่อให้ modal ปิดเรียบร้อยก่อนแสดง error
+                    setTimeout(() => {
+                        showCropValidationErrorFromGAS(result, expectedCropType, expectedCropVariety);
+                    }, 100);
                     return;
                 }
 
                 // Step 5: If validation passes, display results
-                showAlert('success', `✅ ตรวจสอบสำเร็จ! ${expectedCropType} สายพันธุ์${expectedCropVariety} ตรงกันกับข้อมูลในระบบ`);
-                displayResults(result.data);
-                showProductionResults();
+                const successMessage = result.isValidCrop ? 
+                    `✅ ตรวจสอบสำเร็จ! ${expectedCropType} สายพันธุ์${expectedCropVariety} ตรงกันกับข้อมูลในระบบ` :
+                    `✅ ค้นหาข้อมูลสำเร็จ!`;
+                    
+                // แสดงผลลัพธ์และปิด modal  
+                showProductionResults(result.data);
+                showAlert('success', successMessage);
 
             } catch (error) {
                 console.error('❌ Crop verification error:', error);
-                showAlert('error', 'เกิดข้อผิดพลาดในการตรวจสอบ: ' + error.message);
+                showLoading(false); // ✅ ปิด modal ก่อนแสดง error
+                setTimeout(() => {
+                    showAlert('error', 'เกิดข้อผิดพลาดในการตรวจสอบ: ' + error.message);
+                }, 100);
             } finally {
-                showLoading(false);
+                showLoading(false); // ✅ Backup - เผื่อกรณีที่ไม่ผ่าน catch
             }
         }
 
@@ -2431,29 +2514,78 @@
             };
         }
 
-        // Show crop validation error with detailed information
-        function showCropValidationError(validationResult, expectedCropType, expectedCropVariety) {
-            let errorMessage = `❌ ${validationResult.error}\n\n`;
-            errorMessage += `🎯 ที่คาดหวัง:\n`;
+        // Show crop validation error from Google Apps Script with enhanced details
+        function showCropValidationErrorFromGAS(result, expectedCropType, expectedCropVariety) {
+            console.log('🚫 Displaying crop validation error from Google Apps Script:', result);
+            
+            // Determine the type of error
+            let errorTitle = '❌ การตรวจสอบชนิดผักไม่ผ่าน';
+            let errorDetails = '';
+            
+            if (!result.actualCropType && !result.actualCropVariety) {
+                errorTitle = '❌ ไม่พบข้อมูลการปลูกในระบบ';
+                errorDetails = 'ไม่พบข้อมูลการปลูกสำหรับรหัสรอบการผลิตนี้ในฐานข้อมูล Google Sheets';
+            } else {
+                // Compare expected vs actual
+                const cropTypeMatch = result.actualCropType === expectedCropType;
+                const cropVarietyMatch = result.actualCropVariety === expectedCropVariety;
+                
+                if (!cropTypeMatch && !cropVarietyMatch) {
+                    errorDetails = 'ทั้งชนิดผักและสายพันธุ์ไม่ตรงกับข้อมูลในระบบ';
+                } else if (!cropTypeMatch) {
+                    errorDetails = 'ชนิดผักไม่ตรงกับข้อมูลในระบบ';
+                } else if (!cropVarietyMatch) {
+                    errorDetails = 'สายพันธุ์ไม่ตรงกับข้อมูลในระบบ';
+                }
+            }
+            
+            let errorMessage = `${errorTitle}\n\n${errorDetails}\n\n`;
+            errorMessage += `🎯 ที่คุณเลือก:\n`;
             errorMessage += `   • ชนิดผัก: ${expectedCropType}\n`;
             errorMessage += `   • สายพันธุ์: ${expectedCropVariety}\n\n`;
-            errorMessage += `📊 ข้อมูลจริงในระบบ:\n`;
-            errorMessage += `   • ชนิดผัก: ${validationResult.actualCropType || 'ไม่มีข้อมูล'}\n`;
-            errorMessage += `   • สายพันธุ์: ${validationResult.actualCropVariety || 'ไม่มีข้อมูล'}\n\n`;
-            errorMessage += `⚠️ การตรวจสอบหยุดทำงาน กรุณาตรวจสอบข้อมูลและลองใหม่อีกครั้ง`;
+            errorMessage += `📊 ข้อมูลจริงใน Google Sheets:\n`;
+            errorMessage += `   • ชนิดผัก: ${result.actualCropType || 'ไม่มีข้อมูล'}\n`;
+            errorMessage += `   • สายพันธุ์: ${result.actualCropVariety || 'ไม่มีข้อมูล'}\n`;
+            
+            if (result.matchedProductionID) {
+                errorMessage += `   • รหัสการผลิต: ${result.matchedProductionID}\n`;
+            }
+            
+            errorMessage += `\n💡 แนวทางแก้ไข:\n`;
+            errorMessage += `   • ตรวจสอบความถูกต้องของรหัสรอบการผลิต\n`;
+            errorMessage += `   • เลือกชนิดผักและสายพันธุ์ที่ตรงกับข้อมูลจริง\n`;
+            errorMessage += `   • ติดต่อผู้ดูแลระบบหากข้อมูลในระบบไม่ถูกต้อง`;
 
-            // Show detailed error alert
-            showAlert('error', errorMessage);
+            // Show enhanced error alert with warning style
+            showAlert('warning', errorMessage);
 
             // Hide any existing results
             hideAllResults();
             
-            console.log('❌ Crop validation failed:', validationResult);
+            // Focus back to crop selection for retry
+            const cropTypeSelect = document.getElementById('expectedCropType');
+            if (cropTypeSelect) {
+                cropTypeSelect.focus();
+            }
+            
+            console.log('❌ Crop validation failed from Google Apps Script:', result);
         }
 
-        // Show production results
-        function showProductionResults() {
+        // Legacy: Show crop validation error with detailed information
+        function showCropValidationError(validationResult, expectedCropType, expectedCropVariety) {
+            // Redirect to new function for consistency
+            showCropValidationErrorFromGAS(validationResult, expectedCropType, expectedCropVariety);
+        }
+
+        // Show production results with data
+        function showProductionResults(data = null) {
             hideAllResults();
+            
+            // แสดงข้อมูลถ้ามี
+            if (data) {
+                displayResults(data);
+            }
+            
             const productionResults = document.getElementById('productionResults');
             if (productionResults) {
                 productionResults.style.display = 'block';
