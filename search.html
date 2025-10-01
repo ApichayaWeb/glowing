@@ -1531,7 +1531,11 @@
 
             // Display production data
             if (data.productions && data.productions.length > 0) {
-                const prod = data.productions[0]; // Take first production record
+                // Use the production record that matches matchedProductionID from crop validation
+                // If no matchedProductionID, fall back to first record
+                const prod = data.matchedProductionID 
+                    ? data.productions.find(p => p.ProductionID === data.matchedProductionID) || data.productions[0]
+                    : data.productions[0];
                 document.getElementById('prodCropType').textContent = prod.CropType || '-';
                 document.getElementById('prodCropVariety').textContent = prod.CropVariety || '-';
                 
