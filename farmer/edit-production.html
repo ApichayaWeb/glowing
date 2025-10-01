@@ -322,7 +322,7 @@
                                         <small class="text-muted" id="shipDateBE"></small>
                                     </div>
                                     <div class="col-md-6 mb-3">
-                                        <label class="form-label">วิธีการเก็บเกี่ยว</label>
+                                        <label class="form-label">ระบุ</label>
                                         <input type="text" class="form-control" id="harvestMethod" placeholder="ระบุวิธีการเก็บเกี่ยว">
                                     </div>
                                 </div>
@@ -981,21 +981,11 @@
         }
 
         function displayExistingFiles(fileRecords) {
-            console.log('🔍 DEBUG: displayExistingFiles called with:', fileRecords);
-            
             if (!fileRecords || fileRecords.length === 0) {
-                const existingFilesSectionEl = document.getElementById('existingFilesSection');
-                if (existingFilesSectionEl) {
-                    existingFilesSectionEl.style.display = 'none';
-                }
-                console.log('📁 No existing files to display');
+                document.getElementById('existingFilesSection').style.display = 'none';
                 return;
             }
-            
-            const existingFilesSectionEl = document.getElementById('existingFilesSection');
-            if (existingFilesSectionEl) {
-                existingFilesSectionEl.style.display = 'block';
-            }
+            document.getElementById('existingFilesSection').style.display = 'block';
             
             const groupedFiles = fileRecords.reduce((acc, file) => {
                 const type = file.FileType || file.fileType;
@@ -1004,24 +994,16 @@
                 return acc;
             }, {});
             
-            // แสดงไฟล์เดิมแต่ละประเภท โดยมี safety check
-            const elementsToUpdate = [
-                { id: 'existingPlotImages', fileType: 'รูปแปลงปลูก' },
-                { id: 'existingProductImages', fileType: 'รูปสินค้า' },
-                { id: 'existingPlantingImages', fileType: 'รูปกิจกรรมการปลูก' },
-                { id: 'existingCertificationDocs', fileType: 'เอกสารการรับรอง' },
-                { id: 'existingRecordMethodImages', fileType: 'วิธีการปลูก' }
-            ];
+            document.getElementById('existingPlotImages').innerHTML = displayFileList(groupedFiles['รูปแปลงปลูก'], 'รูปแปลงปลูก');
+            document.getElementById('existingProductImages').innerHTML = displayFileList(groupedFiles['รูปสินค้า'], 'รูปสินค้า');
+            document.getElementById('existingPlantingImages').innerHTML = displayFileList(groupedFiles['รูปกิจกรรมการปลูก'], 'รูปกิจกรรมการปลูก');
+            document.getElementById('existingCertificationDocs').innerHTML = displayFileList(groupedFiles['เอกสารการรับรอง'], 'เอกสารการรับรอง');
+            document.getElementById('existingMethodImages').innerHTML = displayFileList(groupedFiles['วิธีการปลูก'], 'วิธีการปลูก');
             
-            elementsToUpdate.forEach(({ id, fileType }) => {
-                const element = document.getElementById(id);
-                if (element) {
-                    element.innerHTML = displayFileList(groupedFiles[fileType], fileType);
-                    console.log(`✅ Updated ${id} with ${fileType} files`);
-                } else {
-                    console.warn(`⚠️ Element not found: ${id}`);
-                }
-            });
+            // แสดงไฟล์เดิมสำหรับ recordMethodImages (ใช้ไฟล์ประเภทเดียวกับ วิธีการปลูก)
+            if (document.getElementById('existingRecordMethodImages')) {
+                document.getElementById('existingRecordMethodImages').innerHTML = displayFileList(groupedFiles['วิธีการปลูก'], 'วิธีการปลูก');
+            }
         }
     
         function displayFileList(files, category) {
@@ -1209,21 +1191,60 @@
             showLoadingModal(true);
             try {
                 const currentUser = Auth.getCurrentUser();
-                const formData = collectFlatFormData();
+                const formData = collectFormData();
                 
                 // Helper function to ensure text format (match farmer-api.js)
                 const ensureText = (v) => {
                     return v == null ? '' : String(v);
                 };
 
-                // 🔧 CRITICAL FIX: ใช้ข้อมูลแบบ flat structure จาก collectFlatFormData()
+                // 🔧 CRITICAL FIX: ส่งข้อมูลแบบ nested structure ตามที่ Google Apps Script คาดหวัง
                 const apiData = {
                     action: 'updateProductionData',
-                    // ใช้ ensureText เฉพาะ ID fields
+                    // ใช้ ensureText เฉพาะ ID fields และแก้ไข farmerId เป็น farmerID
                     productionId: ensureText(currentProductionId),
-                    farmerID: ensureText(currentUser.farmerID),
-                    // ใช้ข้อมูลจาก formData ที่เป็น flat structure แล้ว
-                    ...formData,
+                    farmerID: ensureText(currentUser.farmerID),  // แก้ไขจาก farmerId
+                    // Production data (nested structure)
+                    production: {
+                        cropType: formData.production.cropType || '',
+                        cropVariety: formData.production.cropVariety || '',
+                        plantDate: formData.production.plantDate || '',
+                        harvestDate: formData.production.harvestDate || '',
+                        plantingMethod: formData.production.plantingMethod || '',
+                        plantingMethodOther: formData.production.plantingMethodOther || '',
+                        fertilizer: formData.production.fertilizer || '',
+                        pesticide: formData.production.pesticide || '',
+                        waterSourceType: formData.production.waterSourceType || '',
+                        waterManagement: formData.production.waterManagement || '',
+                        recordMethod: formData.production.recordMethod || '',
+                        pestControl: formData.production.pestControl || '',
+                        seasonID: formData.production.seasonID || '',
+                        maintenanceRecord: formData.production.maintenanceRecord || ''
+                    },
+                    // Harvest data (nested structure)
+                    harvest: {
+                        shipDate: formData.harvest.shipDate || '',
+                        harvestMethod: formData.harvest.harvestMethod || '',
+                        quantity: formData.harvest.quantity || '',
+                        unit: formData.harvest.unit || '',
+                        unitOther: formData.harvest.unitOther || '',
+                        packagingCompany: formData.harvest.packagingCompany || '',
+                        packagingLocation: formData.harvest.packagingLocation || '',
+                        responsiblePerson: formData.harvest.responsiblePerson || ''
+                    },
+                    // Transport data (nested structure)
+                    transport: {
+                        farmShipDate: formData.transport.farmShipDate || '',
+                        transportChannel: formData.transport.transportChannel || '',
+                        transportMethod: formData.transport.transportMethod || '',
+                        transportMethodOther: formData.transport.transportMethodOther || '',
+                        transportCompany: formData.transport.transportCompany || '',
+                        distributorCode: formData.transport.distributorCode || ''
+                    },
+                    // Additional info (nested structure)
+                    additionalInfo: {
+                        story: formData.additionalInfo.story || ''
+                    },
                     // Files to delete (as JSON string since it's array)
                     filesToDelete: filesToDelete.length > 0 ? JSON.stringify(filesToDelete) : '[]'
                 };
@@ -1354,48 +1375,6 @@
                     transportCompany: getVal('transportCompany'), distributorCode: getVal('distributorCode')
                 },
                 additionalInfo: { story: getVal('additionalInfo') }
-            };
-        }
-
-        /**
-         * 🔧 NEW: ฟังก์ชันเฉพาะสำหรับ edit-production ที่ส่งข้อมูลแบบ flat structure
-         */
-        function collectFlatFormData() {
-            const getVal = id => document.getElementById(id)?.value || '';
-            return {
-                // Production data (flat structure)
-                cropType: getVal('cropType'),
-                cropVariety: getVal('cropVariety'),
-                plantDate: getVal('plantDate'),
-                harvestDate: getVal('harvestDate'),
-                plantingMethod: getVal('plantingMethod'),
-                plantingMethodOther: getVal('plantingMethodOther'),
-                fertilizer: getVal('fertilizer'),
-                pesticide: getVal('pesticide'),
-                waterSourceType: getVal('waterSourceType'),
-                waterManagement: getVal('waterManagement'),
-                recordMethod: getVal('recordMethod'),
-                pestControl: getVal('pestControl'),
-                seasonID: getVal('seasonID'),
-                maintenanceRecord: getVal('maintenanceRecord'),
-                // Harvest data (flat structure)
-                shipDate: getVal('shipDate'),
-                harvestMethod: getVal('harvestMethod'),
-                quantity: getVal('quantity'),
-                unit: getVal('unit'),
-                unitOther: getVal('unitOther'),
-                packagingCompany: getVal('packagingCompany'),
-                packagingLocation: getVal('packagingLocation'),
-                responsiblePerson: getVal('responsiblePerson'),
-                // Transport data (flat structure)
-                farmShipDate: getVal('farmShipDate'),
-                transportChannel: getVal('transportChannel'),
-                transportMethod: getVal('transportMethod'),
-                transportMethodOther: getVal('transportMethodOther'),
-                transportCompany: getVal('transportCompany'),
-                distributorCode: getVal('distributorCode'),
-                // Additional info (flat structure)
-                story: getVal('additionalInfo')
             };
         }
 
@@ -1654,21 +1633,9 @@
         }
     
         function cancelEdit() {
-            Swal.fire({
-                title: 'ยืนยันการยกเลิก',
-                text: 'คุณแน่ใจหรือไม่ที่จะยกเลิกการแก้ไข? การเปลี่ยนแปลงที่ยังไม่ได้บันทึกจะสูญหาย',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#dc3545',
-                cancelButtonColor: '#6c757d',
-                confirmButtonText: '<i class="fas fa-times me-1"></i>ยกเลิกการแก้ไข',
-                cancelButtonText: '<i class="fas fa-edit me-1"></i>แก้ไขต่อ',
-                reverseButtons: true
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    window.location.href = 'dashboard.html';
-                }
-            });
+            if (confirm('คุณแน่ใจหรือไม่ที่จะยกเลิกการแก้ไข?')) {
+                window.location.href = 'dashboard.html';
+            }
         }
     
         function goToDetail() {
