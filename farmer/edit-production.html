@@ -981,11 +981,21 @@
         }
 
         function displayExistingFiles(fileRecords) {
+            console.log('🔍 DEBUG: displayExistingFiles called with:', fileRecords);
+            
             if (!fileRecords || fileRecords.length === 0) {
-                document.getElementById('existingFilesSection').style.display = 'none';
+                const existingFilesSectionEl = document.getElementById('existingFilesSection');
+                if (existingFilesSectionEl) {
+                    existingFilesSectionEl.style.display = 'none';
+                }
+                console.log('📁 No existing files to display');
                 return;
             }
-            document.getElementById('existingFilesSection').style.display = 'block';
+            
+            const existingFilesSectionEl = document.getElementById('existingFilesSection');
+            if (existingFilesSectionEl) {
+                existingFilesSectionEl.style.display = 'block';
+            }
             
             const groupedFiles = fileRecords.reduce((acc, file) => {
                 const type = file.FileType || file.fileType;
@@ -994,16 +1004,24 @@
                 return acc;
             }, {});
             
-            document.getElementById('existingPlotImages').innerHTML = displayFileList(groupedFiles['รูปแปลงปลูก'], 'รูปแปลงปลูก');
-            document.getElementById('existingProductImages').innerHTML = displayFileList(groupedFiles['รูปสินค้า'], 'รูปสินค้า');
-            document.getElementById('existingPlantingImages').innerHTML = displayFileList(groupedFiles['รูปกิจกรรมการปลูก'], 'รูปกิจกรรมการปลูก');
-            document.getElementById('existingCertificationDocs').innerHTML = displayFileList(groupedFiles['เอกสารการรับรอง'], 'เอกสารการรับรอง');
-            document.getElementById('existingMethodImages').innerHTML = displayFileList(groupedFiles['วิธีการปลูก'], 'วิธีการปลูก');
+            // แสดงไฟล์เดิมแต่ละประเภท โดยมี safety check
+            const elementsToUpdate = [
+                { id: 'existingPlotImages', fileType: 'รูปแปลงปลูก' },
+                { id: 'existingProductImages', fileType: 'รูปสินค้า' },
+                { id: 'existingPlantingImages', fileType: 'รูปกิจกรรมการปลูก' },
+                { id: 'existingCertificationDocs', fileType: 'เอกสารการรับรอง' },
+                { id: 'existingRecordMethodImages', fileType: 'วิธีการปลูก' }
+            ];
             
-            // แสดงไฟล์เดิมสำหรับ recordMethodImages (ใช้ไฟล์ประเภทเดียวกับ วิธีการปลูก)
-            if (document.getElementById('existingRecordMethodImages')) {
-                document.getElementById('existingRecordMethodImages').innerHTML = displayFileList(groupedFiles['วิธีการปลูก'], 'วิธีการปลูก');
-            }
+            elementsToUpdate.forEach(({ id, fileType }) => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.innerHTML = displayFileList(groupedFiles[fileType], fileType);
+                    console.log(`✅ Updated ${id} with ${fileType} files`);
+                } else {
+                    console.warn(`⚠️ Element not found: ${id}`);
+                }
+            });
         }
     
         function displayFileList(files, category) {
