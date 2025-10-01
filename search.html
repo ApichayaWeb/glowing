@@ -814,7 +814,7 @@
                         // Enhanced response validation
                         try {
                             if (this.validateResponse(response, action)) {
-                                console.log('✅ JSONP Response validated successfully');
+                                // console.log('✅ JSONP Response validated successfully');
                                 requestInfo.resolve(response);
                             } else {
                                 requestInfo.reject(new Error('Invalid response format or data'));
@@ -835,7 +835,7 @@
                     try {
                         const url = this.buildSecureURL(action, params, callbackName);
                         script.src = url;
-                        console.log('🚀 JSONP Request URL built successfully');
+                        // console.log('🚀 JSONP Request URL built successfully');
                     } catch (error) {
                         this.cleanup(callbackName, script);
                         reject(error);
@@ -853,7 +853,7 @@
                     };
 
                     script.onload = () => {
-                        console.log('📡 JSONP Script loaded successfully');
+                        // console.log('📡 JSONP Script loaded successfully');
                     };
 
                     document.head.appendChild(script);
@@ -1118,7 +1118,7 @@
             // ✅ Enhanced QR code validation
             try {
                 const validation = validateEnhancedQRCode(qrCode);
-                console.log('✅ QR Code validation passed:', validation);
+                // console.log('✅ QR Code validation passed:', validation);
                 
                 // Only hide search section if validation passes
                 hideQRSearchSection();
@@ -1228,16 +1228,16 @@
 
         async function performQRCodeSearch(qrCode) {
             try {
-                console.log('🔍 Starting Simple QR Code search for:', qrCode);
+                // console.log('🔍 Starting Simple QR Code search for:', qrCode);
                 showLoading(true);
                 hideAllResults();
 
                 // ✨ Simple & Reliable: Use standard API call
                 const result = await QRAPI.searchByQRCode(qrCode);
-                console.log('📥 Simple QR API Response:', result);
+                // console.log('📥 Simple QR API Response:', result);
 
                 if (result.success && result.data) {
-                    console.log('✅ QR Code found - displaying farmer info');
+                    // console.log('✅ QR Code found - displaying farmer info');
                     
                     // Store QR Code data
                     currentQRData = {
@@ -1246,7 +1246,7 @@
                         searchTimestamp: new Date().toISOString(),
                         searchMethod: 'simple-api'
                     };
-                    console.log('💾 Stored currentQRData:', currentQRData);
+                    // console.log('💾 Stored currentQRData:', currentQRData);
                     
                     displayQRResults(result.data);
                     setupProductionFormBasedOnData(result.data);
@@ -1380,7 +1380,7 @@
                     return { success: false, message: 'รูปแบบรหัสรอบการผลิตไม่ถูกต้อง' };
                 }
                 
-                console.log('✅ SearchCode format validated:', cleanedSearchCode);
+                // console.log('✅ SearchCode format validated:', cleanedSearchCode);
                 
                 // Hide only production results, keep QR results visible
                 hideElement('productionResults');
@@ -1452,7 +1452,7 @@
         // New function for search with crop validation using Google Apps Script
         async function performSearchCodeSearchWithCropValidation(searchCode, expectedCropType, expectedCropVariety) {
             try {
-                console.log('🌱 Starting SearchCode search with crop validation in Google Sheets:', {
+                // console.log('🌱 Starting SearchCode search with crop validation in Google Sheets:', {
                     searchCode, expectedCropType, expectedCropVariety
                 });
                 
@@ -1467,7 +1467,7 @@
                     return { success: false, message: 'รูปแบบรหัสรอบการผลิตไม่ถูกต้อง' };
                 }
                 
-                console.log('✅ SearchCode format validated:', cleanedSearchCode);
+                // console.log('✅ SearchCode format validated:', cleanedSearchCode);
                 
                 // ✨ Call enhanced API with crop validation parameters
                 const apiParams = {
@@ -1476,14 +1476,14 @@
                 };
                 
                 const result = await QRAPI.searchByDeepCode(cleanedSearchCode, apiParams);
-                console.log('📥 SearchCode API Response with crop validation from GAS:', result);
+                // console.log('📥 SearchCode API Response with crop validation from GAS:', result);
                 
                 if (result.success && result.data) {
                     // ✅ QR Code validation is now handled in handleCropVerificationSubmit()
                     // This ensures better error messaging and user experience
                     
                     // ✅ Check server-side crop validation results from Google Apps Script
-                    console.log('🌱 Crop validation results from Google Sheets:', {
+                    // console.log('🌱 Crop validation results from Google Sheets:', {
                         isValidCrop: result.isValidCrop,
                         actualCropType: result.actualCropType,
                         actualCropVariety: result.actualCropVariety,
@@ -1615,7 +1615,7 @@
         }
 
         function displayProductionImages(fileRecords) {
-            console.log('📸 displayProductionImages called with:', fileRecords);
+            // console.log('📸 displayProductionImages called with:', fileRecords);
             
             // Initialize all sections first
             const sections = ['plotImages', 'productImages', 'activityImages', 'certificationDocs'];
@@ -1627,7 +1627,7 @@
             });
             
             if (!fileRecords || fileRecords.length === 0) {
-                console.log('❌ No file records found');
+                // console.log('❌ No file records found');
                 return;
             }
             
@@ -1787,7 +1787,7 @@
         }
 
         function displayQRResults(data) {
-            console.log('📋 Displaying QR results:', data);
+            // console.log('📋 Displaying QR results:', data);
             
             // Store current QR data for validation - ensure farmerName is available
             currentQRData = {
@@ -2207,7 +2207,7 @@
 
             // ✅ Add performance monitoring
             if (ENHANCED_JSONP_CONFIG.debug) {
-                console.log('🎨 Enhanced UI features initialized');
+                // console.log('🎨 Enhanced UI features initialized');
                 
                 // Monitor JSONP performance
                 setInterval(() => {
@@ -2280,7 +2280,7 @@
             // Handle crop verification form submission
             cropVerificationForm.addEventListener('submit', handleCropVerificationSubmit);
 
-            console.log('🌱 Crop verification initialized successfully');
+            // console.log('🌱 Crop verification initialized successfully');
         }
 
         // Populate crop varieties based on selected crop type
@@ -2357,7 +2357,7 @@
                 return;
             }
 
-            console.log('🌱 Starting crop verification process:', {
+            // console.log('🌱 Starting crop verification process:', {
                 expectedCropType,
                 expectedCropVariety,
                 searchCode,
