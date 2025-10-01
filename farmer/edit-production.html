@@ -1198,53 +1198,50 @@
                     return v == null ? '' : String(v);
                 };
 
-                // 🔧 CRITICAL FIX: ส่งข้อมูลแบบ nested structure ตามที่ Google Apps Script คาดหวัง
+                // 🔧 CRITICAL FIX: ส่งข้อมูลแบบ flat structure สำหรับ form submission
                 const apiData = {
                     action: 'updateProductionData',
                     // ใช้ ensureText เฉพาะ ID fields และแก้ไข farmerId เป็น farmerID
                     productionId: ensureText(currentProductionId),
                     farmerID: ensureText(currentUser.farmerID),  // แก้ไขจาก farmerId
-                    // Production data (nested structure)
-                    production: {
-                        cropType: formData.production.cropType || '',
-                        cropVariety: formData.production.cropVariety || '',
-                        plantDate: formData.production.plantDate || '',
-                        harvestDate: formData.production.harvestDate || '',
-                        plantingMethod: formData.production.plantingMethod || '',
-                        plantingMethodOther: formData.production.plantingMethodOther || '',
-                        fertilizer: formData.production.fertilizer || '',
-                        pesticide: formData.production.pesticide || '',
-                        waterSourceType: formData.production.waterSourceType || '',
-                        waterManagement: formData.production.waterManagement || '',
-                        recordMethod: formData.production.recordMethod || '',
-                        pestControl: formData.production.pestControl || '',
-                        seasonID: formData.production.seasonID || '',
-                        maintenanceRecord: formData.production.maintenanceRecord || ''
-                    },
-                    // Harvest data (nested structure)
-                    harvest: {
-                        shipDate: formData.harvest.shipDate || '',
-                        harvestMethod: formData.harvest.harvestMethod || '',
-                        quantity: formData.harvest.quantity || '',
-                        unit: formData.harvest.unit || '',
-                        unitOther: formData.harvest.unitOther || '',
-                        packagingCompany: formData.harvest.packagingCompany || '',
-                        packagingLocation: formData.harvest.packagingLocation || '',
-                        responsiblePerson: formData.harvest.responsiblePerson || ''
-                    },
-                    // Transport data (nested structure)
-                    transport: {
-                        farmShipDate: formData.transport.farmShipDate || '',
-                        transportChannel: formData.transport.transportChannel || '',
-                        transportMethod: formData.transport.transportMethod || '',
-                        transportMethodOther: formData.transport.transportMethodOther || '',
-                        transportCompany: formData.transport.transportCompany || '',
-                        distributorCode: formData.transport.distributorCode || ''
-                    },
-                    // Additional info (nested structure)
-                    additionalInfo: {
-                        story: formData.additionalInfo.story || ''
-                    },
+                    
+                    // Production data (flat structure)
+                    cropType: formData.production.cropType || '',
+                    cropVariety: formData.production.cropVariety || '',
+                    plantDate: formData.production.plantDate || '',
+                    harvestDate: formData.production.harvestDate || '',
+                    plantingMethod: formData.production.plantingMethod || '',
+                    plantingMethodOther: formData.production.plantingMethodOther || '',
+                    fertilizer: formData.production.fertilizer || '',
+                    pesticide: formData.production.pesticide || '',
+                    waterSourceType: formData.production.waterSourceType || '',
+                    waterManagement: formData.production.waterManagement || '',
+                    recordMethod: formData.production.recordMethod || '',
+                    pestControl: formData.production.pestControl || '',
+                    seasonID: formData.production.seasonID || '',
+                    maintenanceRecord: formData.production.maintenanceRecord || '',
+                    
+                    // Harvest data (flat structure)
+                    shipDate: formData.harvest.shipDate || '',
+                    harvestMethod: formData.harvest.harvestMethod || '',
+                    quantity: formData.harvest.quantity || '',
+                    unit: formData.harvest.unit || '',
+                    unitOther: formData.harvest.unitOther || '',
+                    packagingCompany: formData.harvest.packagingCompany || '',
+                    packagingLocation: formData.harvest.packagingLocation || '',
+                    responsiblePerson: formData.harvest.responsiblePerson || '',
+                    
+                    // Transport data (flat structure)
+                    farmShipDate: formData.transport.farmShipDate || '',
+                    transportChannel: formData.transport.transportChannel || '',
+                    transportMethod: formData.transport.transportMethod || '',
+                    transportMethodOther: formData.transport.transportMethodOther || '',
+                    transportCompany: formData.transport.transportCompany || '',
+                    distributorCode: formData.transport.distributorCode || '',
+                    
+                    // Additional info (flat structure)
+                    story: formData.additionalInfo.story || '',
+                    
                     // Files to delete (as JSON string since it's array)
                     filesToDelete: filesToDelete.length > 0 ? JSON.stringify(filesToDelete) : '[]'
                 };
@@ -1322,28 +1319,19 @@
                     }
                 }
                 
-                const response = await API.call('updateProductionData', apiData);
+                // ใช้ form submission แทน fetch API เพื่อหลีกเลี่ยงปัญหา CORS
+                console.log('🚀 Submitting data via form submission...');
+                await submitViaForm(apiData);
                 
-                console.log('=== API RESPONSE ===');
-                console.log('Response object:', response);
-                console.log('Success status:', response.success);
-                console.log('Response message:', response.message);
-                console.log('==================');
-
-                if (response.success) {
-                    console.log('✅ Update successful, clearing cache and showing success modal');
-                    CacheManager.clearProductionCache(currentProductionId);
-                    
-                    // แสดงข้อมูลการลบไฟล์ถ้ามี
-                    if (filesToDelete.length > 0) {
-                        console.log(`🗑️ Requested deletion of ${filesToDelete.length} files:`, filesToDelete);
-                    }
-                    
-                    showSuccessModal();
-                } else {
-                    console.error('❌ API returned failure:', response);
-                    throw new Error(response.message || 'ไม่สามารถบันทึกข้อมูลได้');
+                console.log('✅ Form submitted successfully');
+                CacheManager.clearProductionCache(currentProductionId);
+                
+                // แสดงข้อมูลการลบไฟล์ถ้ามี
+                if (filesToDelete.length > 0) {
+                    console.log(`🗑️ Requested deletion of ${filesToDelete.length} files:`, filesToDelete);
                 }
+                
+                showSuccessModal();
             } catch (error) {
                 showError(error.message);
             } finally {
@@ -1881,6 +1869,57 @@
                     bsAlert.close();
                 }
             }, 5000);
+        }
+
+        /**
+         * ส่งข้อมูลผ่าน form submission เพื่อหลีกเลี่ยงปัญหา CORS
+         */
+        function submitViaForm(data) {
+            return new Promise((resolve, reject) => {
+                try {
+                    console.log('📝 Creating form for submission...');
+                    
+                    // สร้าง form element
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = 'https://script.google.com/macros/s/AKfycbzGxCc9S8BAQhfJZqv5Xq5ianSzvUgMp7QFhaGXQIihmoPqmNHvUBDdhVYOHpGdFj_e/exec';
+                    form.style.display = 'none';
+                    
+                    // เพิ่ม hidden inputs สำหรับข้อมูลแต่ละฟิลด์
+                    Object.entries(data).forEach(([key, value]) => {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = key;
+                        
+                        // จัดการ nested objects
+                        if (typeof value === 'object' && value !== null) {
+                            input.value = JSON.stringify(value);
+                        } else {
+                            input.value = value || '';
+                        }
+                        
+                        form.appendChild(input);
+                        console.log(`📋 Added field: ${key} = ${input.value}`);
+                    });
+                    
+                    // เพิ่ม form เข้า DOM
+                    document.body.appendChild(form);
+                    
+                    console.log('🚀 Submitting form...');
+                    form.submit();
+                    
+                    // ลบ form ออกจาก DOM
+                    setTimeout(() => {
+                        document.body.removeChild(form);
+                        console.log('🗑️ Form removed from DOM');
+                        resolve();
+                    }, 1000);
+                    
+                } catch (error) {
+                    console.error('❌ Form submission error:', error);
+                    reject(error);
+                }
+            });
         }
     
         window.DISABLE_AUTH_NAVIGATION = true;
