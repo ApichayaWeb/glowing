@@ -1479,18 +1479,8 @@
                 console.log('📥 SearchCode API Response with crop validation from GAS:', result);
                 
                 if (result.success && result.data) {
-                    // ✅ Core validation: Ensure SearchCode belongs to current QR Code
-                    if (currentQRData && currentQRData.qrCode) {
-                        const currentQRCode = currentQRData.qrCode;
-                        const searchResultQRCode = result.data.qrCode;
-                        
-                        if (searchResultQRCode && currentQRCode !== searchResultQRCode) {
-                            console.log('❌ SearchCode and QRCode do not match');
-                            return { success: false, message: 'QR Code และ SearchCode ไม่ตรงกัน' };
-                        }
-                        
-                        console.log('✅ QR Code และ SearchCode ตรงกัน');
-                    }
+                    // ✅ QR Code validation is now handled in handleCropVerificationSubmit()
+                    // This ensures better error messaging and user experience
                     
                     // ✅ Check server-side crop validation results from Google Apps Script
                     console.log('🌱 Crop validation results from Google Sheets:', {
@@ -2329,7 +2319,13 @@
             const expectedCropVariety = document.getElementById('expectedCropVariety').value.trim();
             const searchCode = document.getElementById('cropVerificationSearchCode').value.trim();
 
-            // Step 1: Validate form inputs
+            // Step 1: Validate QR Code requirement first
+            if (!currentQRData || !currentQRData.qrCode) {
+                showAlert('warning', 'กรุณาสแกน QR Code ของเกษตรกรก่อนค้นหารหัสรอบการผลิต\n\nขั้นตอนที่ถูกต้อง:\n1. สแกน QR Code เกษตรกร\n2. เลือกชนิดผักและสายพันธุ์\n3. ใส่รหัสรอบการผลิต');
+                return;
+            }
+
+            // Step 2: Validate form inputs
             if (!expectedCropType) {
                 showAlert('warning', 'กรุณาเลือกชนิดผัก');
                 return;
@@ -2345,7 +2341,7 @@
                 return;
             }
 
-            // Step 2: Validate SearchCode format
+            // Step 3: Validate SearchCode format
             const searchPattern = /^\d{8}-\d{3}$/;
             if (!searchPattern.test(searchCode)) {
                 showAlert('error', 'รูปแบบรหัสค้นหาไม่ถูกต้อง ต้องเป็น YYYYMMDD-XXX');
@@ -2355,16 +2351,30 @@
             console.log('🌱 Starting crop verification process:', {
                 expectedCropType,
                 expectedCropVariety,
-                searchCode
+                searchCode,
+                currentQRCode: currentQRData.qrCode
             });
 
-            // Step 3: Perform SearchCode lookup with crop validation
+            // Step 4: Perform SearchCode lookup with crop validation
             showLoading(true);
 
             try {
                 // Perform search with crop validation parameters
                 const result = await performSearchCodeSearchWithCropValidation(searchCode, expectedCropType, expectedCropVariety);
                 
+                // Step 5: Check if SearchCode belongs to current QR Code (มีความสำคัญสูงสุด)
+                if (result.success && result.data && result.data.qrCode) {
+                    if (currentQRData.qrCode !== result.data.qrCode) {
+                        showLoading(false); // ✅ ปิด modal ก่อน return
+                        setTimeout(() => {
+                            showQRCodeMismatchError(currentQRData.qrCode, result.data.qrCode, searchCode);
+                        }, 100);
+                        return;
+                    }
+                    console.log('✅ QR Code และ SearchCode ตรงกัน');
+                }
+                
+                // Step 6: Check other errors
                 if (!result.success) {
                     showLoading(false); // ✅ ปิด modal ก่อน return
                     // เพิ่ม delay เล็กน้อยเพื่อให้ modal ปิดเรียบร้อยก่อนแสดง error
@@ -2374,7 +2384,7 @@
                     return;
                 }
 
-                // Step 4: Check crop validation result from Google Sheets
+                // Step 7: Check crop validation result from Google Sheets
                 if (result.isValidCrop !== null && !result.isValidCrop) {
                     showLoading(false); // ✅ ปิด modal ก่อน return
                     // เพิ่ม delay เล็กน้อยเพื่อให้ modal ปิดเรียบร้อยก่อนแสดง error
@@ -2384,9 +2394,14 @@
                     return;
                 }
 
-                // Step 5: If validation passes, display results
+                // Step 8: If all validations pass, display results
                 const successMessage = result.isValidCrop ? 
-                    `✅ ตรวจสอบสำเร็จ! ${expectedCropType} สายพันธุ์${expectedCropVariety} ตรงกันกับข้อมูลในระบบ` :
+                    `✅ ตรวจสอบสำเร็จ!\n\n` +
+                    `🌱 ชนิดผัก: ${expectedCropType}\n` +
+                    `🌿 สายพันธุ์: ${expectedCropVariety}\n` +
+                    `📱 QR Code: ${currentQRData.qrCode}\n` +
+                    `🔍 รหัสรอบการผลิต: ${searchCode}\n\n` +
+                    `ข้อมูลทั้งหมดตรงกันกับข้อมูลในระบบ` :
                     `✅ ค้นหาข้อมูลสำเร็จ!`;
                     
                 // แสดงผลลัพธ์และปิด modal  
@@ -2512,6 +2527,37 @@
                 actualCropType,
                 actualCropVariety
             };
+        }
+
+        // Show QR Code mismatch error with detailed information
+        function showQRCodeMismatchError(currentQRCode, searchResultQRCode, searchCode) {
+            console.log('🚫 Displaying QR Code mismatch error:', {
+                currentQRCode, searchResultQRCode, searchCode
+            });
+            
+            let errorMessage = `❌ รหัสรอบการผลิตไม่ตรงกับ QR Code ที่สแกน\n\n`;
+            errorMessage += `🔍 รหัสรอบการผลิต: ${searchCode}\n`;
+            errorMessage += `📱 QR Code ที่สแกน: ${currentQRCode}\n`;
+            errorMessage += `📋 รหัสรอบการผลิตนี้เป็นของ: ${searchResultQRCode}\n\n`;
+            errorMessage += `💡 แนวทางแก้ไข:\n`;
+            errorMessage += `   • ตรวจสอบความถูกต้องของรหัสรอบการผลิต\n`;
+            errorMessage += `   • สแกน QR Code ของเกษตรกรที่ถูกต้อง (${searchResultQRCode})\n`;
+            errorMessage += `   • หรือใช้รหัสรอบการผลิตที่เป็นของ ${currentQRCode}`;
+
+            // Show enhanced error alert with warning style
+            showAlert('error', errorMessage);
+
+            // Hide any existing results
+            hideAllResults();
+            
+            // Focus back to search code input for retry
+            const searchCodeInput = document.getElementById('cropVerificationSearchCode');
+            if (searchCodeInput) {
+                searchCodeInput.focus();
+                searchCodeInput.select();
+            }
+            
+            console.log('❌ QR Code mismatch error displayed');
         }
 
         // Show crop validation error from Google Apps Script with enhanced details
