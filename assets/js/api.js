@@ -831,20 +831,33 @@ const QRAPI = {
     },
 
     /**
-     * Search by deep search code
+     * Search by deep search code with optional crop validation
      */
-    async searchByDeepCode(searchCode) {
+    async searchByDeepCode(searchCode, apiParams = {}) {
         try {
             const parsedCode = Utils.parseSearchCode(searchCode);
             if (!parsedCode) {
                 throw new Error('รูปแบบรหัสค้นหาไม่ถูกต้อง');
             }
 
-            const result = await API.makeRequest('searchDeepCode', {
+            // Prepare API request data with crop validation parameters
+            const requestData = {
                 searchCode: searchCode,
                 dateCode: parsedCode.dateCode,
                 sequenceCode: parsedCode.sequenceCode
-            });
+            };
+
+            // Add crop validation parameters if provided
+            if (apiParams.expectedCropType) {
+                requestData.expectedCropType = apiParams.expectedCropType;
+            }
+            if (apiParams.expectedCropVariety) {
+                requestData.expectedCropVariety = apiParams.expectedCropVariety;
+            }
+
+            console.log('🌱 QRAPI.searchByDeepCode calling handleSearchDeepCodeForSearch with:', requestData);
+
+            const result = await API.makeRequest('handleSearchDeepCodeForSearch', requestData);
 
             return result;
         } catch (error) {
