@@ -855,9 +855,9 @@ const QRAPI = {
                 requestData.expectedCropVariety = apiParams.expectedCropVariety;
             }
 
-            console.log('🌱 QRAPI.searchByDeepCode calling handleSearchDeepCodeForSearch with:', requestData);
+            console.log('🌱 QRAPI.searchByDeepCode calling searchDeepCode with:', requestData);
 
-            const result = await API.makeRequest('handleSearchDeepCodeForSearch', requestData);
+            const result = await API.makeRequest('searchDeepCode', requestData);
 
             return result;
         } catch (error) {
