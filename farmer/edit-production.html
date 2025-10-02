@@ -178,7 +178,7 @@
 
                 <!-- Production Form -->
                 <div id="editForm" style="display: none;">
-                    <form id="productionForm" novalidate>
+                    <form id="productionForm" novalidate aria-label="แบบฟอร์มแก้ไขข้อมูลการผลิต">
                         <!-- ส่วนที่ 1: ข้อมูลการผลิต -->
                         <div class="card shadow-sm border-0 mb-4">
                             <div class="card-header bg-success text-white">
@@ -188,7 +188,7 @@
                                 <div class="row">
 									
                                     <div class="col-md-6 mb-3">
-                                        <label class="form-label">ชนิดพืชผักที่ปลูก <span class="text-danger">*</span></label>
+                                        <label class="form-label" for="cropType">ชนิดพืชผักที่ปลูก <span class="text-danger">*</span></label>
                                         <select class="form-select" id="cropType" required>
                                             <option value="">เลือกชนิดพืชผักที่ปลูก</option>
                                             <option value="ผักคะน้า">ผักคะน้า</option>
@@ -200,7 +200,7 @@
                                         </select>
                                     </div>
                                     <div class="col-md-6 mb-3" id="cropVarietyDiv" style="display: none;">
-                                        <label class="form-label">สายพันธุ์</label>
+                                        <label class="form-label" for="cropVariety">สายพันธุ์</label>
                                         <select class="form-select" id="cropVariety">
                                             <option value="">เลือกสายพันธุ์</option>
                                         </select>
@@ -290,6 +290,7 @@
                                         <input type="file" class="form-control" id="plantingMethodImages" multiple accept="image/*">
                                         <small class="text-muted">อัพโหลดได้หลายไฟล์</small>
                                         <div id="existingRecordMethodImages" class="mt-2"></div>
+                                        <div id="existingMethodImages" class="mt-2"></div>
                                     </div>
                                 </div>
                                 <div class="row">
@@ -776,6 +777,9 @@
                     update();
                     inputEl.addEventListener('change', update);
                     inputEl.addEventListener('input', update);
+                } else {
+                    if (!inputEl) console.warn(`⚠️ Date input element not found: ${input}`);
+                    if (!displayEl) console.warn(`⚠️ Date display element not found: ${display}`);
                 }
             });
         }
@@ -784,8 +788,14 @@
         document.addEventListener('DOMContentLoaded', function() {
             const urlParams = new URLSearchParams(window.location.search);
             currentProductionId = urlParams.get('id');
-            if (!currentProductionId) {
+            if (!currentProductionId || currentProductionId.trim() === '') {
                 showError('ไม่พบรหัสการผลิต กรุณาระบุ ProductionID ใน URL');
+                return;
+            }
+            
+            // Basic validation for production ID format
+            if (currentProductionId.length < 3 || !/^[A-Za-z0-9]+$/.test(currentProductionId)) {
+                showError('รูปแบบรหัสการผลิตไม่ถูกต้อง');
                 return;
             }
             loadProductionData();
@@ -852,7 +862,10 @@
             console.log('🔍 DEBUG: populateForm data received:', data);
             console.log('🔍 DEBUG: data.transports:', data.transports);
             
-            document.getElementById('productionSubtitle').textContent = `รหัสการผลิต: ${currentProductionId} | ${data.farmer?.FullName || 'ไม่ระบุชื่อ'}`;
+            const subtitleEl = document.getElementById('productionSubtitle');
+            if (subtitleEl) {
+                subtitleEl.textContent = `รหัสการผลิต: ${currentProductionId} | ${data.farmer?.FullName || 'ไม่ระบุชื่อ'}`;
+            }
             
             if (data.productions && data.productions.length > 0) {
                 const prod = data.productions[0];
@@ -994,11 +1007,48 @@
                 return acc;
             }, {});
             
-            document.getElementById('existingPlotImages').innerHTML = displayFileList(groupedFiles['รูปแปลงปลูก'], 'รูปแปลงปลูก');
-            document.getElementById('existingProductImages').innerHTML = displayFileList(groupedFiles['รูปสินค้า'], 'รูปสินค้า');
-            document.getElementById('existingPlantingImages').innerHTML = displayFileList(groupedFiles['รูปกิจกรรมการปลูก'], 'รูปกิจกรรมการปลูก');
-            document.getElementById('existingCertificationDocs').innerHTML = displayFileList(groupedFiles['เอกสารการรับรอง'], 'เอกสารการรับรอง');
-            document.getElementById('existingMethodImages').innerHTML = displayFileList(groupedFiles['วิธีการปลูก'], 'วิธีการปลูก');
+            // ตรวจสอบ element ก่อนใช้เพื่อป้องกัน null error
+            console.log('🔍 Checking elements and updating files...');
+            
+            const plotImagesEl = document.getElementById('existingPlotImages');
+            if (plotImagesEl) {
+                plotImagesEl.innerHTML = displayFileList(groupedFiles['รูปแปลงปลูก'], 'รูปแปลงปลูก');
+                console.log('✅ Updated existingPlotImages');
+            } else {
+                console.warn('⚠️ Element not found: existingPlotImages');
+            }
+            
+            const productImagesEl = document.getElementById('existingProductImages');
+            if (productImagesEl) {
+                productImagesEl.innerHTML = displayFileList(groupedFiles['รูปสินค้า'], 'รูปสินค้า');
+                console.log('✅ Updated existingProductImages');
+            } else {
+                console.warn('⚠️ Element not found: existingProductImages');
+            }
+            
+            const plantingImagesEl = document.getElementById('existingPlantingImages');
+            if (plantingImagesEl) {
+                plantingImagesEl.innerHTML = displayFileList(groupedFiles['รูปกิจกรรมการปลูก'], 'รูปกิจกรรมการปลูก');
+                console.log('✅ Updated existingPlantingImages');
+            } else {
+                console.warn('⚠️ Element not found: existingPlantingImages');
+            }
+            
+            const certificationDocsEl = document.getElementById('existingCertificationDocs');
+            if (certificationDocsEl) {
+                certificationDocsEl.innerHTML = displayFileList(groupedFiles['เอกสารการรับรอง'], 'เอกสารการรับรอง');
+                console.log('✅ Updated existingCertificationDocs');
+            } else {
+                console.warn('⚠️ Element not found: existingCertificationDocs');
+            }
+            
+            const methodImagesEl = document.getElementById('existingMethodImages');
+            if (methodImagesEl) {
+                methodImagesEl.innerHTML = displayFileList(groupedFiles['วิธีการปลูก'], 'วิธีการปลูก');
+                console.log('✅ Updated existingMethodImages');
+            } else {
+                console.warn('⚠️ Element not found: existingMethodImages');
+            }
             
             // แสดงไฟล์เดิมสำหรับ recordMethodImages (ใช้ไฟล์ประเภทเดียวกับ วิธีการปลูก)
             if (document.getElementById('existingRecordMethodImages')) {
@@ -1009,9 +1059,9 @@
         function displayFileList(files, category) {
             if (!files || files.length === 0) return '<small class="text-muted">ไม่มีไฟล์เดิม</small>';
             return files.map(file => {
-                const fileName = (file.FileName || file.fileName || 'N/A');
-                const fileUrl = file.FileUrl || file.fileUrl || '#';
-                const fileId = file.FileID || file.fileId || fileName;
+                const fileName = sanitizeHTML(file.FileName || file.fileName || 'N/A');
+                const fileUrl = sanitizeURL(file.FileUrl || file.fileUrl || '#');
+                const fileId = sanitizeHTML(file.FileID || file.fileId || fileName);
                 const fileSize = file.FileSize || file.fileSize || 0;
                 const formattedSize = Utils.formatBytes(fileSize);
 
@@ -1333,7 +1383,22 @@
                 
                 showSuccessModal();
             } catch (error) {
-                showError(error.message);
+                console.error('❌ Form submission error:', error);
+                
+                // แสดงข้อความข้อผิดพลาดที่เหมาะสมกับผู้ใช้
+                let errorMessage = 'เกิดข้อผิดพลาดในการบันทึกข้อมูล';
+                
+                if (error.message.includes('CORS')) {
+                    errorMessage = 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ กรุณาลองใหม่อีกครั้ง';
+                } else if (error.message.includes('timeout')) {
+                    errorMessage = 'การบันทึกข้อมูลใช้เวลานานเกินไป กรุณาลองใหม่อีกครั้ง';
+                } else if (error.message.includes('network')) {
+                    errorMessage = 'ไม่สามารถเชื่อมต่ออินเทอร์เน็ตได้ กรุณาตรวจสอบการเชื่อมต่อ';
+                } else if (error.message) {
+                    errorMessage = error.message;
+                }
+                
+                showError(errorMessage);
             } finally {
                 isSubmitting = false;
                 showLoadingModal(false);
@@ -1589,7 +1654,7 @@
                 
                 // Small delay between batches to prevent overwhelming the server
                 if (i + CONCURRENT_UPLOADS < uploadTasks.length) {
-                    await new Promise(resolve => setTimeout(resolve, 500));
+                    await new Promise(resolve => setTimeout(resolve, 200)); // ลดจาก 500ms เป็น 200ms
                 }
             }
             
@@ -1621,9 +1686,24 @@
         }
     
         function cancelEdit() {
-            if (confirm('คุณแน่ใจหรือไม่ที่จะยกเลิกการแก้ไข?')) {
-                window.location.href = 'dashboard.html';
-            }
+            Swal.fire({
+                title: 'ยกเลิกการแก้ไข?',
+                text: 'ข้อมูลที่แก้ไขจะหายไป คุณแน่ใจหรือไม่?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: '<i class="fas fa-check me-1"></i>ยกเลิกการแก้ไข',
+                cancelButtonText: '<i class="fas fa-times me-1"></i>กลับไปแก้ไข',
+                customClass: {
+                    confirmButton: 'btn me-2',
+                    cancelButton: 'btn'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = 'dashboard.html';
+                }
+            });
         }
     
         function goToDetail() {
@@ -1766,8 +1846,8 @@
                 const plantDateTime = new Date(plantDate);
                 const harvestDateTime = new Date(harvestDate);
                 
-                if (harvestDateTime <= plantDateTime) {
-                    showError('วันที่เก็บเกี่ยวต้องมาหลังวันที่เริ่มปลูก');
+                if (harvestDateTime < plantDateTime) {
+                    showError('วันที่เก็บเกี่ยวต้องมาหลังหรือเท่ากับวันที่เริ่มปลูก');
                     harvestDateEl.focus();
                     return false;
                 }
@@ -1817,6 +1897,7 @@
                 { id: 'cropType', name: 'ชื่อพืช' },
                 { id: 'plantDate', name: 'วันที่เริ่มปลูก' },
                 { id: 'harvestDate', name: 'วันที่เก็บเกี่ยว' },
+                { id: 'seasonID', name: 'ฤดูการผลิต' },
                 { id: 'distributorCode', name: 'บริษัทผู้กระจายสินค้า' }
             ];
             
@@ -1847,15 +1928,54 @@
                 return false;
             }
             
+            // ตรวจสอบ quantity ถ้ามีการกรอก
+            const quantityEl = document.getElementById('quantity');
+            if (quantityEl && quantityEl.value) {
+                const quantity = parseFloat(quantityEl.value);
+                if (isNaN(quantity) || quantity <= 0) {
+                    showError('ปริมาณผลผลิตต้องเป็นตัวเลขมากกว่า 0');
+                    quantityEl.focus();
+                    return false;
+                }
+                if (quantity > 999999) {
+                    showError('ปริมาณผลผลิตต้องไม่เกิน 999,999');
+                    quantityEl.focus();
+                    return false;
+                }
+            }
+            
             console.log('✅ Form validation passed!');
             return true;
         }
         
+        /**
+         * Sanitize HTML to prevent XSS
+         */
+        function sanitizeHTML(str) {
+            if (!str) return '';
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+        
+        /**
+         * Sanitize URL to prevent javascript: protocol
+         */
+        function sanitizeURL(url) {
+            if (!url) return '#';
+            const trimmed = url.trim().toLowerCase();
+            if (trimmed.startsWith('javascript:') || trimmed.startsWith('data:') || trimmed.startsWith('vbscript:')) {
+                return '#';
+            }
+            return url;
+        }
+
         function showError(message) {
+            const sanitizedMessage = sanitizeHTML(message);
             const alertHtml = `
                 <div class="alert alert-danger alert-dismissible fade show position-fixed" 
                      style="top: 100px; right: 20px; z-index: 9999; min-width: 300px;">
-                    <i class="fas fa-exclamation-circle me-2"></i>${message}
+                    <i class="fas fa-exclamation-circle me-2"></i>${sanitizedMessage}
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
             `;
