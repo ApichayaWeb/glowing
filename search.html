@@ -1846,6 +1846,7 @@
                 console.log('📡 Using new API format');
                 if (data.hasSearchCodes) {
                     console.log(`✅ Found ${data.searchCodesCount} search codes - showing form`);
+                    showLoading(false); // ✅ Force hide loading modal
                     showProductionSearchForm();
                     
                     if (data.availableSearchCodes && data.availableSearchCodes.length > 0) {
@@ -1870,6 +1871,7 @@
                 
                 if (response.success && response.hasSearchCodes) {
                     console.log(`✅ Manual check: Found ${response.count} search codes`);
+                    showLoading(false); // ✅ Force hide loading modal
                     showProductionSearchForm();
                 } else {
                     console.log('❌ Manual check: No search codes found');
@@ -1958,6 +1960,7 @@
         }
 
         function showLoading(show) {
+            console.log('🔄 showLoading called with:', show);
             const modal = document.getElementById('loadingModal');
             if (!modal) {
                 console.warn('Loading modal element not found');
@@ -1993,6 +1996,7 @@
                     modal.setAttribute('aria-modal', 'true');
                 }
             } else {
+                console.log('🔄 Hiding loading modal');
                 try {
                     // ✨ FIX: Properly handle hiding and cleanup
                     modal.setAttribute('aria-hidden', 'true');
