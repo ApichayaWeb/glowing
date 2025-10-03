@@ -1453,8 +1453,8 @@
         async function performSearchCodeSearchWithCropValidation(searchCode, expectedCropType, expectedCropVariety) {
             try {
                 // console.log('🌱 Starting SearchCode search with crop validation in Google Sheets:', {
-                    searchCode, expectedCropType, expectedCropVariety
-                });
+                //     searchCode, expectedCropType, expectedCropVariety
+                // });
                 
                 // Validate input first
                 if (!searchCode || searchCode.trim() === '') {
@@ -1484,12 +1484,12 @@
                     
                     // ✅ Check server-side crop validation results from Google Apps Script
                     // console.log('🌱 Crop validation results from Google Sheets:', {
-                        isValidCrop: result.isValidCrop,
-                        actualCropType: result.actualCropType,
-                        actualCropVariety: result.actualCropVariety,
-                        expectedCropType: result.expectedCropType,
-                        expectedCropVariety: result.expectedCropVariety
-                    });
+                    //     isValidCrop: result.isValidCrop,
+                    //     actualCropType: result.actualCropType,
+                    //     actualCropVariety: result.actualCropVariety,
+                    //     expectedCropType: result.expectedCropType,
+                    //     expectedCropVariety: result.expectedCropVariety
+                    // });
                     
                     // Return the complete result with crop validation info
                     return {
@@ -2358,11 +2358,11 @@
             }
 
             // console.log('🌱 Starting crop verification process:', {
-                expectedCropType,
-                expectedCropVariety,
-                searchCode,
-                currentQRCode: currentQRData.qrCode
-            });
+            //     expectedCropType,
+            //     expectedCropVariety,
+            //     searchCode,
+            //     currentQRCode: currentQRData.qrCode
+            // });
 
             // Step 4: Perform SearchCode lookup with crop validation
             showLoading(true);
