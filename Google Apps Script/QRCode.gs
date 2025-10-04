@@ -289,32 +289,75 @@ function handleSearchDeepCode(params) {
       return { success: false, message: 'ไม่พบรหัสค้นหานี้ในระบบ' };
     }
     
-    // Get farmer data
-    const farmerData = getFarmerById(searchData.farmerId);
+    // Get farmer data using search-specific function
+    console.log(`🔍 Looking up farmer data for FarmerID: '${searchData.farmerId}'`);
+    const farmerData = getFarmerByIdForSearch(searchData.farmerId);
     if (!farmerData) {
+      console.log(`❌ No farmer data found for FarmerID: '${searchData.farmerId}'`);
       return { success: false, message: 'ไม่พบข้อมูลเกษตรกร' };
     }
+    console.log(`✅ Found farmer data: ${JSON.stringify(farmerData, null, 2)}`);
     
     // Get all sections data (2-6)
-    const allData = getAllFarmerData(farmerData.farmerId);
+    const allData = getAllFarmerData(searchData.farmerId); // ✅ FIXED: Use farmerId from searchData
     
     // Remove sensitive information (distributor company)
     if (allData.transportData) {
       delete allData.transportData.distributorCode;
     }
     
+    // ✅ FIXED: Transform data structure to match frontend expectations
+    const responseData = {
+      searchCode: searchCode,
+      qrCode: searchData.qrCode, // ✅ FIXED: Use searchData instead of undefined searchRecord
+      farmer: {
+        // Map both naming conventions for compatibility
+        FullName: farmerData.fullName,
+        fullName: farmerData.fullName,
+        GroupName: farmerData.groupName,
+        groupName: farmerData.groupName,
+        PlotNumber: farmerData.plotNumber,
+        plotNumber: farmerData.plotNumber,
+        Area: farmerData.area,
+        area: farmerData.area,
+        Phone: farmerData.phone,
+        phone: farmerData.phone
+      },
+      // Use arrays directly (getFarmerSectionData now returns arrays)
+      productions: allData.productionData || [],
+      harvests: allData.harvestData || [],
+      transports: allData.transportData || [],
+      additionalInfo: allData.additionalInfo || [],
+      fileRecords: allData.documents || []
+    };
+    
+    // Log final response structure for debugging
+    console.log('📋 Final Response Structure:');
+    console.log(`  - productions: ${responseData.productions.length} records`);
+    console.log(`  - harvests: ${responseData.harvests.length} records`);
+    console.log(`  - transports: ${responseData.transports.length} records`);
+    console.log(`  - additionalInfo: ${responseData.additionalInfo.length} records`);
+    console.log(`  - fileRecords: ${responseData.fileRecords.length} records`);
+    
+    if (responseData.productions.length > 0) {
+      console.log(`📋 First production record fields: ${Object.keys(responseData.productions[0]).join(', ')}`);
+      console.log(`📋 First production record data: ${JSON.stringify(responseData.productions[0], null, 2)}`);
+    }
+    
+    if (responseData.harvests.length > 0) {
+      console.log(`📋 First harvest record fields: ${Object.keys(responseData.harvests[0]).join(', ')}`);
+      console.log(`📋 First harvest record data: ${JSON.stringify(responseData.harvests[0], null, 2)}`);
+    }
+    
+    if (responseData.transports.length > 0) {
+      console.log(`📋 First transport record fields: ${Object.keys(responseData.transports[0]).join(', ')}`);
+      console.log(`📋 First transport record data: ${JSON.stringify(responseData.transports[0], null, 2)}`);
+    }
+    
     return {
       success: true,
       message: 'พบข้อมูลเชิงลึกสำเร็จ',
-      data: {
-        searchCode: searchCode,
-        qrCode: searchRecord.qrCode, // Add QR Code for validation
-        farmer: {
-          name: farmerData.fullName,
-          plotNumber: farmerData.plotNumber
-        },
-        sections: allData
-      }
+      data: responseData
     };
     
   } catch (error) {
@@ -511,20 +554,37 @@ function findSearchCode(searchCode) {
     const sheet = getSheet(CONFIG.SHEETS.SEARCH_CODES);
     const data = sheet.getDataRange().getValues();
     
+    console.log('🔍 Searching for SearchCode:', searchCode);
+    console.log('📊 Search_Codes table has', data.length - 1, 'rows');
+    
     for (let i = 1; i < data.length; i++) {
       const row = data[i];
-      if (row[0] === searchCode) {
-        return {
-          searchCode: row[0],
-          shipDate: row[1],
-          qrCode: row[2],
-          farmerId: row[3],
-          status: row[4],
-          created: row[5]
+      // ✅ FIXED: Search in column 1 (SearchCode) instead of column 0 (SearchID)
+      if (row[1] === searchCode) {
+        console.log('✅ Found SearchCode at row', i, ':', row[1]);
+        
+        // ✅ FIXED: Correct field mapping according to actual table structure
+        const result = {
+          searchId: row[0],        // SearchID (column 0)
+          searchCode: row[1],      // SearchCode (column 1) ← FIXED
+          shipDate: row[2],        // ShipDate (column 2) ← FIXED
+          qrCode: row[3],          // QRCode (column 3) ← FIXED
+          farmerId: row[4],        // FarmerID (column 4) ← FIXED
+          productionId: row[5],    // ProductionID (column 5)
+          distributorCode: row[6], // DistributorCode (column 6)
+          lotCode: row[7],         // LotCode (column 7)
+          status: row[8],          // Status (column 8) ← FIXED
+          created: row[9],         // Created (column 9) ← FIXED
+          viewCount: row[10] || 0, // ViewCount (column 10)
+          lastViewed: row[11]      // LastViewed (column 11)
         };
+        
+        console.log('📦 SearchCode data found:', result);
+        return result;
       }
     }
     
+    console.log('❌ SearchCode not found:', searchCode);
     return null;
   } catch (error) {
     console.error('Find search code error:', error);
@@ -698,22 +758,38 @@ function hasDeepSearchData(farmerId) {
  */
 function getAllFarmerData(farmerId) {
   try {
+    console.log(`🔄 getAllFarmerData: Starting data collection for FarmerID '${farmerId}'`);
     const allData = {};
     
     // Section 2: Production Data
+    console.log('📊 Fetching Production Data...');
     allData.productionData = getFarmerSectionData(CONFIG.SHEETS.PRODUCTION_DATA, farmerId);
     
     // Section 3: Harvest Data
+    console.log('📊 Fetching Harvest Data...');
     allData.harvestData = getFarmerSectionData(CONFIG.SHEETS.HARVEST_DATA, farmerId);
     
     // Section 4: Transport Data
+    console.log('📊 Fetching Transport Data...');
     allData.transportData = getFarmerSectionData(CONFIG.SHEETS.TRANSPORT_DATA, farmerId);
     
     // Section 5: Documents
+    console.log('📊 Fetching Documents...');
     allData.documents = getFarmerDocuments(farmerId);
     
     // Section 6: Additional Info
+    console.log('📊 Fetching Additional Info...');
     allData.additionalInfo = getFarmerSectionData(CONFIG.SHEETS.ADDITIONAL_INFO, farmerId);
+    
+    // Log summary
+    const summary = {
+      productionData: allData.productionData ? 'Found' : 'Not found',
+      harvestData: allData.harvestData ? 'Found' : 'Not found', 
+      transportData: allData.transportData ? 'Found' : 'Not found',
+      documents: allData.documents && allData.documents.length > 0 ? `Found ${allData.documents.length} documents` : 'Not found',
+      additionalInfo: allData.additionalInfo ? 'Found' : 'Not found'
+    };
+    console.log('📋 getAllFarmerData Summary:', summary);
     
     return allData;
   } catch (error) {
@@ -855,30 +931,190 @@ function getAdditionalInfoByFarmer(farmerId, productionId = null) {
 }
 
 /**
- * Get farmer section data (legacy function for backward compatibility)
+ * Get farmer data by ID specifically for search functionality with detailed logging
+ */
+function getFarmerByIdForSearch(farmerId) {
+  try {
+    console.log(`🔍 getFarmerByIdForSearch: Searching for FarmerID '${farmerId}'`);
+    const sheet = getSheet(CONFIG.SHEETS.FARMERS);
+    const data = sheet.getDataRange().getValues();
+    const headers = data[0];
+    
+    console.log(`📋 Farmers sheet headers: ${headers.join(', ')}`);
+    console.log(`📊 Farmers sheet has ${data.length - 1} rows`);
+    
+    // Convert farmerId to string for consistent comparison
+    const searchFarmerId = String(farmerId).trim();
+    
+    for (let i = 1; i < data.length; i++) {
+      const row = data[i];
+      const currentFarmerId = String(row[0]).trim();
+      
+      if (currentFarmerId === searchFarmerId) {
+        console.log(`✅ Found farmer at row ${i + 1}: [${row.map((val, idx) => `${idx}:"${val}"`).join(', ')}]`);
+        
+        // Dynamic mapping using headers + get group name
+        const farmerData = {};
+        for (let j = 0; j < headers.length; j++) {
+          farmerData[headers[j]] = row[j];
+        }
+        
+        // Add compatibility aliases
+        farmerData.farmerId = farmerData.FarmerID;
+        farmerData.fullName = farmerData.FullName;
+        farmerData.plotNumber = farmerData.PlotNumber;
+        farmerData.area = farmerData.Area;
+        farmerData.phone = farmerData.Phone;
+        
+        // Get group name
+        if (farmerData.GroupID) {
+          const groupData = getGroupById(farmerData.GroupID);
+          farmerData.groupName = groupData ? groupData.GroupName : 'ไม่พบกลุ่ม';
+        } else {
+          farmerData.groupName = 'ไม่ระบุกลุ่ม';
+        }
+        
+        console.log(`📋 Returning farmer data: ${JSON.stringify(farmerData, null, 2)}`);
+        return farmerData;
+      }
+    }
+    
+    console.log(`❌ No farmer found for FarmerID '${searchFarmerId}'`);
+    return null;
+  } catch (error) {
+    console.error('Get farmer by ID for search error:', error);
+    return null;
+  }
+}
+
+/**
+ * Correct field mapping based on actual Google Sheets structure vs expected structure
+ */
+function correctFieldMapping(sheetName, originalData, rawRow) {
+  const corrected = { ...originalData };
+  
+  console.log(`🔧 Correcting field mapping for sheet: ${sheetName}`);
+  
+  try {
+    if (sheetName === CONFIG.SHEETS.PRODUCTION_DATA) {
+      // Based on actual data structure observed
+      corrected.ProductionID = rawRow[0];
+      corrected.FarmerID = rawRow[1];
+      corrected.SeasonID = rawRow[2] || '';
+      corrected.CropType = rawRow[3] || '';        // Fix: "กวางตุ้ง" should be CropType
+      corrected.CropVariety = rawRow[4] || '';     // Fix: "ต้น" should be CropVariety
+      corrected.PlantingMethod = rawRow[5] || '';  // Fix: "ไฮโดรโปนิกส์" should be PlantingMethod
+      corrected.PlantingMethodOther = rawRow[6] || '';
+      corrected.Fertilizer = rawRow[7] || '';
+      corrected.Pesticide = rawRow[8] || '';
+      corrected.PlantDate = rawRow[9] || '';
+      corrected.HarvestDate = rawRow[10] || '';
+      corrected.RecordMethod = rawRow[11] || '';
+      corrected.MaintenanceRecord = rawRow[12] || '';
+      corrected.PestControl = rawRow[13] || '';
+      corrected.WaterSource = rawRow[14] || '';
+      corrected.WaterManagement = rawRow[15] || '';
+      corrected.WaterSourceType = rawRow[16] || '';
+      corrected.Status = rawRow[17] || '';
+      corrected.Created = rawRow[18] || '';
+      corrected.UpdatedAt = rawRow[19] || '';
+      
+      console.log(`✅ Production corrected: CropType="${corrected.CropType}", CropVariety="${corrected.CropVariety}", PlantingMethod="${corrected.PlantingMethod}"`);
+    }
+    
+    else if (sheetName === CONFIG.SHEETS.HARVEST_DATA) {
+      // Based on actual data structure observed
+      corrected.HarvestID = rawRow[0];
+      corrected.FarmerID = rawRow[1];
+      corrected.ProductionID = rawRow[2];          // Fix: "cj2c11L8" should be ProductionID
+      corrected.ShipDate = rawRow[3] || '';        // Fix: "2025-09-25T17:00:00.000Z" should be ShipDate
+      corrected.HarvestMethod = rawRow[4] || '';   // Fix: 5 should be HarvestMethod
+      corrected.PackagingCompany = rawRow[5] || '';
+      corrected.PackagingLocation = rawRow[6] || '';
+      corrected.PackagingProvince = rawRow[7] || '';
+      corrected.ResponsiblePerson = rawRow[8] || ''; // Fix: "สาสาส" should be ResponsiblePerson
+      corrected.LotCode = rawRow[9] || '';         // Fix: 25680926 should be LotCode
+      corrected.Quantity = rawRow[10] || '';       // Fix: 4 should be Quantity
+      corrected.Unit = rawRow[11] || '';           // Fix: "ชิ้น" should be Unit
+      corrected.Created = rawRow[12] || '';
+      corrected.UpdatedAt = rawRow[13] || '';
+      
+      console.log(`✅ Harvest corrected: Quantity="${corrected.Quantity}", Unit="${corrected.Unit}", ResponsiblePerson="${corrected.ResponsiblePerson}"`);
+    }
+    
+    else if (sheetName === CONFIG.SHEETS.TRANSPORT_DATA) {
+      // Based on actual data structure observed
+      corrected.TransportID = rawRow[0];
+      corrected.FarmerID = rawRow[1];
+      corrected.ProductionID = rawRow[2];          // Fix: "cj2c11L8" should be ProductionID
+      corrected.farmShipDate = rawRow[3] || '';    // Fix: "2025-09-25T17:00:00.000Z" should be farmShipDate
+      corrected.TransportChannel = rawRow[4] || ''; // Fix: "ส่งสินค้าไปยังผู้รับสินค้า" should be TransportChannel
+      corrected.TransportMethodOther = rawRow[5] || '';
+      corrected.TransportMethod = rawRow[6] || '';  // Fix: "รถยนต์" should be TransportMethod
+      corrected.TransportCompany = rawRow[7] || '';
+      corrected.DistributorCode = rawRow[8] || '';
+      corrected.Status = rawRow[9] || '';
+      corrected.Created = rawRow[10] || '';
+      corrected.UpdatedAt = rawRow[11] || '';
+      
+      console.log(`✅ Transport corrected: TransportMethod="${corrected.TransportMethod}", TransportChannel="${corrected.TransportChannel}"`);
+    }
+    
+  } catch (error) {
+    console.error(`❌ Field correction error for ${sheetName}:`, error);
+  }
+  
+  return corrected;
+}
+
+/**
+ * Get farmer section data (updated to return arrays of all matching records)
  */
 function getFarmerSectionData(sheetName, farmerId) {
   try {
     const sheet = getSheet(sheetName);
     const data = sheet.getDataRange().getValues();
     
+    console.log(`🔍 getFarmerSectionData: Searching for FarmerID '${farmerId}' in sheet '${sheetName}'`);
+    console.log(`📊 Sheet has ${data.length - 1} data rows (excluding header)`);
+    
+    // Convert farmerId to string for consistent comparison
+    const searchFarmerId = String(farmerId).trim();
+    const results = [];
+    const headers = data[0];
+    
+    console.log(`📋 Sheet headers (${headers.length} columns): ${headers.join(', ')}`);
+    
     for (let i = 1; i < data.length; i++) {
-      if (data[i][1] === farmerId) { // FarmerID is usually in column 1 (index 1)
-        const headers = data[0];
+      const currentFarmerId = String(data[i][1]).trim(); // FarmerID is usually in column 1 (index 1)
+      
+      if (currentFarmerId === searchFarmerId) {
+        console.log(`✅ Found matching FarmerID at row ${i + 1}`);
+        console.log(`📋 Raw data for row ${i + 1}: [${data[i].map((val, idx) => `${idx}:"${val}"`).join(', ')}]`);
+        
         const rowData = {};
         
         for (let j = 0; j < headers.length; j++) {
           rowData[headers[j]] = data[i][j];
+          console.log(`   ${j}: ${headers[j]} = "${data[i][j]}"`);
         }
         
-        return rowData;
+        // ✅ CRITICAL FIX: Correct field mapping based on actual Google Sheets structure
+        const correctedData = correctFieldMapping(sheetName, rowData, data[i]);
+        results.push(correctedData);
+        console.log(`📋 Mapped object: ${JSON.stringify(rowData, null, 2)}`);
       }
     }
     
-    return null;
+    console.log(`📋 Found ${results.length} matching records for FarmerID '${searchFarmerId}' in sheet '${sheetName}'`);
+    if (results.length > 0) {
+      console.log(`📋 First record fields: ${Object.keys(results[0]).join(', ')}`);
+    }
+    
+    return results.length > 0 ? results : [];
   } catch (error) {
     console.error('Get farmer section data error:', error);
-    return null;
+    return [];
   }
 }
 

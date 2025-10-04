@@ -630,6 +630,18 @@ function doPost(e) {
                 requestData[key] = JSON.parse(requestData[key]);
               }
             });
+            
+            // Parse filesToDelete if provided as string
+            if (requestData.filesToDelete && typeof requestData.filesToDelete === 'string') {
+              try {
+                requestData.filesToDelete = JSON.parse(requestData.filesToDelete);
+                console.log('✅ Parsed filesToDelete:', requestData.filesToDelete);
+              } catch (fileParseError) {
+                console.warn('⚠️ Failed to parse filesToDelete, keeping as string:', fileParseError);
+                // Keep as string, updateProductionData will handle it
+              }
+            }
+            
             console.log('✅ Parsed nested objects for updateProductionData');
           } catch (nestedParseError) {
             console.error('❌ Failed to parse nested objects:', nestedParseError);
@@ -710,7 +722,7 @@ function doPost(e) {
         result = handleSearchQRCode(e.parameter);
         break;
       case 'searchDeepCode':
-        result = handleSearchDeepCode(e.parameter);
+        result = handleSearchDeepCodeForSearch(e.parameter);
         break;
       case 'handleDeepSearch':
         result = handleDeepSearch(e.parameter);
@@ -829,6 +841,9 @@ function doPost(e) {
       case 'createProductionCycle':
         result = createProductionCycle(e.parameter);
         break;
+      case 'createProductionCycleFormData':
+        result = createProductionCycleFormData(requestData);
+        break;
       case 'getProductionHistory':
         result = getLatestProductionRecords(e.parameter.farmerID, e.parameter.limit);
         break;
@@ -839,6 +854,9 @@ function doPost(e) {
         result = updateProductionCycle(e.parameter);
         break;
       case 'deleteProductionCycle':
+        result = deleteProductionCycle(e.parameter);
+        break;
+      case 'deleteProductionRecord':
         result = deleteProductionCycle(e.parameter);
         break;
       case 'uploadFarmerDocument':
@@ -899,6 +917,29 @@ function doPost(e) {
         break;
       case 'deleteFileRecord':
         result = deleteFileRecord(e.parameter);
+        break;
+      
+      // Production List API
+      case 'getProductionListData':
+        result = getProductionListData(e.parameter);
+        break;
+      case 'clearProductionListCache':
+        result = { success: clearProductionListCache(e.parameter.farmerID) };
+        break;
+      case 'getProductionData':
+        result = getProductionDataByFarmer(e.parameter.farmerID);
+        break;
+      case 'getHarvestData':
+        result = getHarvestDataByFarmerAPI(e.parameter.farmerID);
+        break;
+      case 'getTransportData':
+        result = getTransportDataByFarmerAPI(e.parameter.farmerID);
+        break;
+      case 'getSearchCodes':
+        result = getSearchCodesByFarmer(e.parameter.farmerID);
+        break;
+      case 'getFarmerProductionListData':
+        result = getFarmerProductionListData(e.parameter.farmerID);
         break;
         
       default:
@@ -1624,19 +1665,30 @@ function setupSystem() {
  */
 function getHarvestDataByFarmer(farmerID, productionID = null) {
   try {
+    console.log('=== DEBUG getHarvestDataByFarmer (Code.gs) ===');
+    console.log('Input farmerID:', farmerID, 'type:', typeof farmerID);
+    console.log('Input productionID:', productionID);
+    
     const harvestSheet = getSheet(CONFIG.SHEETS.HARVEST_DATA);
     const harvestData = harvestSheet.getDataRange().getValues();
     const harvestHeaders = harvestData[0];
     
     const results = [];
+    console.log('Harvest_Data sheet has', harvestData.length - 1, 'data rows');
     
     for (let i = 1; i < harvestData.length; i++) {
       const row = harvestData[i];
       const rowFarmerID = row[1]; // FarmerID is in column 1
       const rowProductionID = row[2]; // ProductionID is in column 2
       
+      // Clean farmer IDs for comparison
+      const cleanRowFarmerID = String(rowFarmerID || '').replace(/^'/, '').trim();
+      const cleanInputFarmerID = String(farmerID || '').replace(/^'/, '').trim();
+      
+      console.log(`Row ${i}: HarvestID="${row[0]}", FarmerID="${rowFarmerID}" (cleaned: "${cleanRowFarmerID}") vs input "${farmerID}" (cleaned: "${cleanInputFarmerID}")`);
+      
       // Check if this row matches our criteria
-      const farmerMatch = rowFarmerID === farmerID;
+      const farmerMatch = cleanRowFarmerID === cleanInputFarmerID;
       const productionMatch = !productionID || rowProductionID === productionID;
       
       if (farmerMatch && productionMatch) {
@@ -1645,9 +1697,11 @@ function getHarvestDataByFarmer(farmerID, productionID = null) {
           harvestRecord[header] = row[index];
         });
         results.push(harvestRecord);
+        console.log(`✓ Added harvest record: ${row[0]} for production: ${rowProductionID}`);
       }
     }
     
+    console.log(`Found ${results.length} harvest records for farmer ${farmerID}`);
     return results;
   } catch (error) {
     console.error('getHarvestDataByFarmer error:', error);
@@ -1660,19 +1714,30 @@ function getHarvestDataByFarmer(farmerID, productionID = null) {
  */
 function getTransportDataByFarmer(farmerID, productionID = null) {
   try {
+    console.log('=== DEBUG getTransportDataByFarmer (Code.gs) ===');
+    console.log('Input farmerID:', farmerID, 'type:', typeof farmerID);
+    console.log('Input productionID:', productionID);
+    
     const transportSheet = getSheet(CONFIG.SHEETS.TRANSPORT_DATA);
     const transportData = transportSheet.getDataRange().getValues();
     const transportHeaders = transportData[0];
     
     const results = [];
+    console.log('Transport_Data sheet has', transportData.length - 1, 'data rows');
     
     for (let i = 1; i < transportData.length; i++) {
       const row = transportData[i];
       const rowFarmerID = row[1]; // FarmerID is in column 1
       const rowProductionID = row[2]; // ProductionID is in column 2
       
+      // Clean farmer IDs for comparison
+      const cleanRowFarmerID = String(rowFarmerID || '').replace(/^'/, '').trim();
+      const cleanInputFarmerID = String(farmerID || '').replace(/^'/, '').trim();
+      
+      console.log(`Row ${i}: TransportID="${row[0]}", FarmerID="${rowFarmerID}" (cleaned: "${cleanRowFarmerID}") vs input "${farmerID}" (cleaned: "${cleanInputFarmerID}")`);
+      
       // Check if this row matches our criteria
-      const farmerMatch = rowFarmerID === farmerID;
+      const farmerMatch = cleanRowFarmerID === cleanInputFarmerID;
       const productionMatch = !productionID || rowProductionID === productionID;
       
       if (farmerMatch && productionMatch) {
@@ -1681,9 +1746,11 @@ function getTransportDataByFarmer(farmerID, productionID = null) {
           transportRecord[header] = row[index];
         });
         results.push(transportRecord);
+        console.log(`✓ Added transport record: ${row[0]} for production: ${rowProductionID}`);
       }
     }
     
+    console.log(`Found ${results.length} transport records for farmer ${farmerID}`);
     return results;
   } catch (error) {
     console.error('getTransportDataByFarmer error:', error);
@@ -1765,5 +1832,307 @@ function getFileRecordsByProductionId(productionID) {
   } catch (error) {
     console.error('getFileRecordsByProductionId error:', error);
     return [];
+  }
+}
+
+/**
+ * API Wrapper functions for frontend compatibility
+ */
+
+/**
+ * Get production data by farmer - API wrapper
+ */
+function getProductionDataByFarmer(farmerID) {
+  try {
+    console.log('=== DEBUG getProductionDataByFarmer (Code.gs API wrapper) ===');
+    console.log('Input farmerID:', farmerID, 'type:', typeof farmerID);
+    
+    const sheet = getSheet(CONFIG.SHEETS.PRODUCTION_DATA);
+    const data = sheet.getDataRange().getValues();
+    const headers = data[0];
+    
+    const results = [];
+    console.log('Production_Data sheet has', data.length - 1, 'data rows');
+    
+    for (let i = 1; i < data.length; i++) {
+      const row = data[i];
+      const rowFarmerID = row[1]; // FarmerID is in column 1
+      
+      // Clean both farmer IDs for comparison
+      const cleanRowFarmerID = String(rowFarmerID || '').replace(/^'/, '').trim();
+      const cleanInputFarmerID = String(farmerID || '').replace(/^'/, '').trim();
+      
+      console.log(`Row ${i}: ProductionID="${row[0]}", FarmerID="${rowFarmerID}" (cleaned: "${cleanRowFarmerID}") vs input "${farmerID}" (cleaned: "${cleanInputFarmerID}")`);
+      
+      if (cleanRowFarmerID === cleanInputFarmerID) {
+        const record = {};
+        headers.forEach((header, index) => {
+          record[header] = row[index];
+        });
+        results.push(record);
+        console.log(`✓ Added production record: ${row[0]}`);
+      }
+    }
+    
+    console.log(`Found ${results.length} production records for farmer ${farmerID}`);
+    
+    return {
+      success: true,
+      data: results,
+      total: results.length
+    };
+  } catch (error) {
+    console.error('getProductionDataByFarmer error:', error);
+    return {
+      success: false,
+      message: 'เกิดข้อผิดพลาดในการดึงข้อมูลการผลิต',
+      data: []
+    };
+  }
+}
+
+/**
+ * Get harvest data by farmer - API wrapper
+ */
+function getHarvestDataByFarmerAPI(farmerID) {
+  try {
+    const results = getHarvestDataByFarmer(farmerID);
+    return {
+      success: true,
+      data: results,
+      total: results.length
+    };
+  } catch (error) {
+    console.error('getHarvestDataByFarmerAPI error:', error);
+    return {
+      success: false,
+      message: 'เกิดข้อผิดพลาดในการดึงข้อมูลการเก็บเกี่ยว',
+      data: []
+    };
+  }
+}
+
+/**
+ * Get transport data by farmer - API wrapper
+ */
+function getTransportDataByFarmerAPI(farmerID) {
+  try {
+    const results = getTransportDataByFarmer(farmerID);
+    return {
+      success: true,
+      data: results,
+      total: results.length
+    };
+  } catch (error) {
+    console.error('getTransportDataByFarmerAPI error:', error);
+    return {
+      success: false,
+      message: 'เกิดข้อผิดพลาดในการดึงข้อมูลการขนส่ง',
+      data: []
+    };
+  }
+}
+
+/**
+ * Get complete production list data for farmer - single API call
+ */
+function getFarmerProductionListData(farmerID) {
+  try {
+    console.log('=== DEBUG getFarmerProductionListData ===');
+    console.log('Input farmerID:', farmerID, 'type:', typeof farmerID);
+    
+    const cleanInputFarmerID = String(farmerID || '').replace(/^'/, '').trim();
+    console.log('Cleaned farmerID:', cleanInputFarmerID);
+    
+    // Get all data in parallel
+    const productionData = getProductionDataForFarmer(cleanInputFarmerID);
+    const harvestData = getHarvestDataByFarmer(cleanInputFarmerID);
+    const transportData = getTransportDataByFarmer(cleanInputFarmerID);
+    const searchCodesData = getSearchCodesForFarmer(cleanInputFarmerID);
+    
+    console.log('Data counts:', {
+      production: productionData.length,
+      harvest: harvestData.length,
+      transport: transportData.length,
+      searchCodes: searchCodesData.length
+    });
+    
+    // Join the data
+    const joinedData = joinProductionDataInternal(productionData, harvestData, transportData, searchCodesData);
+    
+    console.log(`Joined ${joinedData.length} complete production records`);
+    
+    return {
+      success: true,
+      data: joinedData,
+      total: joinedData.length,
+      counts: {
+        production: productionData.length,
+        harvest: harvestData.length,
+        transport: transportData.length,
+        searchCodes: searchCodesData.length
+      }
+    };
+  } catch (error) {
+    console.error('getFarmerProductionListData error:', error);
+    return {
+      success: false,
+      message: 'เกิดข้อผิดพลาดในการดึงข้อมูลรายการการผลิต',
+      data: []
+    };
+  }
+}
+
+/**
+ * Get production data for farmer (internal helper)
+ */
+function getProductionDataForFarmer(farmerID) {
+  try {
+    const sheet = getSheet(CONFIG.SHEETS.PRODUCTION_DATA);
+    const data = sheet.getDataRange().getValues();
+    const headers = data[0];
+    const results = [];
+    
+    const cleanInputFarmerID = String(farmerID || '').replace(/^'/, '').trim();
+    
+    for (let i = 1; i < data.length; i++) {
+      const row = data[i];
+      const rowFarmerID = row[1];
+      const cleanRowFarmerID = String(rowFarmerID || '').replace(/^'/, '').trim();
+      
+      if (cleanRowFarmerID === cleanInputFarmerID) {
+        const record = {};
+        headers.forEach((header, index) => {
+          record[header] = row[index];
+        });
+        results.push(record);
+      }
+    }
+    
+    return results;
+  } catch (error) {
+    console.error('getProductionDataForFarmer error:', error);
+    return [];
+  }
+}
+
+/**
+ * Get search codes for farmer (internal helper)
+ */
+function getSearchCodesForFarmer(farmerID) {
+  try {
+    const sheet = getSheet(CONFIG.SHEETS.SEARCH_CODES);
+    const data = sheet.getDataRange().getValues();
+    const headers = data[0];
+    const results = [];
+    
+    const cleanInputFarmerID = String(farmerID || '').replace(/^'/, '').trim();
+    
+    for (let i = 1; i < data.length; i++) {
+      const row = data[i];
+      const rowFarmerID = row[4]; // FarmerID is in column 4
+      const cleanRowFarmerID = String(rowFarmerID || '').replace(/^'/, '').trim();
+      
+      if (cleanRowFarmerID === cleanInputFarmerID) {
+        const record = {};
+        headers.forEach((header, index) => {
+          record[header] = row[index];
+        });
+        results.push(record);
+      }
+    }
+    
+    return results;
+  } catch (error) {
+    console.error('getSearchCodesForFarmer error:', error);
+    return [];
+  }
+}
+
+/**
+ * Join production data (internal helper)
+ */
+function joinProductionDataInternal(productionData, harvestData, transportData, searchCodesData) {
+  try {
+    const joinedData = [];
+    
+    productionData.forEach(production => {
+      const productionID = production.ProductionID;
+      
+      // Find related data
+      const relatedHarvest = harvestData.find(h => h.ProductionID === productionID) || {};
+      const relatedTransport = transportData.find(t => t.ProductionID === productionID) || {};
+      const relatedSearchCode = searchCodesData.find(s => s.ProductionID === productionID) || {};
+      
+      // Combine all data (fix field collision)
+      const joinedRecord = {
+        ...production,
+        ...relatedHarvest,
+        ...relatedTransport,
+        ...relatedSearchCode,
+        // Override with correct field names to prevent collision
+        ShipDate: relatedHarvest.ShipDate,  // From Harvest_Data
+        farmShipDate: relatedTransport.farmShipDate || relatedTransport.FarmShipDate  // From Transport_Data
+      };
+      
+      joinedData.push(joinedRecord);
+    });
+    
+    return joinedData;
+  } catch (error) {
+    console.error('joinProductionDataInternal error:', error);
+    return [];
+  }
+}
+
+/**
+ * Get search codes by farmer - API wrapper
+ */
+function getSearchCodesByFarmer(farmerID) {
+  try {
+    console.log('=== DEBUG getSearchCodesByFarmer ===');
+    console.log('Input farmerID:', farmerID, 'type:', typeof farmerID);
+    
+    const sheet = getSheet(CONFIG.SHEETS.SEARCH_CODES);
+    const data = sheet.getDataRange().getValues();
+    const headers = data[0];
+    
+    const results = [];
+    console.log('Search_Codes sheet has', data.length - 1, 'data rows');
+    
+    for (let i = 1; i < data.length; i++) {
+      const row = data[i];
+      const rowFarmerID = row[4]; // FarmerID is in column 4
+      
+      // Clean both farmer IDs for comparison
+      const cleanRowFarmerID = String(rowFarmerID || '').replace(/^'/, '').trim();
+      const cleanInputFarmerID = String(farmerID || '').replace(/^'/, '').trim();
+      
+      console.log(`Row ${i}: SearchCode="${row[1]}", FarmerID="${rowFarmerID}" (cleaned: "${cleanRowFarmerID}") vs input "${farmerID}" (cleaned: "${cleanInputFarmerID}")`);
+      
+      if (cleanRowFarmerID === cleanInputFarmerID) {
+        const record = {};
+        headers.forEach((header, index) => {
+          record[header] = row[index];
+        });
+        results.push(record);
+        console.log(`✓ Added search code record: ${row[1]}`);
+      }
+    }
+    
+    console.log(`Found ${results.length} search code records for farmer ${farmerID}`);
+    
+    return {
+      success: true,
+      data: results,
+      total: results.length
+    };
+  } catch (error) {
+    console.error('getSearchCodesByFarmer error:', error);
+    return {
+      success: false,
+      message: 'เกิดข้อผิดพลาดในการดึงรหัสค้นหา',
+      data: []
+    };
   }
 }
